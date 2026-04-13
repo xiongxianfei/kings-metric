@@ -1,0 +1,62 @@
+name: Android Project Bootstrap And Build Setup
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/android-project-bootstrap-and-build-setup.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "gradle/wrapper/**"
+      - "app/**"
+      - "core/**"
+      - "docs/plan.md"
+      - "specs/android-project-bootstrap-and-build-setup.md"
+      - "specs/android-project-bootstrap-and-build-setup.test.md"
+      - "src/main/kotlin/**"
+      - "src/test/kotlin/**"
+  push:
+    branches:
+      - main
+      - feature/**
+    paths:
+      - ".github/workflows/android-project-bootstrap-and-build-setup.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "gradle/wrapper/**"
+      - "app/**"
+      - "core/**"
+      - "docs/plan.md"
+      - "specs/android-project-bootstrap-and-build-setup.md"
+      - "specs/android-project-bootstrap-and-build-setup.test.md"
+      - "src/main/kotlin/**"
+      - "src/test/kotlin/**"
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run bootstrap test target
+        run: >
+          ./gradlew --no-daemon :core:test
+          --tests "com.kingsmetric.bootstrap.AndroidProjectBootstrapTest"
+
+      - name: Assemble debug app
+        run: ./gradlew --no-daemon :app:assembleDebug
