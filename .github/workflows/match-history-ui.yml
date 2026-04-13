@@ -1,0 +1,52 @@
+name: Match History UI
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/match-history-ui.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "specs/match-history-ui.md"
+      - "specs/match-history-ui.test.md"
+      - "src/main/kotlin/com/kingsmetric/history/**"
+      - "src/test/kotlin/com/kingsmetric/history/**"
+      - "src/main/kotlin/com/kingsmetric/importflow/ImportWorkflow.kt"
+  push:
+    branches:
+      - main
+      - feature/**
+    paths:
+      - ".github/workflows/match-history-ui.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "specs/match-history-ui.md"
+      - "specs/match-history-ui.test.md"
+      - "src/main/kotlin/com/kingsmetric/history/**"
+      - "src/test/kotlin/com/kingsmetric/history/**"
+      - "src/main/kotlin/com/kingsmetric/importflow/ImportWorkflow.kt"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.4.1"
+
+      - name: Run match history tests
+        run: >
+          gradle --no-daemon test
+          --tests "com.kingsmetric.history.MatchHistoryUiTest"
