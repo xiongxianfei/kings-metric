@@ -189,7 +189,8 @@ sealed interface SaveValidationResult {
 
 data class StoredScreenshot(
     val id: String,
-    val path: String
+    val path: String,
+    val originalSourcePath: String
 )
 
 data class ReviewState(
@@ -213,6 +214,22 @@ sealed interface ImportResult {
     data class Unsupported(val reason: String) : ImportResult
 
     data class StorageFailed(val message: String) : ImportResult
+    data class ImportFailed(val message: String) : ImportResult
+    data object Cancelled : ImportResult
+}
+
+sealed interface ScreenshotSelectionResult {
+    data class Accepted(val sourcePath: String) : ScreenshotSelectionResult
+    data object Cancelled : ScreenshotSelectionResult
+}
+
+class SingleScreenshotSelectionPolicy {
+
+    fun accept(sourcePaths: List<String>): ScreenshotSelectionResult {
+        return sourcePaths.firstOrNull()
+            ?.let { ScreenshotSelectionResult.Accepted(it) }
+            ?: ScreenshotSelectionResult.Cancelled
+    }
 }
 
 sealed interface SaveResult {
@@ -241,9 +258,18 @@ class MatchImportWorkflow(
     private val parser: DraftParser
 ) {
 
+    fun importSelection(sourcePaths: List<String>): ImportResult {
+        return when (val selection = SingleScreenshotSelectionPolicy().accept(sourcePaths)) {
+            is ScreenshotSelectionResult.Accepted -> importScreenshot(selection.sourcePath)
+            ScreenshotSelectionResult.Cancelled -> ImportResult.Cancelled
+        }
+    }
+
     fun importScreenshot(sourcePath: String): ImportResult {
         val storedScreenshot = try {
             screenshotStore.storeOriginal(sourcePath)
+        } catch (_: UnreadableSourceException) {
+            return ImportResult.ImportFailed("Could not import screenshot from the selected source.")
         } catch (_: IllegalStateException) {
             return ImportResult.StorageFailed("Could not save screenshot locally.")
         }
@@ -323,24 +349,31 @@ class FakeScreenshotAnalyzer(
 }
 
 class FakeScreenshotStore(
-    private val failPaths: Set<String> = emptySet()
+    private val failPaths: Set<String> = emptySet(),
+    private val unreadablePaths: Set<String> = emptySet()
 ) : ScreenshotStore {
 
     val stored = mutableListOf<StoredScreenshot>()
 
     override fun storeOriginal(sourcePath: String): StoredScreenshot {
+        if (sourcePath in unreadablePaths) {
+            throw UnreadableSourceException()
+        }
         if (sourcePath in failPaths) {
             throw IllegalStateException("storage failed")
         }
 
         val storedScreenshot = StoredScreenshot(
             id = "shot-${stored.size + 1}",
-            path = "stored/${stored.size + 1}-$sourcePath"
+            path = "stored/${stored.size + 1}-$sourcePath",
+            originalSourcePath = sourcePath
         )
         stored += storedScreenshot
         return storedScreenshot
     }
 }
+
+class UnreadableSourceException : IllegalStateException("source unreadable")
 
 class FakeRecordStore(
     private val shouldFail: Boolean = false
