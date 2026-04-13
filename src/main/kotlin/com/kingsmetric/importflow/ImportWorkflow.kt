@@ -195,8 +195,35 @@ data class StoredScreenshot(
 
 data class ReviewState(
     val screenshotPath: String,
-    val fields: Map<FieldKey, DraftField>
-)
+    val fields: Map<FieldKey, DraftField>,
+    val highlightedFields: Set<FieldKey>,
+    val blockingFields: Set<FieldKey>,
+    val editableFields: Set<FieldKey>,
+    val screenshotAvailable: Boolean,
+    val canConfirm: Boolean
+) {
+    companion object {
+        fun fromDraft(draft: DraftRecord): ReviewState {
+            val highlightedFields = draft.fields
+                .filterValues { it.flags.isNotEmpty() }
+                .keys
+            val blockingFields = draft.fields
+                .filterValues { field ->
+                    field.required && (field.value == null || ReviewFlag.MISSING in field.flags || ReviewFlag.INVALID in field.flags)
+                }
+                .keys
+            return ReviewState(
+                screenshotPath = draft.screenshotPath.orEmpty(),
+                fields = draft.fields,
+                highlightedFields = highlightedFields,
+                blockingFields = blockingFields,
+                editableFields = FieldKey.all,
+                screenshotAvailable = draft.screenshotPath != null,
+                canConfirm = blockingFields.isEmpty()
+            )
+        }
+    }
+}
 
 data class SavedMatchRecord(
     val screenshotId: String,
@@ -291,10 +318,7 @@ class MatchImportWorkflow(
                 ImportResult.DraftReady(
                     storedScreenshot = storedScreenshot,
                     draft = draft,
-                    reviewState = ReviewState(
-                        screenshotPath = storedScreenshot.path,
-                        fields = draft.fields
-                    )
+                    reviewState = ReviewState.fromDraft(draft)
                 )
             }
             is TemplateValidationResult.Unsupported -> ImportResult.Unsupported(
