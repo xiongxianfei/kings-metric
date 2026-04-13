@@ -1,0 +1,55 @@
+name: Recognition Fixture Regression Checks
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/recognition-fixture-dataset-and-regression-checks.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "specs/recognition-fixture-dataset-and-regression-checks.md"
+      - "specs/recognition-fixture-dataset-and-regression-checks.test.md"
+      - "specs/personal-stats-screenshot-import.md"
+      - "specs/personal-stats-screenshot-import.test.md"
+      - "src/main/kotlin/com/kingsmetric/importflow/**"
+      - "src/test/kotlin/com/kingsmetric/importflow/**"
+  push:
+    branches:
+      - main
+      - feature/**
+    paths:
+      - ".github/workflows/recognition-fixture-dataset-and-regression-checks.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "specs/recognition-fixture-dataset-and-regression-checks.md"
+      - "specs/recognition-fixture-dataset-and-regression-checks.test.md"
+      - "specs/personal-stats-screenshot-import.md"
+      - "specs/personal-stats-screenshot-import.test.md"
+      - "src/main/kotlin/com/kingsmetric/importflow/**"
+      - "src/test/kotlin/com/kingsmetric/importflow/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.4.1"
+
+      - name: Run recognition regression tests
+        run: >
+          gradle --no-daemon test
+          --tests "com.kingsmetric.importflow.RecognitionFixtureRegressionTest"
+          --tests "com.kingsmetric.importflow.RecognitionPipelineTest"
