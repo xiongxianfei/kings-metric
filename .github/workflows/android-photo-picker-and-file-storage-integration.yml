@@ -1,0 +1,50 @@
+name: Android Photo Picker And File Storage Integration
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/android-photo-picker-and-file-storage-integration.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "specs/android-photo-picker-and-file-storage-integration.md"
+      - "specs/android-photo-picker-and-file-storage-integration.test.md"
+      - "src/main/kotlin/com/kingsmetric/app/AndroidPhotoPickerIntegration.kt"
+      - "src/test/kotlin/com/kingsmetric/app/AndroidPhotoPickerAndFileStorageIntegrationTest.kt"
+  push:
+    branches:
+      - main
+      - feature/**
+    paths:
+      - ".github/workflows/android-photo-picker-and-file-storage-integration.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "specs/android-photo-picker-and-file-storage-integration.md"
+      - "specs/android-photo-picker-and-file-storage-integration.test.md"
+      - "src/main/kotlin/com/kingsmetric/app/AndroidPhotoPickerIntegration.kt"
+      - "src/test/kotlin/com/kingsmetric/app/AndroidPhotoPickerAndFileStorageIntegrationTest.kt"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.4.1"
+
+      - name: Run photo picker integration tests
+        run: >
+          gradle --no-daemon test
+          --tests "com.kingsmetric.app.AndroidPhotoPickerAndFileStorageIntegrationTest"
