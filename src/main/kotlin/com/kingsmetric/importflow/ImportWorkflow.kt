@@ -246,6 +246,8 @@ interface ScreenshotAnalyzer {
     fun analyze(sourcePath: String): ScreenshotAnalysis
 }
 
+class OcrExtractionException(message: String) : IllegalStateException(message)
+
 interface RecordStore {
     fun save(record: SavedMatchRecord): SavedMatchRecord
 }
@@ -274,7 +276,11 @@ class MatchImportWorkflow(
             return ImportResult.StorageFailed("Could not save screenshot locally.")
         }
 
-        val analysis = analyzer.analyze(sourcePath)
+        val analysis = try {
+            analyzer.analyze(sourcePath)
+        } catch (_: OcrExtractionException) {
+            return ImportResult.ImportFailed("Could not extract screenshot data for review.")
+        }
         return when (val validation = validator.validate(analysis)) {
             TemplateValidationResult.Supported -> {
                 val draft = parser.createDraft(
