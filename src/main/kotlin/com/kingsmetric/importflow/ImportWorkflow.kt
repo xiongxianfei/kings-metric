@@ -231,6 +231,12 @@ data class SavedMatchRecord(
     val fields: Map<FieldKey, String?>
 )
 
+enum class FailureAction {
+    RETRY_IMPORT,
+    CORRECT_REVIEW_FIELDS,
+    RETRY_SAVE
+}
+
 sealed interface ImportResult {
     data class DraftReady(
         val storedScreenshot: StoredScreenshot,
@@ -238,10 +244,10 @@ sealed interface ImportResult {
         val reviewState: ReviewState
     ) : ImportResult
 
-    data class Unsupported(val reason: String) : ImportResult
+    data class Unsupported(val reason: String, val nextAction: FailureAction = FailureAction.RETRY_IMPORT) : ImportResult
 
-    data class StorageFailed(val message: String) : ImportResult
-    data class ImportFailed(val message: String) : ImportResult
+    data class StorageFailed(val message: String, val nextAction: FailureAction = FailureAction.RETRY_IMPORT) : ImportResult
+    data class ImportFailed(val message: String, val nextAction: FailureAction = FailureAction.RETRY_IMPORT) : ImportResult
     data object Cancelled : ImportResult
 }
 
@@ -261,8 +267,18 @@ class SingleScreenshotSelectionPolicy {
 
 sealed interface SaveResult {
     data class Saved(val record: SavedMatchRecord) : SaveResult
-    data class Blocked(val reason: String, val draft: DraftRecord) : SaveResult
-    data class StorageFailed(val message: String, val saved: Boolean = false, val draft: DraftRecord? = null) : SaveResult
+    data class Blocked(
+        val reason: String,
+        val draft: DraftRecord,
+        val nextAction: FailureAction = FailureAction.CORRECT_REVIEW_FIELDS
+    ) : SaveResult
+
+    data class StorageFailed(
+        val message: String,
+        val saved: Boolean = false,
+        val draft: DraftRecord? = null,
+        val nextAction: FailureAction = FailureAction.RETRY_SAVE
+    ) : SaveResult
 }
 
 interface ScreenshotStore {
