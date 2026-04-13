@@ -261,8 +261,8 @@ class SingleScreenshotSelectionPolicy {
 
 sealed interface SaveResult {
     data class Saved(val record: SavedMatchRecord) : SaveResult
-    data class Blocked(val reason: String) : SaveResult
-    data class StorageFailed(val message: String, val saved: Boolean = false) : SaveResult
+    data class Blocked(val reason: String, val draft: DraftRecord) : SaveResult
+    data class StorageFailed(val message: String, val saved: Boolean = false, val draft: DraftRecord? = null) : SaveResult
 }
 
 interface ScreenshotStore {
@@ -349,9 +349,9 @@ class MatchImportWorkflow(
         return when (val validation = validateForSave(draft)) {
             SaveValidationResult.Allowed -> {
                 val screenshotId = draft.screenshotId
-                    ?: return SaveResult.StorageFailed("Could not save record: screenshot link missing.")
+                    ?: return SaveResult.StorageFailed("Could not save record: screenshot link missing.", draft = draft)
                 val screenshotPath = draft.screenshotPath
-                    ?: return SaveResult.StorageFailed("Could not save record: screenshot link missing.")
+                    ?: return SaveResult.StorageFailed("Could not save record: screenshot link missing.", draft = draft)
                 val record = SavedMatchRecord(
                     screenshotId = screenshotId,
                     screenshotPath = screenshotPath,
@@ -360,10 +360,10 @@ class MatchImportWorkflow(
                 try {
                     SaveResult.Saved(recordStore.save(record))
                 } catch (_: IllegalStateException) {
-                    SaveResult.StorageFailed("Could not save record locally.")
+                    SaveResult.StorageFailed("Could not save record locally.", draft = draft)
                 }
             }
-            is SaveValidationResult.Rejected -> SaveResult.Blocked(validation.reason)
+            is SaveValidationResult.Rejected -> SaveResult.Blocked(validation.reason, draft)
         }
     }
 }
