@@ -9,6 +9,10 @@ on:
       - "gradle.properties"
       - "specs/android-app-shell-and-navigation.md"
       - "specs/android-app-shell-and-navigation.test.md"
+      - "app/build.gradle.kts"
+      - "app/src/main/AndroidManifest.xml"
+      - "app/src/main/java/com/kingsmetric/**"
+      - "app/src/androidTest/java/com/kingsmetric/**"
       - "src/main/kotlin/com/kingsmetric/app/**"
       - "src/test/kotlin/com/kingsmetric/app/**"
   push:
@@ -22,6 +26,10 @@ on:
       - "gradle.properties"
       - "specs/android-app-shell-and-navigation.md"
       - "specs/android-app-shell-and-navigation.test.md"
+      - "app/build.gradle.kts"
+      - "app/src/main/AndroidManifest.xml"
+      - "app/src/main/java/com/kingsmetric/**"
+      - "app/src/androidTest/java/com/kingsmetric/**"
       - "src/main/kotlin/com/kingsmetric/app/**"
       - "src/test/kotlin/com/kingsmetric/app/**"
 
@@ -49,3 +57,9 @@ jobs:
         run: >
           ./gradlew --no-daemon :core:test
           --tests "com.kingsmetric.app.AndroidAppShellNavigationTest"
+
+      - name: Assemble Android app shell targets
+        run: >
+          ./gradlew --no-daemon
+          :app:assembleDebug
+          :app:assembleDebugAndroidTest

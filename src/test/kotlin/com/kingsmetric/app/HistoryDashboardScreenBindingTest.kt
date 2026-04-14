@@ -279,6 +279,8 @@ private class FakeSavedMatchDao(
         } ?: entities
     }
 
+    override fun countAll(): Int = entities.value.size
+
     override fun getById(recordId: String): SavedMatchEntity? {
         return entities.value.firstOrNull { it.recordId == recordId }
     }

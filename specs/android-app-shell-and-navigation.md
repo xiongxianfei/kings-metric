@@ -57,3 +57,18 @@ Expected behavior:
 - A single Android app shell can reach import, review, history, dashboard, and detail screens.
 - Navigation failures degrade to a safe state.
 - Android wiring does not move business rules into composables.
+
+## Gotchas
+
+- 2026-04-14: Pure JVM coordinator tests were not enough once the shell moved
+  to a real `NavHost`. Keep Android Compose coverage for review-without-draft,
+  detail-without-record-id, and post-save navigation because runtime route
+  state can fail even when the pure coordinator still passes.
+- 2026-04-14: Treat Hilt plugin application failures such as `Android
+  BaseExtension not found` as Android build-wiring/toolchain problems first.
+  Verify the app shell with at least `:app:assembleDebug` in addition to the
+  pure app-shell test suite.
+- 2026-04-14: In the real review route, changing in-memory draft state in the
+  same callback as a post-save navigation can race the destination change.
+  Keep the navigation path and the route-state cleanup order covered by an
+  Android test.

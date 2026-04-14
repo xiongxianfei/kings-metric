@@ -18,109 +18,88 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.room.Room
-import com.kingsmetric.app.AndroidBitmapLoader
-import com.kingsmetric.app.AndroidMlKitTextRecognizer
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.kingsmetric.app.AndroidPhotoPickerImportAdapter
 import com.kingsmetric.app.AndroidPhotoPickerRuntime
+import com.kingsmetric.app.AppNavigationCoordinator
+import com.kingsmetric.app.AppRoute
+import com.kingsmetric.app.AppRoutes
+import com.kingsmetric.app.AppShellState
 import com.kingsmetric.app.DashboardScreenBinder
 import com.kingsmetric.app.DashboardScreenUiState
 import com.kingsmetric.app.DetailScreenUiState
-import com.kingsmetric.app.ImportRuntimeStatus
 import com.kingsmetric.app.HistoryScreenBinder
 import com.kingsmetric.app.HistoryScreenUiState
-import com.kingsmetric.app.MlKitRecognitionAdapter
+import com.kingsmetric.app.ImportRuntimeStatus
 import com.kingsmetric.app.PreviewAvailability
 import com.kingsmetric.app.ReviewScreenRoute
 import com.kingsmetric.app.ReviewScreenViewModel
-import com.kingsmetric.data.local.KingsMetricDatabase
-import com.kingsmetric.data.local.LocalScreenshotFileStore
-import com.kingsmetric.data.local.RecordIdProvider
-import com.kingsmetric.data.local.RepositorySaveResult
-import com.kingsmetric.data.local.RoomObservedMatchRepository
-import com.kingsmetric.data.local.SavedAtProvider
+import com.kingsmetric.app.UriScreenshotStorage
 import com.kingsmetric.dashboard.DashboardContentState
+import com.kingsmetric.data.local.RoomObservedMatchRepository
 import com.kingsmetric.history.HistoryContentState
-import com.kingsmetric.importflow.DraftParser
 import com.kingsmetric.importflow.DraftRecord
-import com.kingsmetric.importflow.FakeScreenshotAnalyzer
-import com.kingsmetric.importflow.FakeScreenshotStore
+import com.kingsmetric.importflow.ImportResult
 import com.kingsmetric.importflow.MatchImportWorkflow
-import com.kingsmetric.importflow.RecordStore
-import com.kingsmetric.importflow.SavedMatchRecord
-import com.kingsmetric.importflow.TemplateValidator
 import java.io.File
-import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private enum class HomeTab {
-    Import,
-    History,
-    Dashboard
-}
-
 @Composable
-fun HistoryDashboardRoot() {
-    val context = LocalContext.current
-    val repository = remember(context) {
-        val database = Room.databaseBuilder(
-            context,
-            KingsMetricDatabase::class.java,
-            "kings-metric.db"
-        ).build()
-        RoomObservedMatchRepository(
-            dao = database.savedMatchDao(),
-            screenshotFiles = AndroidScreenshotFileStore(),
-            recordIdProvider = UuidRecordIdProvider(),
-            savedAtProvider = SystemSavedAtProvider()
-        )
-    }
+fun HistoryDashboardRoot(
+    repository: RoomObservedMatchRepository,
+    uriStorage: UriScreenshotStorage,
+    recognizeStoredScreenshot: (String) -> ImportResult,
+    reviewWorkflow: MatchImportWorkflow,
+    navigationCoordinator: AppNavigationCoordinator = remember { AppNavigationCoordinator() },
+    initialRoute: String? = null,
+    initialReviewDraft: DraftRecord? = null
+) {
     val historyBinder = remember(repository) { HistoryScreenBinder(repository) }
     val dashboardBinder = remember(repository) { DashboardScreenBinder(repository) }
-    val recognitionAdapter = remember(context) {
-        MlKitRecognitionAdapter(
-            bitmapLoader = AndroidBitmapLoader(),
-            recognizer = AndroidMlKitTextRecognizer(context)
+    val importAdapter = remember(uriStorage) {
+        AndroidPhotoPickerImportAdapter(
+            uriStorage = uriStorage,
+            importStarter = { ImportResult.Cancelled }
         )
     }
-    val reviewWorkflow = remember(repository) {
-        MatchImportWorkflow(
-            screenshotStore = FakeScreenshotStore(),
-            analyzer = FakeScreenshotAnalyzer(emptyMap()),
-            recordStore = RoomRecordStoreAdapter(repository),
-            validator = TemplateValidator(),
-            parser = DraftParser()
-        )
-    }
-    val importRuntime = remember(context) {
+    val importRuntime = remember(importAdapter, recognizeStoredScreenshot) {
         AndroidPhotoPickerRuntime(
-            adapter = com.kingsmetric.app.AndroidPhotoPickerImportAdapter(
-                uriStorage = AndroidUriScreenshotStorage(context),
-                importStarter = { _: com.kingsmetric.app.ImportedScreenshotRequest ->
-                    com.kingsmetric.importflow.ImportResult.Cancelled
-                }
-            ),
+            adapter = importAdapter,
             recognizeImportedScreenshot = { request ->
-                recognitionAdapter.recognize(request.localPath)
+                recognizeStoredScreenshot(request.localPath)
             }
         )
     }
     val scope = rememberCoroutineScope()
     val historyState by historyBinder.state.collectAsState()
     val dashboardState by dashboardBinder.state.collectAsState()
-    var selectedTab by rememberSaveable { mutableStateOf(HomeTab.Import) }
-    var reviewDraft by remember { mutableStateOf<DraftRecord?>(null) }
+    val launchState by produceState<AppShellState?>(initialValue = null, repository, navigationCoordinator, initialRoute, initialReviewDraft) {
+        value = resolveLaunchState(
+            repository = repository,
+            coordinator = navigationCoordinator,
+            initialRoute = initialRoute,
+            initialReviewDraft = initialReviewDraft
+        )
+    }
+    var reviewDraft by remember(initialReviewDraft) { mutableStateOf(initialReviewDraft) }
+    var rootMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     DisposableEffect(historyBinder, dashboardBinder, scope) {
         val historyJob = historyBinder.bind(scope)
@@ -131,6 +110,23 @@ fun HistoryDashboardRoot() {
         }
     }
 
+    if (launchState == null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Text("Loading app...")
+        }
+        return
+    }
+
+    val navController = rememberNavController()
+
+    LaunchedEffect(launchState) {
+        rootMessage = launchState?.userMessage
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -138,21 +134,86 @@ fun HistoryDashboardRoot() {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = { selectedTab = HomeTab.Import }) {
+            Button(
+                onClick = {
+                    navController.navigate(AppRoute.Import.path()) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            ) {
                 Text("Import")
             }
-            Button(onClick = { selectedTab = HomeTab.History }) {
+            Button(
+                onClick = {
+                    navController.navigate(AppRoute.History.path()) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            ) {
                 Text("History")
             }
-            Button(onClick = { selectedTab = HomeTab.Dashboard }) {
+            Button(
+                onClick = {
+                    navController.navigate(AppRoute.Dashboard.path()) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            ) {
                 Text("Dashboard")
             }
         }
 
-        when (selectedTab) {
-            HomeTab.Import -> {
-                if (reviewDraft != null) {
-                    val draft = reviewDraft ?: error("review draft missing")
+        rootMessage?.let { message ->
+            Text(message)
+        }
+
+        NavHost(
+            navController = navController,
+            startDestination = launchState!!.currentPath,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            composable(AppRoute.Import.pattern) {
+                ImportScreen(
+                    runtime = importRuntime,
+                    onReviewDraftReady = { draft ->
+                        reviewDraft = draft
+                        rootMessage = null
+                        navController.navigate(AppRoute.Review.path()) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+            composable(AppRoute.Review.pattern) {
+                val draft = reviewDraft
+                if (draft == null) {
+                    LaunchedEffect(Unit) {
+                        val fallback = navigationCoordinator.openReview(
+                            currentState = navigationCoordinator.resolveLaunchState(hasSavedRecords = repository.hasSavedRecords()),
+                            draftAvailable = false
+                        )
+                        rootMessage = fallback.userMessage
+                        navController.navigate(fallback.currentPath) {
+                            popUpTo(AppRoute.Import.path()) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                    Text("Select one screenshot to import.")
+                } else {
                     val reviewViewModel = remember(draft, reviewWorkflow) {
                         ReviewScreenViewModel(
                             draft = draft,
@@ -165,27 +226,73 @@ fun HistoryDashboardRoot() {
                     ReviewScreenRoute(
                         viewModel = reviewViewModel,
                         onSaveSucceeded = {
-                            reviewDraft = null
+                            navController.navigate(AppRoute.History.path()) {
+                                popUpTo(navController.graph.startDestinationId)
+                                launchSingleTop = true
+                            }
                             importRuntime.reset()
-                            selectedTab = HomeTab.History
-                        }
-                    )
-                } else {
-                    ImportScreen(
-                        runtime = importRuntime,
-                        onReviewDraftReady = { draft ->
-                            reviewDraft = draft
+                            rootMessage = null
                         }
                     )
                 }
             }
-            HomeTab.History -> HistoryScreen(
-                state = historyState,
-                onRecordSelected = { recordId ->
-                    historyBinder.openDetail(scope, recordId)
+            composable(AppRoute.History.pattern) {
+                HistoryScreen(
+                    state = historyState,
+                    onRecordSelected = { recordId ->
+                        navController.navigate(AppRoute.RecordDetail.path(recordId))
+                    }
+                )
+            }
+            composable(AppRoute.Dashboard.pattern) {
+                DashboardScreen(state = dashboardState)
+            }
+            composable(
+                route = AppRoute.RecordDetail.pattern,
+                arguments = listOf(
+                    navArgument("recordId") {
+                        type = NavType.StringType
+                        nullable = true
+                    }
+                )
+            ) { backStackEntry ->
+                val recordId = backStackEntry.arguments?.getString("recordId")
+                LaunchedEffect(recordId) {
+                    if (recordId.isNullOrBlank()) {
+                        val fallback = navigationCoordinator.openDetail(recordId = null)
+                        rootMessage = fallback.userMessage
+                        navController.navigate(fallback.currentPath) {
+                            popUpTo(AppRoute.History.path()) {
+                                inclusive = false
+                            }
+                            launchSingleTop = true
+                        }
+                    } else {
+                        historyBinder.openDetail(scope, recordId)
+                    }
                 }
-            )
-            HomeTab.Dashboard -> DashboardScreen(state = dashboardState)
+                LaunchedEffect(recordId, historyState.detail, historyState.userMessage) {
+                    if (!recordId.isNullOrBlank() &&
+                        historyState.detail == null &&
+                        historyState.userMessage != null
+                    ) {
+                        rootMessage = historyState.userMessage
+                        navController.navigate(AppRoute.History.path()) {
+                            popUpTo(AppRoute.History.path()) {
+                                inclusive = false
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+                when {
+                    recordId.isNullOrBlank() -> Text("Loading record...")
+                    historyState.detail?.recordId == recordId -> RecordDetailScreen(
+                        state = historyState.detail!!
+                    )
+                    else -> Text("Loading record...")
+                }
+            }
         }
     }
 }
@@ -225,9 +332,7 @@ fun ImportScreen(
 
         when (val current = status) {
             ImportRuntimeStatus.Idle -> Text("Select one screenshot to import.")
-            is ImportRuntimeStatus.Failed -> {
-                Text(current.message)
-            }
+            is ImportRuntimeStatus.Failed -> Text(current.message)
             is ImportRuntimeStatus.ReviewReady -> {
                 Text("Review draft ready.")
                 Text(current.draft.screenshotPath.orEmpty())
@@ -254,8 +359,14 @@ fun HistoryScreen(
                                 .clickable { onRecordSelected(record.recordId) }
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                Text(record.hero ?: "Unknown Hero", style = MaterialTheme.typography.titleMedium)
-                                Text(record.result ?: "Unknown Result", style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    record.hero ?: "Unknown Hero",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    record.result ?: "Unknown Result",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
                             }
                         }
                     }
@@ -265,10 +376,6 @@ fun HistoryScreen(
 
         state.userMessage?.let { message ->
             Text(message, style = MaterialTheme.typography.bodyMedium)
-        }
-
-        state.detail?.let { detail ->
-            RecordDetailScreen(state = detail)
         }
     }
 }
@@ -309,27 +416,54 @@ fun RecordDetailScreen(state: DetailScreenUiState) {
     }
 }
 
-private class AndroidScreenshotFileStore : LocalScreenshotFileStore {
-    override fun exists(path: String): Boolean = File(path).exists()
-}
+private suspend fun resolveLaunchState(
+    repository: RoomObservedMatchRepository,
+    coordinator: AppNavigationCoordinator,
+    initialRoute: String?,
+    initialReviewDraft: DraftRecord?
+): AppShellState {
+    if (initialRoute == null) {
+        return withContext(Dispatchers.IO) {
+            coordinator.resolveLaunchState(hasSavedRecords = repository.hasSavedRecords())
+        }
+    }
 
-private class UuidRecordIdProvider : RecordIdProvider {
-    override fun nextId(): String = UUID.randomUUID().toString()
-}
-
-private class SystemSavedAtProvider : SavedAtProvider {
-    override fun now(): Long = System.currentTimeMillis()
-}
-
-private class RoomRecordStoreAdapter(
-    private val repository: RoomObservedMatchRepository
-) : RecordStore {
-    override fun save(record: SavedMatchRecord): SavedMatchRecord {
-        return when (repository.save(record)) {
-            is RepositorySaveResult.Saved -> record
-            is RepositorySaveResult.Error -> {
-                throw IllegalStateException("Could not save record locally.")
+    return when {
+        initialRoute == AppRoute.Import.path() -> AppShellState(
+            currentRoute = AppRoute.Import,
+            currentPath = AppRoute.Import.path(),
+            availableRoutes = AppRoutes.all
+        )
+        initialRoute == AppRoute.History.path() -> AppShellState(
+            currentRoute = AppRoute.History,
+            currentPath = AppRoute.History.path(),
+            availableRoutes = AppRoutes.all
+        )
+        initialRoute == AppRoute.Dashboard.path() -> AppShellState(
+            currentRoute = AppRoute.Dashboard,
+            currentPath = AppRoute.Dashboard.path(),
+            availableRoutes = AppRoutes.all
+        )
+        initialRoute == AppRoute.Review.path() -> {
+            if (initialReviewDraft == null) {
+                coordinator.openReview(
+                    currentState = coordinator.resolveLaunchState(hasSavedRecords = repository.hasSavedRecords()),
+                    draftAvailable = false
+                )
+            } else {
+                AppShellState(
+                    currentRoute = AppRoute.Review,
+                    currentPath = AppRoute.Review.path(),
+                    availableRoutes = AppRoutes.all
+                )
             }
         }
+        initialRoute.startsWith("detail/") -> {
+            val recordId = initialRoute.removePrefix("detail/").ifBlank { null }
+            coordinator.openDetail(recordId)
+        }
+        else -> coordinator.resolveLaunchState(hasSavedRecords = repository.hasSavedRecords()).copy(
+            userMessage = "Could not open the requested screen."
+        )
     }
 }

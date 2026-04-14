@@ -44,13 +44,13 @@ Current feature status:
 
 1. `Done` Android Project Bootstrap And Build Setup
    Spec: [android-project-bootstrap-and-build-setup.md](../specs/android-project-bootstrap-and-build-setup.md)
-2. `Done` Android App Shell And Navigation
+2. `In Progress` Android App Shell And Navigation
    Spec: [android-app-shell-and-navigation.md](../specs/android-app-shell-and-navigation.md)
 3. `Done` Android Photo Picker And File Storage Integration
    Spec: [android-photo-picker-and-file-storage-integration.md](../specs/android-photo-picker-and-file-storage-integration.md)
-4. `Todo` ML Kit Recognition Adapter And Image Region Integration
+4. `Done` ML Kit Recognition Adapter And Image Region Integration
    Spec: [ml-kit-recognition-adapter-and-image-region-integration.md](../specs/ml-kit-recognition-adapter-and-image-region-integration.md)
-5. `In Progress` Compose Review Screen And ViewModel Integration
+5. `Done` Compose Review Screen And ViewModel Integration
    Spec: [compose-review-screen-and-viewmodel-integration.md](../specs/compose-review-screen-and-viewmodel-integration.md)
 6. `Done` Room Repositories And Observed History Dashboard Integration
    Spec: [room-repositories-and-observed-history-dashboard-integration.md](../specs/room-repositories-and-observed-history-dashboard-integration.md)
@@ -66,15 +66,18 @@ What is real now:
 - Android app module, manifest, resources, wrapper, and CI exist
 - Room code generation and Android build wiring are fixed
 - photo picker file copy path exists
+- real ML Kit recognition from stored screenshot into draft generation exists
+- automatic import -> recognition -> review handoff exists in the Android runtime
+- review save can return the user to history in the runtime flow
 - Room-backed history/dashboard runtime exists
-- review runtime UI is being wired into the Android app
+- review runtime UI exists and is exercised by Android tests
 - emulator-backed Android verification is available and in use
 
 What is still missing for the core user journey:
 
-- real screenshot recognition from stored file into the runtime flow
-- automatic handoff from import to review after recognition
-- final end-to-end import -> recognize -> review -> save -> history path
+- merge the Hilt + Navigation Compose shell that replaces the current tab-only root
+- harden route-scoped state ownership for review data after navigation and process recreation
+- broaden end-to-end navigation and failure-path verification around the real app shell
 
 ## Delivery Rules
 
@@ -136,14 +139,13 @@ What is still missing for the core user journey:
 
 Highest-value remaining product gap:
 
-- connect the real picker/storage path to recognition
-- produce a draft from the stored screenshot
-- enter the Android review screen with that draft
-- save successfully into Room and return to history
+- finish landing the spec-compliant Hilt + Navigation Compose app shell
+- then harden review-route state persistence and fallback behavior in the real runtime
+- then expand end-to-end Android verification around import -> review -> save -> history
 
-This means the next implementation focus after the review runtime PR is Feature 4:
+This means the current implementation focus is Feature 2:
 
-- [ml-kit-recognition-adapter-and-image-region-integration.md](../specs/ml-kit-recognition-adapter-and-image-region-integration.md)
+- [android-app-shell-and-navigation.md](../specs/android-app-shell-and-navigation.md)
 
 ## Key Risks
 
