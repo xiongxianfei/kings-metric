@@ -112,6 +112,24 @@ class AppShellNavigationComposeTest {
         }
         composeRule.onNodeWithText("No saved matches yet.").assertIsDisplayed()
     }
+
+    @Test
+    fun emptyLaunch_allowsNavigationToHistoryAndDashboardEmptyStates() {
+        composeRule.setContent {
+            HistoryDashboardRoot(
+                repository = testRepository(),
+                uriStorage = FakeUriScreenshotStorage(),
+                recognizeStoredScreenshot = { com.kingsmetric.importflow.ImportResult.Cancelled },
+                reviewWorkflow = AppShellTestFixtures.workflow()
+            )
+        }
+
+        composeRule.onNodeWithText("History").performClick()
+        composeRule.onNodeWithText("No saved matches yet.").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Dashboard").performClick()
+        composeRule.onNodeWithText("No saved metrics yet.").assertIsDisplayed()
+    }
 }
 
 private fun testRepository(): RoomObservedMatchRepository {
