@@ -125,6 +125,7 @@ If a required spec does not exist, do not invent a full feature contract in code
 - Prefer immutable data structures and explicit state models.
 - Use `sealed` hierarchies for closed UI or domain state models when variants carry different data.
 - Keep validation close to the domain or `ViewModel` layer, not buried in composables.
+- If an Android route depends on in-memory user progress, do not keep that state in plain `remember` alone. Use `rememberSaveable`, `SavedStateHandle`, or another explicit state owner that survives activity recreation.
 - When adding Room, Hilt, or other generated-code Android integrations, wire the required KSP/compiler dependency in the owning Android module before treating the feature as runnable.
 - For generated-code Android features, verify at least `:app:assembleDebug` so missing `_Impl` or generated component classes fail in CI instead of at runtime.
 - If the current Android toolchain uses AGP built-in Kotlin with KSP, preserve the compatibility property in `gradle.properties` unless the toolchain is upgraded and verified without it.

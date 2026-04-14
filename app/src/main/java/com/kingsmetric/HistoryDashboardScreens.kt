@@ -98,7 +98,7 @@ fun HistoryDashboardRoot(
             initialReviewDraft = initialReviewDraft
         )
     }
-    var reviewDraft by remember(initialReviewDraft) { mutableStateOf(initialReviewDraft) }
+    var reviewDraft by rememberReviewDraftState(initialReviewDraft = initialReviewDraft)
     var rootMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     DisposableEffect(historyBinder, dashboardBinder, scope) {

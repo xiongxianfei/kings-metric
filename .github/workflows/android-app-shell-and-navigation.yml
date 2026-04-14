@@ -12,6 +12,7 @@ on:
       - "app/build.gradle.kts"
       - "app/src/main/AndroidManifest.xml"
       - "app/src/main/java/com/kingsmetric/**"
+      - "app/src/test/java/com/kingsmetric/**"
       - "app/src/androidTest/java/com/kingsmetric/**"
       - "src/main/kotlin/com/kingsmetric/app/**"
       - "src/test/kotlin/com/kingsmetric/app/**"
@@ -29,6 +30,7 @@ on:
       - "app/build.gradle.kts"
       - "app/src/main/AndroidManifest.xml"
       - "app/src/main/java/com/kingsmetric/**"
+      - "app/src/test/java/com/kingsmetric/**"
       - "app/src/androidTest/java/com/kingsmetric/**"
       - "src/main/kotlin/com/kingsmetric/app/**"
       - "src/test/kotlin/com/kingsmetric/app/**"
@@ -61,5 +63,6 @@ jobs:
       - name: Assemble Android app shell targets
         run: >
           ./gradlew --no-daemon
+          :app:testDebugUnitTest
           :app:assembleDebug
           :app:assembleDebugAndroidTest
