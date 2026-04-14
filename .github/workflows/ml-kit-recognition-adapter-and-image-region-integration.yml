@@ -7,6 +7,9 @@ on:
       - "build.gradle.kts"
       - "settings.gradle.kts"
       - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "app/src/main/java/com/kingsmetric/app/AndroidMlKitTextRecognition.kt"
+      - "app/src/androidTest/java/com/kingsmetric/AndroidMlKitRecognitionAdapterTest.kt"
       - "specs/ml-kit-recognition-adapter-and-image-region-integration.md"
       - "specs/ml-kit-recognition-adapter-and-image-region-integration.test.md"
       - "src/main/kotlin/com/kingsmetric/app/MlKitRecognitionAdapter.kt"
@@ -21,6 +24,9 @@ on:
       - "build.gradle.kts"
       - "settings.gradle.kts"
       - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "app/src/main/java/com/kingsmetric/app/AndroidMlKitTextRecognition.kt"
+      - "app/src/androidTest/java/com/kingsmetric/AndroidMlKitRecognitionAdapterTest.kt"
       - "specs/ml-kit-recognition-adapter-and-image-region-integration.md"
       - "specs/ml-kit-recognition-adapter-and-image-region-integration.test.md"
       - "src/main/kotlin/com/kingsmetric/app/MlKitRecognitionAdapter.kt"
@@ -52,3 +58,7 @@ jobs:
           ./gradlew --no-daemon :core:test
           --tests "com.kingsmetric.app.MlKitRecognitionAdapterIntegrationTest"
           --tests "com.kingsmetric.importflow.RecognitionPipelineTest"
+
+      - name: Assemble Android ML Kit targets
+        run: >
+          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest

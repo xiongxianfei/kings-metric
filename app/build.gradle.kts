@@ -68,7 +68,7 @@ dependencies {
     implementation("androidx.room:room-runtime:2.8.3")
     ksp("androidx.room:room-compiler:2.8.3")
     implementation("androidx.datastore:datastore:1.1.7")
-    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
