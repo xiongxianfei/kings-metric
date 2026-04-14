@@ -45,11 +45,12 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "9.4.1"
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
 
       - name: Run recognition regression tests
         run: >
-          gradle --no-daemon test
+          ./gradlew --no-daemon :core:test
           --tests "com.kingsmetric.importflow.RecognitionFixtureRegressionTest"
           --tests "com.kingsmetric.importflow.RecognitionPipelineTest"
