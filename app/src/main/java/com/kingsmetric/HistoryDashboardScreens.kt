@@ -6,7 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,8 +14,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -28,13 +34,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.kingsmetric.app.AndroidPhotoPickerImportAdapter
+import com.kingsmetric.app.AppShellChrome
+import com.kingsmetric.app.AppShellDestinationKind
 import com.kingsmetric.app.AndroidPhotoPickerRuntime
 import com.kingsmetric.app.AppNavigationCoordinator
 import com.kingsmetric.app.AppRoute
@@ -64,6 +74,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryDashboardRoot(
     repository: RoomObservedMatchRepository,
@@ -126,176 +137,192 @@ fun HistoryDashboardRoot(
     }
 
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = AppShellChrome.routeForPath(
+        navBackStackEntry?.destination?.route ?: launchState!!.currentPath
+    )
+    val shellChrome = AppShellChrome.forRoute(currentRoute)
 
     LaunchedEffect(launchState) {
         rootMessage = launchState?.userMessage
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = shellChrome.title,
+                        modifier = Modifier.testTag("shell-title")
+                    )
+                },
+                navigationIcon = {
+                    if (shellChrome.kind == AppShellDestinationKind.Secondary) {
+                        TextButton(
+                            onClick = {
+                                when (currentRoute) {
+                                    AppRoute.Review -> {
+                                        if (!navController.popBackStack()) {
+                                            navigatePrimary(navController, AppRoute.Import)
+                                        }
+                                    }
+                                    AppRoute.RecordDetail -> {
+                                        if (!navController.popBackStack()) {
+                                            navigatePrimary(navController, AppRoute.History)
+                                        }
+                                    }
+                                    else -> Unit
+                                }
+                            },
+                            modifier = Modifier.testTag("shell-secondary-action")
+                        ) {
+                            Text(shellChrome.secondaryActionLabel.orEmpty())
+                        }
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            if (shellChrome.kind == AppShellDestinationKind.Primary) {
+                Column(modifier = Modifier.testTag("primary-nav")) {
+                    NavigationBar {
+                        AppShellChrome.primaryRoutes.forEach { route ->
+                            val chrome = AppShellChrome.forRoute(route)
+                            NavigationBarItem(
+                                selected = route == currentRoute,
+                                onClick = { navigatePrimary(navController, route) },
+                                icon = { Text(chrome.navigationLabel.take(1)) },
+                                label = { Text(chrome.navigationLabel) },
+                                modifier = Modifier.testTag("nav-${route.path()}")
+                            )
+                        }
+                    }
+                }
+            }
+        }
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(
-                onClick = {
-                    navController.navigate(AppRoute.Import.path()) {
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            ) {
-                Text("Import")
-            }
-            Button(
-                onClick = {
-                    navController.navigate(AppRoute.History.path()) {
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            ) {
-                Text("History")
-            }
-            Button(
-                onClick = {
-                    navController.navigate(AppRoute.Dashboard.path()) {
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            ) {
-                Text("Dashboard")
-            }
-        }
-
-        rootMessage?.let { message ->
-            Text(message)
-        }
-
-        NavHost(
-            navController = navController,
-            startDestination = launchState!!.currentPath,
-            modifier = Modifier.fillMaxSize()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            composable(AppRoute.Import.pattern) {
-                ImportScreen(
-                    runtime = importRuntime,
-                    testImportedDraft = testImportedDraft,
-                    onReviewDraftReady = { draft ->
-                        reviewDraft = draft
-                        rootMessage = null
-                        navController.navigate(AppRoute.Review.path()) {
-                            launchSingleTop = true
-                        }
-                    }
-                )
+            rootMessage?.let { message ->
+                Text(message)
             }
-            composable(AppRoute.Review.pattern) {
-                val draft = reviewDraft
-                if (draft == null) {
-                    LaunchedEffect(Unit) {
-                        val fallback = navigationCoordinator.openReview(
-                            currentState = navigationCoordinator.resolveLaunchState(hasSavedRecords = repository.hasSavedRecords()),
-                            draftAvailable = false
-                        )
-                        rootMessage = fallback.userMessage
-                        navController.navigate(fallback.currentPath) {
-                            popUpTo(AppRoute.Import.path()) {
-                                inclusive = true
-                            }
-                            launchSingleTop = true
-                        }
-                    }
-                    Text(SharedUxCopy.message(SharedMessageKey.IMPORT_IDLE).text)
-                } else {
-                    val reviewViewModel = remember(draft, reviewWorkflow) {
-                        ReviewScreenViewModel(
-                            draft = draft,
-                            workflow = reviewWorkflow,
-                            previewAvailableResolver = { path ->
-                                path?.let(::File)?.exists() == true
-                            }
-                        )
-                    }
-                    ReviewScreenRoute(
-                        viewModel = reviewViewModel,
-                        onSaveSucceeded = {
-                            navController.navigate(AppRoute.History.path()) {
-                                popUpTo(navController.graph.startDestinationId)
+
+            NavHost(
+                navController = navController,
+                startDestination = launchState!!.currentPath,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                composable(AppRoute.Import.pattern) {
+                    ImportScreen(
+                        runtime = importRuntime,
+                        testImportedDraft = testImportedDraft,
+                        onReviewDraftReady = { draft ->
+                            reviewDraft = draft
+                            rootMessage = null
+                            navController.navigate(AppRoute.Review.path()) {
                                 launchSingleTop = true
                             }
-                            importRuntime.reset()
-                            rootMessage = null
                         }
                     )
                 }
-            }
-            composable(AppRoute.History.pattern) {
-                HistoryScreen(
-                    state = historyState,
-                    onRecordSelected = { recordId ->
-                        navController.navigate(AppRoute.RecordDetail.path(recordId))
-                    }
-                )
-            }
-            composable(AppRoute.Dashboard.pattern) {
-                DashboardScreen(state = dashboardState)
-            }
-            composable(
-                route = AppRoute.RecordDetail.pattern,
-                arguments = listOf(
-                    navArgument("recordId") {
-                        type = NavType.StringType
-                        nullable = true
-                    }
-                )
-            ) { backStackEntry ->
-                val recordId = backStackEntry.arguments?.getString("recordId")
-                LaunchedEffect(recordId) {
-                    if (recordId.isNullOrBlank()) {
-                        val fallback = navigationCoordinator.openDetail(recordId = null)
-                        rootMessage = fallback.userMessage
-                        navController.navigate(fallback.currentPath) {
-                            popUpTo(AppRoute.History.path()) {
-                                inclusive = false
+                composable(AppRoute.Review.pattern) {
+                    val draft = reviewDraft
+                    if (draft == null) {
+                        LaunchedEffect(Unit) {
+                            val fallback = navigationCoordinator.openReview(
+                                currentState = navigationCoordinator.resolveLaunchState(hasSavedRecords = repository.hasSavedRecords()),
+                                draftAvailable = false
+                            )
+                            rootMessage = fallback.userMessage
+                            navController.navigate(fallback.currentPath) {
+                                popUpTo(AppRoute.Import.path()) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
                             }
-                            launchSingleTop = true
                         }
+                        Text(SharedUxCopy.message(SharedMessageKey.IMPORT_IDLE).text)
                     } else {
-                        historyBinder.openDetail(scope, recordId)
+                        val reviewViewModel = remember(draft, reviewWorkflow) {
+                            ReviewScreenViewModel(
+                                draft = draft,
+                                workflow = reviewWorkflow,
+                                previewAvailableResolver = { path ->
+                                    path?.let(::File)?.exists() == true
+                                }
+                            )
+                        }
+                        ReviewScreenRoute(
+                            viewModel = reviewViewModel,
+                            onSaveSucceeded = {
+                                navigatePrimary(navController, AppRoute.History)
+                                importRuntime.reset()
+                                rootMessage = null
+                            }
+                        )
                     }
                 }
-                LaunchedEffect(recordId, historyState.detail, historyState.userMessage) {
-                    if (!recordId.isNullOrBlank() &&
-                        historyState.detail == null &&
-                        historyState.userMessage != null
-                    ) {
-                        rootMessage = historyState.userMessage
-                        navController.navigate(AppRoute.History.path()) {
-                            popUpTo(AppRoute.History.path()) {
-                                inclusive = false
+                composable(AppRoute.History.pattern) {
+                    HistoryScreen(
+                        state = historyState,
+                        onRecordSelected = { recordId ->
+                            navController.navigate(AppRoute.RecordDetail.path(recordId))
+                        }
+                    )
+                }
+                composable(AppRoute.Dashboard.pattern) {
+                    DashboardScreen(state = dashboardState)
+                }
+                composable(
+                    route = AppRoute.RecordDetail.pattern,
+                    arguments = listOf(
+                        navArgument("recordId") {
+                            type = NavType.StringType
+                            nullable = true
+                        }
+                    )
+                ) { backStackEntry ->
+                    val recordId = backStackEntry.arguments?.getString("recordId")
+                    LaunchedEffect(recordId) {
+                        if (recordId.isNullOrBlank()) {
+                            val fallback = navigationCoordinator.openDetail(recordId = null)
+                            rootMessage = fallback.userMessage
+                            navController.navigate(fallback.currentPath) {
+                                popUpTo(AppRoute.History.path()) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
                             }
-                            launchSingleTop = true
+                        } else {
+                            historyBinder.openDetail(scope, recordId)
                         }
                     }
-                }
-                when {
-                    recordId.isNullOrBlank() -> Text("Loading record...")
-                    historyState.detail?.recordId == recordId -> RecordDetailScreen(
-                        state = historyState.detail!!
-                    )
-                    else -> Text("Loading record...")
+                    LaunchedEffect(recordId, historyState.detail, historyState.userMessage) {
+                        if (!recordId.isNullOrBlank() &&
+                            historyState.detail == null &&
+                            historyState.userMessage != null
+                        ) {
+                            rootMessage = historyState.userMessage
+                            navController.navigate(AppRoute.History.path()) {
+                                popUpTo(AppRoute.History.path()) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                    when {
+                        recordId.isNullOrBlank() -> Text("Loading record...")
+                        historyState.detail?.recordId == recordId -> RecordDetailScreen(
+                            state = historyState.detail!!
+                        )
+                        else -> Text("Loading record...")
+                    }
                 }
             }
         }
@@ -375,6 +402,7 @@ fun HistoryScreen(
                     items(content.records, key = { it.recordId }) { record ->
                         Card(
                             modifier = Modifier
+                                .testTag("history-record-${record.recordId}")
                                 .fillMaxWidth()
                                 .clickable { onRecordSelected(record.recordId) }
                         ) {
@@ -433,6 +461,19 @@ fun RecordDetailScreen(state: DetailScreenUiState) {
         state.fields.forEach { field ->
             Text(SharedUxCopy.labeledValue(field.key, field.value))
         }
+    }
+}
+
+private fun navigatePrimary(
+    navController: androidx.navigation.NavHostController,
+    route: AppRoute
+) {
+    navController.navigate(route.path()) {
+        popUpTo(navController.graph.startDestinationId) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }
 
