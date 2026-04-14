@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
@@ -65,6 +66,7 @@ dependencies {
 
     implementation("com.google.dagger:hilt-android:2.57.1")
     implementation("androidx.room:room-runtime:2.8.3")
+    ksp("androidx.room:room-compiler:2.8.3")
     implementation("androidx.datastore:datastore:1.1.7")
     implementation("com.google.mlkit:text-recognition:16.0.1")
 

@@ -57,3 +57,10 @@ Expected behavior:
 - Room-backed repositories support save, history list, detail lookup, and dashboard observation.
 - History and dashboard refresh from observable local data.
 - Missing-record and read/write failures degrade safely.
+
+## Gotchas
+
+- 2026-04-14: This feature is not runnable unless the Android app module also
+  wires Room code generation (`ksp`/compiler dependency). A build that links
+  only `room-runtime` will compile some source files but crash at runtime with
+  `KingsMetricDatabase_Impl does not exist`.
