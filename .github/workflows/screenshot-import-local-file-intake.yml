@@ -45,12 +45,12 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "9.4.1"
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
 
       - name: Run intake and importflow tests
         run: >
-          gradle --no-daemon test
+          ./gradlew --no-daemon :core:test
           --tests "com.kingsmetric.importflow.ScreenshotImportLocalFileIntakeUnitTest"
           --tests "com.kingsmetric.importflow.ScreenshotImportLocalFileIntakeIntegrationTest"
-          --tests "com.kingsmetric.importflow.ImportWorkflowIntegrationTest"

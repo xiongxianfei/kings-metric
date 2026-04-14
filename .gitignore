@@ -6,6 +6,3 @@ out/
 *.iml
 .codex/
 local.properties
-gradle/
-gradlew
-gradlew.bat
