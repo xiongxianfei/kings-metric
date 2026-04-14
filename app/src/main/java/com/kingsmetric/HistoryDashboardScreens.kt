@@ -55,6 +55,7 @@ import com.kingsmetric.app.DashboardScreenUiState
 import com.kingsmetric.app.DetailScreenUiState
 import com.kingsmetric.app.HistoryScreenBinder
 import com.kingsmetric.app.HistoryScreenUiState
+import com.kingsmetric.app.ImportScreenUiStateMapper
 import com.kingsmetric.app.ImportRuntimeStatus
 import com.kingsmetric.app.PreviewAvailability
 import com.kingsmetric.app.ReviewScreenRoute
@@ -337,11 +338,13 @@ fun ImportScreen(
 ) {
     val runtimeState by runtime.state.collectAsState()
     val status = runtimeState.status
+    val model = remember(status) { ImportScreenUiStateMapper().map(status) }
     val scope = rememberCoroutineScope()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         scope.launch {
+            runtime.beginImport()
             withContext(Dispatchers.Default) {
                 runtime.handlePickerResult(uri?.toString())
             }
@@ -353,6 +356,9 @@ fun ImportScreen(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(model.title)
+        Text(model.supportedScreenshotHint)
+
         testImportedDraft?.let { draft ->
             Button(
                 onClick = {
@@ -367,22 +373,32 @@ fun ImportScreen(
                 launcher.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                 )
-            }
+            },
+            modifier = Modifier.testTag("import-primary-action")
         ) {
-            Text(SharedUxCopy.message(SharedMessageKey.IMPORT_ACTION).text)
+            Text(model.primaryActionLabel)
         }
 
+        Text(model.guidance)
+
         when (val current = status) {
-            ImportRuntimeStatus.Idle -> Text(SharedUxCopy.message(SharedMessageKey.IMPORT_IDLE).text)
-            is ImportRuntimeStatus.Failed -> Text(current.message)
+            ImportRuntimeStatus.Idle,
+            ImportRuntimeStatus.InProgress,
+            is ImportRuntimeStatus.Unsupported,
+            is ImportRuntimeStatus.SourceFailed,
+            is ImportRuntimeStatus.StorageFailed,
+            is ImportRuntimeStatus.Failed -> Unit
             is ImportRuntimeStatus.ReviewReady -> {
-                Text(SharedUxCopy.message(SharedMessageKey.IMPORT_REVIEW_READY).text)
                 Text(current.draft.screenshotPath.orEmpty())
-                Button(
-                    onClick = { onReviewDraftReady(current.draft) }
-                ) {
-                    Text("Continue Review")
-                }
+            }
+        }
+
+        val reviewDraft = model.reviewDraft
+        if (model.showContinueReview && reviewDraft != null) {
+            Button(
+                onClick = { onReviewDraftReady(reviewDraft) }
+            ) {
+                Text(model.continueReviewLabel)
             }
         }
     }
