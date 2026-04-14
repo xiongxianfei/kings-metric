@@ -16,6 +16,7 @@ class HistoryDashboardComposeTest {
 
     @Test
     fun historyDashboard_rootTabsRender() {
+        composeRule.onNodeWithText("Import").assertIsDisplayed()
         composeRule.onNodeWithText("History").assertIsDisplayed()
         composeRule.onNodeWithText("Dashboard").assertIsDisplayed()
     }

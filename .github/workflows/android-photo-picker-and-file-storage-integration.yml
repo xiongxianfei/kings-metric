@@ -7,10 +7,17 @@ on:
       - "build.gradle.kts"
       - "settings.gradle.kts"
       - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "app/src/main/java/com/kingsmetric/AndroidUriScreenshotStorage.kt"
+      - "app/src/main/java/com/kingsmetric/HistoryDashboardScreens.kt"
+      - "app/src/androidTest/java/com/kingsmetric/AndroidUriScreenshotStorageTest.kt"
+      - "app/src/androidTest/java/com/kingsmetric/HistoryDashboardComposeTest.kt"
       - "specs/android-photo-picker-and-file-storage-integration.md"
       - "specs/android-photo-picker-and-file-storage-integration.test.md"
       - "src/main/kotlin/com/kingsmetric/app/AndroidPhotoPickerIntegration.kt"
+      - "src/main/kotlin/com/kingsmetric/app/AndroidPhotoPickerRuntime.kt"
       - "src/test/kotlin/com/kingsmetric/app/AndroidPhotoPickerAndFileStorageIntegrationTest.kt"
+      - "src/test/kotlin/com/kingsmetric/app/AndroidPhotoPickerRuntimeWiringTest.kt"
   push:
     branches:
       - main
@@ -20,10 +27,17 @@ on:
       - "build.gradle.kts"
       - "settings.gradle.kts"
       - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "app/src/main/java/com/kingsmetric/AndroidUriScreenshotStorage.kt"
+      - "app/src/main/java/com/kingsmetric/HistoryDashboardScreens.kt"
+      - "app/src/androidTest/java/com/kingsmetric/AndroidUriScreenshotStorageTest.kt"
+      - "app/src/androidTest/java/com/kingsmetric/HistoryDashboardComposeTest.kt"
       - "specs/android-photo-picker-and-file-storage-integration.md"
       - "specs/android-photo-picker-and-file-storage-integration.test.md"
       - "src/main/kotlin/com/kingsmetric/app/AndroidPhotoPickerIntegration.kt"
+      - "src/main/kotlin/com/kingsmetric/app/AndroidPhotoPickerRuntime.kt"
       - "src/test/kotlin/com/kingsmetric/app/AndroidPhotoPickerAndFileStorageIntegrationTest.kt"
+      - "src/test/kotlin/com/kingsmetric/app/AndroidPhotoPickerRuntimeWiringTest.kt"
 
 jobs:
   test:
@@ -49,3 +63,7 @@ jobs:
         run: >
           ./gradlew --no-daemon :core:test
           --tests "com.kingsmetric.app.AndroidPhotoPickerAndFileStorageIntegrationTest"
+          --tests "com.kingsmetric.app.AndroidPhotoPickerRuntimeWiringTest"
+
+      - name: Assemble debug app
+        run: ./gradlew --no-daemon :app:assembleDebug

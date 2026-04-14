@@ -168,3 +168,32 @@ A feature is not done unless all of the following are true:
 - Named failure paths and edge cases from the spec are handled.
 - The user-visible behavior does not silently exceed the agreed scope.
 - Any meaningful assumptions or spec gaps are called out in the final response.
+
+## Code Readability Rules
+
+### Functions
+
+- Prefer small functions that do one thing clearly.
+- Treat roughly 50 lines as a review signal, not a hard limit. Extract only when it improves clarity.
+- Avoid boolean parameters when they obscure intent. Prefer separate named functions or a small sealed/value type when that reads better.
+- Name functions after the action they perform, not the implementation detail.
+
+### Naming
+
+- Variables should describe the value they hold, not repeat the type.
+- Prefer `sessions` over `sessionList`, `isValid` over `validFlag`.
+- Prefer clear verb-led function names such as `validateInput()` over vague names such as `check()`.
+- Avoid abbreviations unless they are standard in the codebase or broadly universal, such as `id`, `url`, or `db`.
+
+### Structure
+
+- Prefer one primary class, interface, or object per file when practical.
+- File names should match the main type they contain.
+- Keep public API near the top and private helpers near the bottom when that improves scanability.
+- Group related behavior together. Add a short section comment only when it reduces real ambiguity.
+
+### Comments
+
+- Do not add comments that merely restate the code.
+- Add comments for non-obvious business rules, invariants, edge-case handling, or justified workarounds.
+- When documenting a workaround or limitation, include the reason and a concrete reference when one exists.

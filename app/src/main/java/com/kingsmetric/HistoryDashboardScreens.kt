@@ -1,5 +1,8 @@
 package com.kingsmetric
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,9 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.room.Room
+import com.kingsmetric.app.AndroidPhotoPickerRuntime
 import com.kingsmetric.app.DashboardScreenBinder
 import com.kingsmetric.app.DashboardScreenUiState
 import com.kingsmetric.app.DetailScreenUiState
+import com.kingsmetric.app.ImportRuntimeStatus
 import com.kingsmetric.app.HistoryScreenBinder
 import com.kingsmetric.app.HistoryScreenUiState
 import com.kingsmetric.app.PreviewAvailability
@@ -44,6 +48,7 @@ import java.io.File
 import java.util.UUID
 
 private enum class HomeTab {
+    Import,
     History,
     Dashboard
 }
@@ -66,10 +71,20 @@ fun HistoryDashboardRoot() {
     }
     val historyBinder = remember(repository) { HistoryScreenBinder(repository) }
     val dashboardBinder = remember(repository) { DashboardScreenBinder(repository) }
+    val importRuntime = remember(context) {
+        AndroidPhotoPickerRuntime(
+            adapter = com.kingsmetric.app.AndroidPhotoPickerImportAdapter(
+                uriStorage = AndroidUriScreenshotStorage(context),
+                importStarter = { _: com.kingsmetric.app.ImportedScreenshotRequest ->
+                    com.kingsmetric.importflow.ImportResult.Cancelled
+                }
+            )
+        )
+    }
     val scope = rememberCoroutineScope()
     val historyState by historyBinder.state.collectAsState()
     val dashboardState by dashboardBinder.state.collectAsState()
-    var selectedTab by rememberSaveable { mutableStateOf(HomeTab.History) }
+    var selectedTab by rememberSaveable { mutableStateOf(HomeTab.Import) }
 
     DisposableEffect(historyBinder, dashboardBinder, scope) {
         val historyJob = historyBinder.bind(scope)
@@ -87,6 +102,9 @@ fun HistoryDashboardRoot() {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Button(onClick = { selectedTab = HomeTab.Import }) {
+                Text("Import")
+            }
             Button(onClick = { selectedTab = HomeTab.History }) {
                 Text("History")
             }
@@ -96,6 +114,7 @@ fun HistoryDashboardRoot() {
         }
 
         when (selectedTab) {
+            HomeTab.Import -> ImportScreen(runtime = importRuntime)
             HomeTab.History -> HistoryScreen(
                 state = historyState,
                 onRecordSelected = { recordId ->
@@ -103,6 +122,40 @@ fun HistoryDashboardRoot() {
                 }
             )
             HomeTab.Dashboard -> DashboardScreen(state = dashboardState)
+        }
+    }
+}
+
+@Composable
+fun ImportScreen(runtime: AndroidPhotoPickerRuntime) {
+    var status by remember(runtime) { mutableStateOf(runtime.state.status) }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        runtime.handlePickerResult(uri?.toString())
+        status = runtime.state.status
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Button(
+            onClick = {
+                launcher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
+        ) {
+            Text("Import Screenshot")
+        }
+
+        when (val current = status) {
+            ImportRuntimeStatus.Idle -> Text("Select one screenshot to import.")
+            is ImportRuntimeStatus.ReadyForRecognition -> {
+                Text("Imported screenshot ready.")
+                Text(current.request.localPath)
+            }
+            is ImportRuntimeStatus.Failed -> {
+                Text("Import failed: ${current.failure.name}")
+            }
         }
     }
 }
