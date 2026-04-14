@@ -52,5 +52,5 @@ jobs:
       - name: Run intake and importflow tests
         run: >
           ./gradlew --no-daemon :core:test
-          --tests "com.kingsmetric.importflow.ScreenshotImportLocalFileIntakeTest"
-          --tests "com.kingsmetric.importflow.ImportFeatureTest"
+          --tests "com.kingsmetric.importflow.ScreenshotImportLocalFileIntakeUnitTest"
+          --tests "com.kingsmetric.importflow.ScreenshotImportLocalFileIntakeIntegrationTest"

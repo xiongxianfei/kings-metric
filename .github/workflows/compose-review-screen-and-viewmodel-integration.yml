@@ -1,0 +1,59 @@
+name: Compose Review Screen And ViewModel Integration
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/compose-review-screen-and-viewmodel-integration.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "specs/compose-review-screen-and-viewmodel-integration.md"
+      - "specs/compose-review-screen-and-viewmodel-integration.test.md"
+      - "src/main/kotlin/com/kingsmetric/app/ReviewScreenIntegration.kt"
+      - "src/test/kotlin/com/kingsmetric/app/ComposeReviewScreenAndViewModelIntegrationTest.kt"
+      - "src/main/kotlin/com/kingsmetric/importflow/**"
+  push:
+    branches:
+      - main
+      - feature/**
+    paths:
+      - ".github/workflows/compose-review-screen-and-viewmodel-integration.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "specs/compose-review-screen-and-viewmodel-integration.md"
+      - "specs/compose-review-screen-and-viewmodel-integration.test.md"
+      - "src/main/kotlin/com/kingsmetric/app/ReviewScreenIntegration.kt"
+      - "src/test/kotlin/com/kingsmetric/app/ComposeReviewScreenAndViewModelIntegrationTest.kt"
+      - "src/main/kotlin/com/kingsmetric/importflow/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: >
+      ${{
+        hashFiles('src/main/kotlin/com/kingsmetric/app/ReviewScreenIntegration.kt') != '' &&
+        hashFiles('src/test/kotlin/com/kingsmetric/app/ComposeReviewScreenAndViewModelIntegrationTest.kt') != ''
+      }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run review screen integration tests
+        run: >
+          ./gradlew --no-daemon :core:test
+          --tests "com.kingsmetric.app.ComposeReviewScreenAndViewModelIntegrationTest"
+          --tests "com.kingsmetric.importflow.ReviewAndManualCorrectionFlowTest"
