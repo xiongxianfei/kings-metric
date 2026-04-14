@@ -6,6 +6,16 @@ sealed class AppRoute(val pattern: String) {
     data object History : AppRoute("history")
     data object Dashboard : AppRoute("dashboard")
     data object RecordDetail : AppRoute("detail/{recordId}")
+
+    fun path(recordId: String? = null): String {
+        return when (this) {
+            Import -> "import"
+            Review -> "review"
+            History -> "history"
+            Dashboard -> "dashboard"
+            RecordDetail -> "detail/${recordId ?: "{recordId}"}"
+        }
+    }
 }
 
 object AppRoutes {
@@ -78,16 +88,6 @@ class AppNavigationCoordinator {
                 currentPath = AppRoute.RecordDetail.path(recordId),
                 availableRoutes = AppRoutes.all
             )
-        }
-    }
-
-    private fun AppRoute.path(recordId: String? = null): String {
-        return when (this) {
-            AppRoute.Import -> "import"
-            AppRoute.Review -> "review"
-            AppRoute.History -> "history"
-            AppRoute.Dashboard -> "dashboard"
-            AppRoute.RecordDetail -> "detail/${recordId ?: "{recordId}"}"
         }
     }
 }

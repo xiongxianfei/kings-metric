@@ -50,6 +50,9 @@ interface SavedMatchDao {
     @Query("SELECT * FROM saved_matches ORDER BY savedAt DESC, recordId ASC")
     fun observeAll(): Flow<List<SavedMatchEntity>>
 
+    @Query("SELECT COUNT(*) FROM saved_matches")
+    fun countAll(): Int
+
     @Query("SELECT * FROM saved_matches WHERE recordId = :recordId LIMIT 1")
     fun getById(recordId: String): SavedMatchEntity?
 
@@ -87,6 +90,14 @@ class RoomObservedMatchRepository(
     private val savedAtProvider: SavedAtProvider,
     private val calculator: DashboardMetricsCalculator = DashboardMetricsCalculator()
 ) {
+
+    fun hasSavedRecords(): Boolean {
+        return try {
+            dao.countAll() > 0
+        } catch (_: IllegalStateException) {
+            false
+        }
+    }
 
     fun save(record: SavedMatchRecord): RepositorySaveResult {
         val entity = record.toEntity(
