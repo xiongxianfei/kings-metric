@@ -93,12 +93,13 @@ jobs:
       - name: Run Android app shell instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 34
           arch: x86_64
-          target: google_apis
+          target: default
           profile: pixel
+          emulator-boot-timeout: 900
           disable-animations: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: >
             ./gradlew --no-daemon :app:connectedDebugAndroidTest
             -Pandroid.testInstrumentationRunnerArguments.class=com.kingsmetric.AppShellNavigationComposeTest
