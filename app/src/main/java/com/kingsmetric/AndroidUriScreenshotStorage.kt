@@ -16,8 +16,11 @@ class AndroidUriScreenshotStorage(
 
     override fun copyFromUri(uri: String): StoredUriScreenshot {
         val parsedUri = Uri.parse(uri)
-        val inputStream = context.contentResolver.openInputStream(parsedUri)
-            ?: throw UnreadableUriException()
+        val inputStream = try {
+            context.contentResolver.openInputStream(parsedUri)
+        } catch (_: Exception) {
+            throw UnreadableUriException()
+        } ?: throw UnreadableUriException()
         inputStream.use { input ->
             val screenshotId = idProvider()
             val targetDirectory = File(context.filesDir, screenshotDirectoryName)
