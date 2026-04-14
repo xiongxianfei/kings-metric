@@ -69,7 +69,8 @@ fun HistoryDashboardRoot(
     reviewWorkflow: MatchImportWorkflow,
     navigationCoordinator: AppNavigationCoordinator = remember { AppNavigationCoordinator() },
     initialRoute: String? = null,
-    initialReviewDraft: DraftRecord? = null
+    initialReviewDraft: DraftRecord? = null,
+    testImportedDraft: DraftRecord? = null
 ) {
     val historyBinder = remember(repository) { HistoryScreenBinder(repository) }
     val dashboardBinder = remember(repository) { DashboardScreenBinder(repository) }
@@ -187,6 +188,7 @@ fun HistoryDashboardRoot(
             composable(AppRoute.Import.pattern) {
                 ImportScreen(
                     runtime = importRuntime,
+                    testImportedDraft = testImportedDraft,
                     onReviewDraftReady = { draft ->
                         reviewDraft = draft
                         rootMessage = null
@@ -300,6 +302,7 @@ fun HistoryDashboardRoot(
 @Composable
 fun ImportScreen(
     runtime: AndroidPhotoPickerRuntime,
+    testImportedDraft: DraftRecord? = null,
     onReviewDraftReady: (DraftRecord) -> Unit
 ) {
     var status by remember(runtime) { mutableStateOf(runtime.state.status) }
@@ -320,6 +323,16 @@ fun ImportScreen(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        testImportedDraft?.let { draft ->
+            Button(
+                onClick = {
+                    status = ImportRuntimeStatus.ReviewReady(draft)
+                    onReviewDraftReady(draft)
+                }
+            ) {
+                Text("Use Test Draft")
+            }
+        }
         Button(
             onClick = {
                 launcher.launch(

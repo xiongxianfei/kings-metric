@@ -76,3 +76,15 @@ Expected behavior:
   `remember` state. Persist it with `rememberSaveable`, `SavedStateHandle`, or
   another explicit shell-owned state mechanism, and cover the save/restore
   codec with a deterministic test.
+- 2026-04-14: The real import route depends on the system photo picker, which
+  is not a stable Compose-test surface for shell navigation tests. Keep the
+  production picker path unchanged, but add the smallest shell-level test seam
+  needed to drive import -> review -> save navigation deterministically.
+- 2026-04-14: App-shell emulator jobs are expensive and easy to duplicate. For
+  this feature, use `pull_request` plus `push` on `main` rather than also
+  running the same workflow on feature-branch `push`, and add `concurrency` so
+  stale emulator runs are cancelled.
+- 2026-04-14: Hosted-runner emulator stability is not neutral. API/profile
+  combinations that work locally may fail in action-managed post-boot setup.
+  Keep the workflow on a proven emulator configuration and scope connected
+  tests to the app-shell instrumentation class when possible.

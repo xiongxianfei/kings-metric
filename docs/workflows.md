@@ -24,11 +24,23 @@ forces generated-code wiring to execute.
   state serializer or codec with a deterministic unit test. Emulator-side
   state-restoration tooling can fail for framework reasons that are unrelated
   to the actual save/restore logic.
+- If an end-to-end Android flow depends on Photo Picker, permissions UI, or
+  another system surface, keep the real business/runtime path intact but add a
+  narrow shell-level test hook before the framework boundary so Compose
+  instrumentation can still verify navigation and save behavior deterministically.
+- For feature-scoped CI, prefer `pull_request` plus `push` on `main` only.
+  Running the same workflow on feature-branch `push` and `pull_request`
+  duplicates expensive emulator work and makes failures harder to read.
+- Add `concurrency` to expensive workflows so stale branch runs are cancelled.
 - Keep repository-specific Kotlin/KSP compatibility properties in place
   until the toolchain is upgraded and re-verified. Removing them can turn a
   compile-time wiring problem into a runtime crash.
 - Treat "generated implementation does not exist" failures as build wiring
   bugs first, not runtime-only bugs.
+- Treat emulator API level, profile, and post-boot setup options as explicit
+  stability choices. If a hosted runner repeatedly fails during emulator boot
+  or action-managed device setup, prefer a proven API/profile combination and
+  narrow the connected test command to the relevant test class.
 
 ---
 

@@ -19,7 +19,6 @@ on:
   push:
     branches:
       - main
-      - feature/**
     paths:
       - ".github/workflows/android-app-shell-and-navigation.yml"
       - "build.gradle.kts"
@@ -34,6 +33,10 @@ on:
       - "app/src/androidTest/java/com/kingsmetric/**"
       - "src/main/kotlin/com/kingsmetric/app/**"
       - "src/test/kotlin/com/kingsmetric/app/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -66,3 +69,37 @@ jobs:
           :app:testDebugUnitTest
           :app:assembleDebug
           :app:assembleDebugAndroidTest
+
+  android-instrumented:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run Android app shell instrumentation tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: default
+          profile: pixel
+          emulator-boot-timeout: 900
+          disable-animations: false
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: >
+            ./gradlew --no-daemon :app:connectedDebugAndroidTest
+            -Pandroid.testInstrumentationRunnerArguments.class=com.kingsmetric.AppShellNavigationComposeTest

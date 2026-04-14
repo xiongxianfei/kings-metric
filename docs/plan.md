@@ -70,6 +70,7 @@ What is real now:
 - automatic import -> recognition -> review handoff exists in the Android runtime
 - review save can return the user to history in the runtime flow
 - review-route draft state now has explicit saveable persistence inside the app shell
+- app-shell instrumentation now covers import -> review -> save -> history with a deterministic shell test seam
 - Room-backed history/dashboard runtime exists
 - review runtime UI exists and is exercised by Android tests
 - emulator-backed Android verification is available and in use
@@ -77,7 +78,7 @@ What is real now:
 What is still missing for the core user journey:
 
 - merge the Hilt + Navigation Compose shell that replaces the current tab-only root
-- broaden end-to-end navigation and failure-path verification around the real app shell
+- broaden failure-path verification around the real app shell beyond the current happy-path shell flow
 
 ## Delivery Rules
 
@@ -140,8 +141,8 @@ What is still missing for the core user journey:
 Highest-value remaining product gap:
 
 - finish landing the spec-compliant Hilt + Navigation Compose app shell
-- then expand end-to-end Android verification around import -> review -> save -> history
-- then harden any remaining shell fallback paths exposed by device/emulator runs
+- then harden remaining shell fallback paths exposed by device/emulator runs
+- then expand failure-path Android verification around import, review, detail, and history routing
 
 This means the current implementation focus is Feature 2:
 
