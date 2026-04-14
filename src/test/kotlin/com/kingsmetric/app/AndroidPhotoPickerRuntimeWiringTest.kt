@@ -1,6 +1,10 @@
 package com.kingsmetric.app
 
 import com.kingsmetric.importflow.ImportResult
+import com.kingsmetric.importflow.DraftParser
+import com.kingsmetric.importflow.FieldKey
+import com.kingsmetric.importflow.ReviewState
+import com.kingsmetric.importflow.StoredScreenshot
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -15,16 +19,36 @@ class AndroidPhotoPickerRuntimeWiringTest {
     }
 
     @Test
-    fun `T2 successful picker import updates runtime with stored screenshot request`() {
-        val runtime = photoPickerRuntime()
+    fun `T2 successful picker import updates runtime with a reviewable draft`() {
+        val runtime = photoPickerRuntime(
+            recognizeImportedScreenshot = { request ->
+                ImportResult.DraftReady(
+                    storedScreenshot = StoredScreenshot(
+                        id = request.screenshotId,
+                        path = request.localPath,
+                        originalSourcePath = request.originalUri
+                    ),
+                    draft = RuntimeFixtures.supportedDraft().copy(
+                        screenshotId = request.screenshotId,
+                        screenshotPath = request.localPath
+                    ),
+                    reviewState = ReviewState.fromDraft(
+                        RuntimeFixtures.supportedDraft().copy(
+                            screenshotId = request.screenshotId,
+                            screenshotPath = request.localPath
+                        )
+                    )
+                )
+            }
+        )
 
         runtime.handlePickerResult("content://shots/1")
 
         val status = runtime.state.status
-        assertTrue(status is ImportRuntimeStatus.ReadyForRecognition)
-        status as ImportRuntimeStatus.ReadyForRecognition
-        assertEquals("content://shots/1", status.request.originalUri)
-        assertEquals("shot-1", status.request.screenshotId)
+        assertTrue(status is ImportRuntimeStatus.ReviewReady)
+        status as ImportRuntimeStatus.ReviewReady
+        assertEquals("shot-1", status.draft.screenshotId)
+        assertEquals("stored/shot-1-content__shots_1.png", status.draft.screenshotPath)
     }
 
     @Test
@@ -49,24 +73,60 @@ class AndroidPhotoPickerRuntimeWiringTest {
         storageFailure.handlePickerResult("content://shots/copy-fails")
 
         assertEquals(
-            ImportRuntimeStatus.Failed(PickerFailure.UNREADABLE_SOURCE),
+            ImportRuntimeStatus.Failed("Could not import screenshot from the selected source."),
             unreadable.state.status
         )
         assertEquals(
-            ImportRuntimeStatus.Failed(PickerFailure.LOCAL_STORAGE),
+            ImportRuntimeStatus.Failed("Could not save screenshot locally."),
             storageFailure.state.status
+        )
+    }
+
+    @Test
+    fun `T5 unsupported or failed recognition becomes a retryable runtime failure`() {
+        val unsupported = photoPickerRuntime(
+            recognizeImportedScreenshot = { ImportResult.Unsupported("Unsupported screenshot.") }
+        )
+        val failed = photoPickerRuntime(
+            recognizeImportedScreenshot = { ImportResult.ImportFailed("Could not extract screenshot data for review.") }
+        )
+
+        unsupported.handlePickerResult("content://shots/unsupported")
+        failed.handlePickerResult("content://shots/failed")
+
+        assertEquals(
+            ImportRuntimeStatus.Failed("Unsupported screenshot."),
+            unsupported.state.status
+        )
+        assertEquals(
+            ImportRuntimeStatus.Failed("Could not extract screenshot data for review."),
+            failed.state.status
         )
     }
 }
 
 private fun photoPickerRuntime(
     uriStorage: UriScreenshotStorage = FakeUriScreenshotStorage(),
-    importStarter: (ImportedScreenshotRequest) -> ImportResult = { ImportResult.Cancelled }
+    importStarter: (ImportedScreenshotRequest) -> ImportResult = { ImportResult.Cancelled },
+    recognizeImportedScreenshot: (ImportedScreenshotRequest) -> ImportResult = { ImportResult.Cancelled }
 ): AndroidPhotoPickerRuntime {
     return AndroidPhotoPickerRuntime(
         adapter = AndroidPhotoPickerImportAdapter(
             uriStorage = uriStorage,
             importStarter = importStarter
-        )
+        ),
+        recognizeImportedScreenshot = recognizeImportedScreenshot
+    )
+}
+
+private object RuntimeFixtures {
+    private val parser = DraftParser()
+
+    fun supportedDraft() = parser.createDraft(
+        analysis = MlKitFixtures.supportedAnalysis(
+            visibleFields = FieldKey.all
+        ),
+        screenshotId = "shot-1",
+        screenshotPath = "stored/shot-1.png"
     )
 }

@@ -29,6 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.room.Room
+import com.kingsmetric.app.AndroidBitmapLoader
+import com.kingsmetric.app.AndroidMlKitTextRecognizer
 import com.kingsmetric.app.AndroidPhotoPickerRuntime
 import com.kingsmetric.app.DashboardScreenBinder
 import com.kingsmetric.app.DashboardScreenUiState
@@ -36,16 +38,31 @@ import com.kingsmetric.app.DetailScreenUiState
 import com.kingsmetric.app.ImportRuntimeStatus
 import com.kingsmetric.app.HistoryScreenBinder
 import com.kingsmetric.app.HistoryScreenUiState
+import com.kingsmetric.app.MlKitRecognitionAdapter
 import com.kingsmetric.app.PreviewAvailability
+import com.kingsmetric.app.ReviewScreenRoute
+import com.kingsmetric.app.ReviewScreenViewModel
 import com.kingsmetric.data.local.KingsMetricDatabase
 import com.kingsmetric.data.local.LocalScreenshotFileStore
 import com.kingsmetric.data.local.RecordIdProvider
+import com.kingsmetric.data.local.RepositorySaveResult
 import com.kingsmetric.data.local.RoomObservedMatchRepository
 import com.kingsmetric.data.local.SavedAtProvider
 import com.kingsmetric.dashboard.DashboardContentState
 import com.kingsmetric.history.HistoryContentState
+import com.kingsmetric.importflow.DraftParser
+import com.kingsmetric.importflow.DraftRecord
+import com.kingsmetric.importflow.FakeScreenshotAnalyzer
+import com.kingsmetric.importflow.FakeScreenshotStore
+import com.kingsmetric.importflow.MatchImportWorkflow
+import com.kingsmetric.importflow.RecordStore
+import com.kingsmetric.importflow.SavedMatchRecord
+import com.kingsmetric.importflow.TemplateValidator
 import java.io.File
 import java.util.UUID
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private enum class HomeTab {
     Import,
@@ -71,6 +88,21 @@ fun HistoryDashboardRoot() {
     }
     val historyBinder = remember(repository) { HistoryScreenBinder(repository) }
     val dashboardBinder = remember(repository) { DashboardScreenBinder(repository) }
+    val recognitionAdapter = remember(context) {
+        MlKitRecognitionAdapter(
+            bitmapLoader = AndroidBitmapLoader(),
+            recognizer = AndroidMlKitTextRecognizer(context)
+        )
+    }
+    val reviewWorkflow = remember(repository) {
+        MatchImportWorkflow(
+            screenshotStore = FakeScreenshotStore(),
+            analyzer = FakeScreenshotAnalyzer(emptyMap()),
+            recordStore = RoomRecordStoreAdapter(repository),
+            validator = TemplateValidator(),
+            parser = DraftParser()
+        )
+    }
     val importRuntime = remember(context) {
         AndroidPhotoPickerRuntime(
             adapter = com.kingsmetric.app.AndroidPhotoPickerImportAdapter(
@@ -78,13 +110,17 @@ fun HistoryDashboardRoot() {
                 importStarter = { _: com.kingsmetric.app.ImportedScreenshotRequest ->
                     com.kingsmetric.importflow.ImportResult.Cancelled
                 }
-            )
+            ),
+            recognizeImportedScreenshot = { request ->
+                recognitionAdapter.recognize(request.localPath)
+            }
         )
     }
     val scope = rememberCoroutineScope()
     val historyState by historyBinder.state.collectAsState()
     val dashboardState by dashboardBinder.state.collectAsState()
     var selectedTab by rememberSaveable { mutableStateOf(HomeTab.Import) }
+    var reviewDraft by remember { mutableStateOf<DraftRecord?>(null) }
 
     DisposableEffect(historyBinder, dashboardBinder, scope) {
         val historyJob = historyBinder.bind(scope)
@@ -114,7 +150,35 @@ fun HistoryDashboardRoot() {
         }
 
         when (selectedTab) {
-            HomeTab.Import -> ImportScreen(runtime = importRuntime)
+            HomeTab.Import -> {
+                if (reviewDraft != null) {
+                    val draft = reviewDraft ?: error("review draft missing")
+                    val reviewViewModel = remember(draft, reviewWorkflow) {
+                        ReviewScreenViewModel(
+                            draft = draft,
+                            workflow = reviewWorkflow,
+                            previewAvailableResolver = { path ->
+                                path?.let(::File)?.exists() == true
+                            }
+                        )
+                    }
+                    ReviewScreenRoute(
+                        viewModel = reviewViewModel,
+                        onSaveSucceeded = {
+                            reviewDraft = null
+                            importRuntime.reset()
+                            selectedTab = HomeTab.History
+                        }
+                    )
+                } else {
+                    ImportScreen(
+                        runtime = importRuntime,
+                        onReviewDraftReady = { draft ->
+                            reviewDraft = draft
+                        }
+                    )
+                }
+            }
             HomeTab.History -> HistoryScreen(
                 state = historyState,
                 onRecordSelected = { recordId ->
@@ -127,13 +191,25 @@ fun HistoryDashboardRoot() {
 }
 
 @Composable
-fun ImportScreen(runtime: AndroidPhotoPickerRuntime) {
+fun ImportScreen(
+    runtime: AndroidPhotoPickerRuntime,
+    onReviewDraftReady: (DraftRecord) -> Unit
+) {
     var status by remember(runtime) { mutableStateOf(runtime.state.status) }
+    val scope = rememberCoroutineScope()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        runtime.handlePickerResult(uri?.toString())
-        status = runtime.state.status
+        scope.launch {
+            val updated = withContext(Dispatchers.Default) {
+                runtime.handlePickerResult(uri?.toString())
+                runtime.state.status
+            }
+            status = updated
+            if (updated is ImportRuntimeStatus.ReviewReady) {
+                onReviewDraftReady(updated.draft)
+            }
+        }
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -149,12 +225,12 @@ fun ImportScreen(runtime: AndroidPhotoPickerRuntime) {
 
         when (val current = status) {
             ImportRuntimeStatus.Idle -> Text("Select one screenshot to import.")
-            is ImportRuntimeStatus.ReadyForRecognition -> {
-                Text("Imported screenshot ready.")
-                Text(current.request.localPath)
-            }
             is ImportRuntimeStatus.Failed -> {
-                Text("Import failed: ${current.failure.name}")
+                Text(current.message)
+            }
+            is ImportRuntimeStatus.ReviewReady -> {
+                Text("Review draft ready.")
+                Text(current.draft.screenshotPath.orEmpty())
             }
         }
     }
@@ -243,4 +319,17 @@ private class UuidRecordIdProvider : RecordIdProvider {
 
 private class SystemSavedAtProvider : SavedAtProvider {
     override fun now(): Long = System.currentTimeMillis()
+}
+
+private class RoomRecordStoreAdapter(
+    private val repository: RoomObservedMatchRepository
+) : RecordStore {
+    override fun save(record: SavedMatchRecord): SavedMatchRecord {
+        return when (repository.save(record)) {
+            is RepositorySaveResult.Saved -> record
+            is RepositorySaveResult.Error -> {
+                throw IllegalStateException("Could not save record locally.")
+            }
+        }
+    }
 }
