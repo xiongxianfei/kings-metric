@@ -7,6 +7,9 @@ on:
       - "build.gradle.kts"
       - "settings.gradle.kts"
       - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "app/src/main/java/com/kingsmetric/app/ReviewScreenRoute.kt"
+      - "app/src/androidTest/java/com/kingsmetric/ReviewScreenComposeTest.kt"
       - "specs/compose-review-screen-and-viewmodel-integration.md"
       - "specs/compose-review-screen-and-viewmodel-integration.test.md"
       - "src/main/kotlin/com/kingsmetric/app/ReviewScreenIntegration.kt"
@@ -21,6 +24,9 @@ on:
       - "build.gradle.kts"
       - "settings.gradle.kts"
       - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "app/src/main/java/com/kingsmetric/app/ReviewScreenRoute.kt"
+      - "app/src/androidTest/java/com/kingsmetric/ReviewScreenComposeTest.kt"
       - "specs/compose-review-screen-and-viewmodel-integration.md"
       - "specs/compose-review-screen-and-viewmodel-integration.test.md"
       - "src/main/kotlin/com/kingsmetric/app/ReviewScreenIntegration.kt"
@@ -52,3 +58,7 @@ jobs:
           ./gradlew --no-daemon :core:test
           --tests "com.kingsmetric.app.ComposeReviewScreenAndViewModelIntegrationTest"
           --tests "com.kingsmetric.importflow.ReviewAndManualCorrectionFlowTest"
+
+      - name: Assemble Android review targets
+        run: >
+          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest

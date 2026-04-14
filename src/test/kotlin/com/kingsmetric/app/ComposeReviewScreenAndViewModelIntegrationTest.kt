@@ -24,7 +24,7 @@ class ComposeReviewScreenAndViewModelIntegrationTest {
     fun `T1 review ViewModel exposes screenshot path field state and confirm availability from a draft`() {
         val viewModel = reviewViewModel(draft = ReviewScreenFixtures.supportedDraft())
 
-        val state = viewModel.state
+        val state = viewModel.state.value
 
         assertEquals("stored/1-fixture.png", state.screenshotPath)
         assertTrue(state.fields.isNotEmpty())
@@ -37,7 +37,7 @@ class ComposeReviewScreenAndViewModelIntegrationTest {
 
         viewModel.updateField(FieldKey.KDA, "11/1/5")
 
-        val state = viewModel.state
+        val state = viewModel.state.value
         assertEquals("11/1/5", state.fields.getValue(FieldKey.KDA).value)
         assertFalse(state.blockingFields.contains(FieldKey.KDA))
     }
@@ -50,7 +50,7 @@ class ComposeReviewScreenAndViewModelIntegrationTest {
         val result = viewModel.confirmSave()
 
         assertTrue(result is SaveResult.Blocked)
-        assertEquals("Farm Lane", viewModel.state.fields.getValue(FieldKey.LANE).value)
+        assertEquals("Farm Lane", viewModel.state.value.fields.getValue(FieldKey.LANE).value)
     }
 
     @Test
@@ -78,7 +78,8 @@ class ComposeReviewScreenAndViewModelIntegrationTest {
     @Test
     fun `IT3 missing screenshot preview shows unavailable-preview UI while field data remains visible`() {
         val screen = reviewScreen(
-            draft = ReviewScreenFixtures.supportedDraft().copy(screenshotPath = null)
+            draft = ReviewScreenFixtures.supportedDraft(),
+            previewAvailable = false
         )
 
         val model = screen.render()
@@ -99,20 +100,27 @@ class ComposeReviewScreenAndViewModelIntegrationTest {
         val result = viewModel.confirmSave()
 
         assertTrue(result is SaveResult.StorageFailed)
-        assertEquals("Farm Lane", viewModel.state.fields.getValue(FieldKey.LANE).value)
-        assertEquals(ReviewScreenStatus.Reviewing, viewModel.state.status)
+        assertEquals("Farm Lane", viewModel.state.value.fields.getValue(FieldKey.LANE).value)
+        assertEquals(ReviewScreenStatus.Reviewing, viewModel.state.value.status)
     }
 }
 
-private fun reviewViewModel(draft: DraftRecord): ReviewScreenViewModel {
+private fun reviewViewModel(
+    draft: DraftRecord,
+    previewAvailable: Boolean = true
+): ReviewScreenViewModel {
     return ReviewScreenViewModel(
         draft = draft,
-        workflow = ReviewScreenFixtures.workflow()
+        workflow = ReviewScreenFixtures.workflow(),
+        previewAvailableResolver = { previewAvailable }
     )
 }
 
-private fun reviewScreen(draft: DraftRecord): ReviewScreen {
-    return ReviewScreen(reviewViewModel(draft))
+private fun reviewScreen(
+    draft: DraftRecord,
+    previewAvailable: Boolean = true
+): ReviewScreen {
+    return ReviewScreen(reviewViewModel(draft, previewAvailable))
 }
 
 private object ReviewScreenFixtures {
