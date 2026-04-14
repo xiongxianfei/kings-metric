@@ -8,6 +8,10 @@ import kotlinx.coroutines.flow.asStateFlow
 
 sealed interface ImportRuntimeStatus {
     data object Idle : ImportRuntimeStatus
+    data object InProgress : ImportRuntimeStatus
+    data class Unsupported(val message: String) : ImportRuntimeStatus
+    data class SourceFailed(val message: String) : ImportRuntimeStatus
+    data class StorageFailed(val message: String) : ImportRuntimeStatus
     data class ReviewReady(val draft: DraftRecord) : ImportRuntimeStatus
     data class Failed(val message: String) : ImportRuntimeStatus
 }
@@ -27,6 +31,10 @@ class AndroidPhotoPickerRuntime(
         _state.value = ImportRuntimeUiState(ImportRuntimeStatus.Idle)
     }
 
+    fun beginImport() {
+        _state.value = ImportRuntimeUiState(ImportRuntimeStatus.InProgress)
+    }
+
     fun handlePickerResult(uri: String?) {
         _state.value = when (val result = adapter.handlePickerResult(uri)) {
             PickerImportResult.Idle -> ImportRuntimeUiState(ImportRuntimeStatus.Idle)
@@ -37,7 +45,7 @@ class AndroidPhotoPickerRuntime(
                     }
                     is ImportResult.Unsupported -> {
                         ImportRuntimeUiState(
-                            ImportRuntimeStatus.Failed(
+                            ImportRuntimeStatus.Unsupported(
                                 SharedUxCopy.message(SharedMessageKey.IMPORT_UNSUPPORTED).text
                             )
                         )
@@ -51,7 +59,7 @@ class AndroidPhotoPickerRuntime(
                     }
                     is ImportResult.StorageFailed -> {
                         ImportRuntimeUiState(
-                            ImportRuntimeStatus.Failed(
+                            ImportRuntimeStatus.StorageFailed(
                                 SharedUxCopy.message(SharedMessageKey.IMPORT_STORAGE_FAILED).text
                             )
                         )
@@ -61,14 +69,14 @@ class AndroidPhotoPickerRuntime(
             }
             is PickerImportResult.ImportFailed -> {
                 ImportRuntimeUiState(
-                    ImportRuntimeStatus.Failed(
+                    ImportRuntimeStatus.SourceFailed(
                         SharedUxCopy.message(SharedMessageKey.IMPORT_SOURCE_FAILED).text
                     )
                 )
             }
             is PickerImportResult.StorageFailed -> {
                 ImportRuntimeUiState(
-                    ImportRuntimeStatus.Failed(
+                    ImportRuntimeStatus.StorageFailed(
                         SharedUxCopy.message(SharedMessageKey.IMPORT_STORAGE_FAILED).text
                     )
                 )

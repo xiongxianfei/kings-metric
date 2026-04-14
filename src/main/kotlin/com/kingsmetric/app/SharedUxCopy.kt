@@ -6,6 +6,8 @@ enum class SharedMessageKey {
     APP_LOADING,
     IMPORT_ACTION,
     IMPORT_IDLE,
+    IMPORT_SUPPORTED_EXPECTATION,
+    IMPORT_IN_PROGRESS,
     IMPORT_REVIEW_READY,
     IMPORT_UNSUPPORTED,
     IMPORT_SOURCE_FAILED,
@@ -64,6 +66,12 @@ object SharedUxCopy {
         SharedMessageKey.APP_LOADING to SharedStateCopy("Loading your matches..."),
         SharedMessageKey.IMPORT_ACTION to SharedStateCopy("Import Screenshot"),
         SharedMessageKey.IMPORT_IDLE to SharedStateCopy("Select one supported screenshot to start review."),
+        SharedMessageKey.IMPORT_SUPPORTED_EXPECTATION to SharedStateCopy(
+            "Supported screenshot: one Chinese post-match personal stats detailed-data screen."
+        ),
+        SharedMessageKey.IMPORT_IN_PROGRESS to SharedStateCopy(
+            "Preparing your screenshot for review..."
+        ),
         SharedMessageKey.IMPORT_REVIEW_READY to SharedStateCopy("Review your extracted match data before saving."),
         SharedMessageKey.IMPORT_UNSUPPORTED to SharedStateCopy(
             "This screenshot isn't supported. Try another post-match personal stats screenshot.",
