@@ -59,3 +59,10 @@ Expected behavior:
 - Android selection uses Photo Picker.
 - Imported screenshots are copied into app-managed storage before recognition.
 - Cancellation and storage errors are handled distinctly.
+
+## Gotchas
+
+- 2026-04-14: On real Android, `ContentResolver.openInputStream()` may throw
+  for a missing `file://` `Uri` instead of returning `null`. Treat that as an
+  unreadable-source failure and cover it with an instrumented test rather than
+  assuming JVM/fake storage behavior matches device behavior.
