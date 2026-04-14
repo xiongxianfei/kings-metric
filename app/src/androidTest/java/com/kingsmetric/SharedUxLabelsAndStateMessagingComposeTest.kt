@@ -10,7 +10,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kingsmetric.app.AndroidPhotoPickerImportAdapter
 import com.kingsmetric.app.AndroidPhotoPickerRuntime
-import com.kingsmetric.app.DetailFieldUiState
+import com.kingsmetric.app.DetailFieldDisplayUiState
+import com.kingsmetric.app.DetailSectionUiState
 import com.kingsmetric.app.DetailScreenUiState
 import com.kingsmetric.app.FakeUriScreenshotStorage
 import com.kingsmetric.app.PreviewAvailability
@@ -95,9 +96,16 @@ class SharedUxLabelsAndStateMessagingComposeTest {
                     recordId = "record-1",
                     screenshotPath = null,
                     previewAvailability = PreviewAvailability.Unavailable,
-                    fields = listOf(
-                        DetailFieldUiState(FieldKey.HERO, "Sun Shangxiang"),
-                        DetailFieldUiState(FieldKey.KDA, "11/1/5")
+                    summaryTitle = "Sun Shangxiang",
+                    summaryResult = "Victory",
+                    sections = listOf(
+                        DetailSectionUiState(
+                            title = "Match Summary",
+                            fields = listOf(
+                                DetailFieldDisplayUiState("Hero", "Sun Shangxiang"),
+                                DetailFieldDisplayUiState("KDA Ratio", "11/1/5")
+                            )
+                        )
                     )
                 )
             )
@@ -106,8 +114,9 @@ class SharedUxLabelsAndStateMessagingComposeTest {
         composeRule.onNodeWithText(
             "Screenshot preview unavailable. Match data is still available below."
         ).assertIsDisplayed()
-        composeRule.onNodeWithText("Hero: Sun Shangxiang").assertIsDisplayed()
-        composeRule.onAllNodesWithText("HERO: Sun Shangxiang").assertCountEquals(0)
+        composeRule.onNodeWithText("Hero").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Sun Shangxiang").assertCountEquals(2)
+        composeRule.onAllNodesWithText("HERO").assertCountEquals(0)
     }
 }
 

@@ -139,6 +139,14 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
   below the fold on phone-sized devices, so instrumentation should verify
   visible top guidance plus the existence of grouped content instead of
   assuming every section is simultaneously visible.
+- **Rule:** When the review form becomes long, prefer a single scrolling
+  content surface plus an anchored save action outside that scroll region.
+  Phone-sized screens are much more reliable when the primary action is not
+  buried inside the form content.
+- **Rule:** When history, detail, or dashboard presentation moves to grouped
+  cards, keep Compose assertions on visible labels, fallback copy, and
+  separate value nodes. Avoid brittle tests that depend on old flat
+  `"Label: Value"` concatenation text.
 
 **7. Save Validation**
 
@@ -228,6 +236,16 @@ Flow for viewing and editing a saved record.
 - Screenshot file missing on disk → show record without image,
   do not block access to field data
 - Room update fails → show error, keep edits intact
+
+---
+
+## UX Regression Coverage
+
+- Focused feature tests should own their primary screen or route promises.
+- The residual UX regression pass should cover only cross-screen gaps that are
+  still uncovered after those focused tests land.
+- Do not create a second broad Android suite that repeats the same
+  import/review/history assertions already owned by another feature.
 
 ---
 

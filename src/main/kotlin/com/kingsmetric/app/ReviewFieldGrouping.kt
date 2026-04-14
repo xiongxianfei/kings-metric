@@ -3,6 +3,14 @@ package com.kingsmetric.app
 import com.kingsmetric.importflow.FieldKey
 import com.kingsmetric.importflow.ReviewState
 
+enum class ReviewInputAffordance {
+    Text,
+    Number,
+    Percentage,
+    Duration,
+    Ratio
+}
+
 enum class ReviewSectionId(val title: String) {
     MATCH_SUMMARY("Match Summary"),
     DAMAGE_OUTPUT("Damage Output"),
@@ -16,6 +24,8 @@ data class ReviewFieldPresentation(
     val label: String,
     val value: String?,
     val required: Boolean,
+    val hint: String?,
+    val inputAffordance: ReviewInputAffordance,
     val highlighted: Boolean,
     val blocking: Boolean
 )
@@ -42,6 +52,12 @@ data class ReviewGrouping(
     val canConfirm: Boolean
 )
 
+data class ReviewLayoutState(
+    val previewMaxHeightDp: Int,
+    val stickySaveActionVisible: Boolean,
+    val singleScrollSurface: Boolean
+)
+
 class ReviewFieldGroupingMapper {
 
     fun map(reviewState: ReviewState): ReviewGrouping {
@@ -52,10 +68,16 @@ class ReviewFieldGroupingMapper {
                     label = SharedUxCopy.field(fieldKey).label,
                     value = reviewState.fields.getValue(fieldKey).value,
                     required = SharedUxCopy.field(fieldKey).required,
+                    hint = hintFor(fieldKey),
+                    inputAffordance = inputAffordanceFor(fieldKey),
                     highlighted = fieldKey in reviewState.highlightedFields,
                     blocking = fieldKey in reviewState.blockingFields
                 )
-            }
+            }.sortedWith(
+                compareByDescending<ReviewFieldPresentation> { it.blocking }
+                    .thenByDescending { it.highlighted }
+                    .thenBy { sectionFields.getValue(sectionId).indexOf(it.key) }
+            )
             ReviewSectionPresentation(
                 id = sectionId,
                 title = sectionId.title,
@@ -93,6 +115,17 @@ class ReviewFieldGroupingMapper {
             attentionSummary = attentionSummary,
             editableFields = reviewState.editableFields,
             canConfirm = reviewState.canConfirm
+        )
+    }
+
+    fun layoutFor(
+        previewAvailability: PreviewAvailability,
+        hasBlockerSummary: Boolean
+    ): ReviewLayoutState {
+        return ReviewLayoutState(
+            previewMaxHeightDp = if (previewAvailability == PreviewAvailability.Available) 220 else 0,
+            stickySaveActionVisible = true,
+            singleScrollSurface = true
         )
     }
 
@@ -135,5 +168,45 @@ class ReviewFieldGroupingMapper {
                 FieldKey.KILL_PARTICIPATION_COUNT
             )
         )
+
+        fun hintFor(fieldKey: FieldKey): String? {
+            return when (fieldKey) {
+                FieldKey.SCORE -> "Example: 20-10"
+                FieldKey.KDA -> "Example: 11/1/5"
+                FieldKey.DAMAGE_SHARE,
+                FieldKey.DAMAGE_TAKEN_SHARE,
+                FieldKey.GOLD_SHARE,
+                FieldKey.PARTICIPATION_RATE -> "Example: 34%"
+                FieldKey.CONTROL_DURATION -> "Example: 00:14"
+                FieldKey.DAMAGE_DEALT,
+                FieldKey.DAMAGE_TAKEN,
+                FieldKey.TOTAL_GOLD,
+                FieldKey.GOLD_FROM_FARMING,
+                FieldKey.LAST_HITS,
+                FieldKey.KILL_PARTICIPATION_COUNT,
+                FieldKey.DAMAGE_DEALT_TO_OPPONENTS -> "Whole number"
+                else -> null
+            }
+        }
+
+        fun inputAffordanceFor(fieldKey: FieldKey): ReviewInputAffordance {
+            return when (fieldKey) {
+                FieldKey.DAMAGE_SHARE,
+                FieldKey.DAMAGE_TAKEN_SHARE,
+                FieldKey.GOLD_SHARE,
+                FieldKey.PARTICIPATION_RATE -> ReviewInputAffordance.Percentage
+                FieldKey.CONTROL_DURATION -> ReviewInputAffordance.Duration
+                FieldKey.KDA,
+                FieldKey.SCORE -> ReviewInputAffordance.Ratio
+                FieldKey.DAMAGE_DEALT,
+                FieldKey.DAMAGE_TAKEN,
+                FieldKey.TOTAL_GOLD,
+                FieldKey.GOLD_FROM_FARMING,
+                FieldKey.LAST_HITS,
+                FieldKey.KILL_PARTICIPATION_COUNT,
+                FieldKey.DAMAGE_DEALT_TO_OPPONENTS -> ReviewInputAffordance.Number
+                else -> ReviewInputAffordance.Text
+            }
+        }
     }
 }

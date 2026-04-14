@@ -14,7 +14,8 @@ data class MatchHistoryListItem(
     val recordId: String,
     val savedAt: Long,
     val hero: String?,
-    val result: String?
+    val result: String?,
+    val screenshotAvailable: Boolean = true
 )
 
 sealed interface HistoryContentState {
