@@ -1,0 +1,76 @@
+name: Android Test Harness And Release Readiness
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/android-test-harness-and-release-readiness.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "core/build.gradle.kts"
+      - "app/src/androidTest/**"
+      - "app/src/main/java/com/kingsmetric/**"
+      - "src/main/kotlin/com/kingsmetric/release/**"
+      - "src/test/kotlin/com/kingsmetric/release/**"
+      - "specs/android-test-harness-and-release-readiness.md"
+      - "specs/android-test-harness-and-release-readiness.test.md"
+  push:
+    branches:
+      - main
+      - feature/**
+    paths:
+      - ".github/workflows/android-test-harness-and-release-readiness.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "core/build.gradle.kts"
+      - "app/src/androidTest/**"
+      - "app/src/main/java/com/kingsmetric/**"
+      - "src/main/kotlin/com/kingsmetric/release/**"
+      - "src/test/kotlin/com/kingsmetric/release/**"
+      - "specs/android-test-harness-and-release-readiness.md"
+      - "specs/android-test-harness-and-release-readiness.test.md"
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-36 build-tools;36.0.0
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run release-readiness JVM tests
+        run: >
+          ./gradlew --no-daemon :core:test
+          --tests "com.kingsmetric.release.AndroidVerificationMatrixTest"
+          --tests "com.kingsmetric.release.AndroidVerificationMatrixIntegrationTest"
+
+      - name: Run full JVM test suite
+        run: ./gradlew --no-daemon :core:test
+
+      - name: Assemble debug app
+        run: ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Android verification status
+        run: |
+          echo "Instrumented and Compose UI emulator tests are not run in this workflow yet." >> $GITHUB_STEP_SUMMARY
+          echo "Release readiness remains blocked until emulator-backed verification is configured and passing." >> $GITHUB_STEP_SUMMARY
