@@ -20,6 +20,10 @@ forces generated-code wiring to execute.
 - `:app:assembleDebug` is the minimum verification step for Android runtime
   wiring. Pure JVM tests do not prove that generated classes such as
   `*_Impl` or DI components exist.
+- If route-scoped Android UI state must survive activity recreation, cover the
+  state serializer or codec with a deterministic unit test. Emulator-side
+  state-restoration tooling can fail for framework reasons that are unrelated
+  to the actual save/restore logic.
 - Keep repository-specific Kotlin/KSP compatibility properties in place
   until the toolchain is upgraded and re-verified. Removing them can turn a
   compile-time wiring problem into a runtime crash.

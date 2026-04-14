@@ -69,6 +69,7 @@ What is real now:
 - real ML Kit recognition from stored screenshot into draft generation exists
 - automatic import -> recognition -> review handoff exists in the Android runtime
 - review save can return the user to history in the runtime flow
+- review-route draft state now has explicit saveable persistence inside the app shell
 - Room-backed history/dashboard runtime exists
 - review runtime UI exists and is exercised by Android tests
 - emulator-backed Android verification is available and in use
@@ -76,7 +77,6 @@ What is real now:
 What is still missing for the core user journey:
 
 - merge the Hilt + Navigation Compose shell that replaces the current tab-only root
-- harden route-scoped state ownership for review data after navigation and process recreation
 - broaden end-to-end navigation and failure-path verification around the real app shell
 
 ## Delivery Rules
@@ -140,8 +140,8 @@ What is still missing for the core user journey:
 Highest-value remaining product gap:
 
 - finish landing the spec-compliant Hilt + Navigation Compose app shell
-- then harden review-route state persistence and fallback behavior in the real runtime
 - then expand end-to-end Android verification around import -> review -> save -> history
+- then harden any remaining shell fallback paths exposed by device/emulator runs
 
 This means the current implementation focus is Feature 2:
 

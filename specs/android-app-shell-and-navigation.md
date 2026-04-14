@@ -72,3 +72,7 @@ Expected behavior:
   same callback as a post-save navigation can race the destination change.
   Keep the navigation path and the route-state cleanup order covered by an
   Android test.
+- 2026-04-14: Review-route draft progress should not live only in plain
+  `remember` state. Persist it with `rememberSaveable`, `SavedStateHandle`, or
+  another explicit shell-owned state mechanism, and cover the save/restore
+  codec with a deterministic test.
