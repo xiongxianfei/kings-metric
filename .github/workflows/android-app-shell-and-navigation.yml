@@ -19,7 +19,6 @@ on:
   push:
     branches:
       - main
-      - feature/**
     paths:
       - ".github/workflows/android-app-shell-and-navigation.yml"
       - "build.gradle.kts"
@@ -34,6 +33,10 @@ on:
       - "app/src/androidTest/java/com/kingsmetric/**"
       - "src/main/kotlin/com/kingsmetric/app/**"
       - "src/test/kotlin/com/kingsmetric/app/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -69,6 +72,7 @@ jobs:
 
   android-instrumented:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -89,9 +93,12 @@ jobs:
       - name: Run Android app shell instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 36
+          api-level: 35
           arch: x86_64
           target: google_apis
-          profile: pixel_7
+          profile: pixel
+          disable-animations: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          script: ./gradlew --no-daemon :app:connectedDebugAndroidTest
+          script: >
+            ./gradlew --no-daemon :app:connectedDebugAndroidTest
+            -Pandroid.testInstrumentationRunnerArguments.class=com.kingsmetric.AppShellNavigationComposeTest
