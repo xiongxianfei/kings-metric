@@ -2,11 +2,13 @@ package com.kingsmetric
 
 import android.graphics.Bitmap
 import android.graphics.Color
-import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -44,7 +46,7 @@ import java.io.FileOutputStream
 class ReviewScreenComposeTest {
 
     @get:Rule
-    val composeRule = createAndroidComposeRule<ComponentActivity>()
+    val composeRule = createComposeRule()
 
     @Test
     fun reviewScreen_showsBlockingRequiredFieldAndDisablesConfirm() {
@@ -54,7 +56,10 @@ class ReviewScreenComposeTest {
             )
         }
 
-        composeRule.onNodeWithText("Complete before saving: KDA Ratio").assertIsDisplayed()
+        composeRule.onNodeWithText("Complete the required fields before saving.").assertIsDisplayed()
+        composeRule.onNodeWithText("Match Summary").assertIsDisplayed()
+        composeRule.onNodeWithText("Review next: Match Summary").assertIsDisplayed()
+        composeRule.onNodeWithText("Required fields: KDA Ratio").assertIsDisplayed()
         composeRule.onNodeWithTag("confirm-save").assertIsNotEnabled()
     }
 
@@ -66,8 +71,28 @@ class ReviewScreenComposeTest {
             )
         }
 
-        composeRule.onNodeWithText("Check before saving: Last Hits").assertIsDisplayed()
+        composeRule.onNodeWithText("Check highlighted fields before saving.").assertIsDisplayed()
+        composeRule.onNodeWithTag("field-LAST_HITS").assertExists()
+        composeRule.onNodeWithText("Economy").assertExists()
         composeRule.onNodeWithTag("confirm-save").assertIsEnabled()
+    }
+
+    @Test
+    fun reviewScreen_groupsFieldsIntoSectionsWithVisibleLabels() {
+        composeRule.setContent {
+            ReviewScreenRoute(
+                viewModel = reviewViewModel(draft = ReviewScreenFixtures.supportedDraft())
+            )
+        }
+
+        composeRule.onNodeWithText("Match Summary").assertIsDisplayed()
+        composeRule.onNodeWithText("Damage Output").assertExists()
+        composeRule.onNodeWithText("Survivability").assertExists()
+        composeRule.onNodeWithText("Economy").assertExists()
+        composeRule.onNodeWithText("Team Play").assertExists()
+        composeRule.onAllNodesWithText("Required field").assertCountEquals(13)
+        composeRule.onAllNodesWithText("Optional field").assertCountEquals(5)
+        composeRule.onAllNodesWithTag("review-section").assertCountEquals(5)
     }
 
     @Test
@@ -84,6 +109,7 @@ class ReviewScreenComposeTest {
         composeRule.onNodeWithText(
             "Screenshot preview unavailable. Match data is still available below."
         ).assertIsDisplayed()
+        composeRule.onNodeWithText("Match Summary").assertIsDisplayed()
         composeRule.onNodeWithTag("field-RESULT").assertIsDisplayed()
     }
 

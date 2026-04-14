@@ -24,8 +24,11 @@ data class ReviewScreenUiState(
     val screenshotPath: String?,
     val previewAvailability: PreviewAvailability,
     val fields: Map<FieldKey, DraftField>,
+    val sections: List<ReviewSectionPresentation>,
     val highlightedFields: Set<FieldKey>,
     val blockingFields: Set<FieldKey>,
+    val blockerSummary: ReviewBlockerSummary?,
+    val attentionSummary: String?,
     val canConfirm: Boolean,
     val status: ReviewScreenStatus,
     val userMessage: String? = null
@@ -34,6 +37,7 @@ data class ReviewScreenUiState(
 class ReviewScreenViewModel(
     draft: DraftRecord,
     private val workflow: MatchImportWorkflow,
+    private val groupingMapper: ReviewFieldGroupingMapper = ReviewFieldGroupingMapper(),
     private val previewAvailableResolver: (String?) -> Boolean = { screenshotPath ->
         screenshotPath != null
     }
@@ -74,6 +78,7 @@ class ReviewScreenViewModel(
         userMessage: String? = null
     ): ReviewScreenUiState {
         val review = ReviewState.fromDraft(this)
+        val grouping = groupingMapper.map(review)
         return ReviewScreenUiState(
             screenshotPath = screenshotPath,
             previewAvailability = if (previewAvailableResolver(screenshotPath) && review.screenshotAvailable) {
@@ -82,9 +87,12 @@ class ReviewScreenViewModel(
                 PreviewAvailability.Unavailable
             },
             fields = fields,
+            sections = grouping.sections,
             highlightedFields = review.highlightedFields,
             blockingFields = review.blockingFields,
-            canConfirm = review.canConfirm,
+            blockerSummary = grouping.blockerSummary,
+            attentionSummary = grouping.attentionSummary,
+            canConfirm = grouping.canConfirm,
             status = status,
             userMessage = userMessage
         )
@@ -95,8 +103,11 @@ data class ReviewScreenModel(
     val screenshotPath: String?,
     val previewAvailability: PreviewAvailability,
     val fields: Map<FieldKey, DraftField>,
+    val sections: List<ReviewSectionPresentation>,
     val highlightedFields: Set<FieldKey>,
     val blockingFields: Set<FieldKey>,
+    val blockerSummary: ReviewBlockerSummary?,
+    val attentionSummary: String?,
     val canConfirm: Boolean
 )
 
@@ -109,8 +120,11 @@ class ReviewScreen(
             screenshotPath = state.screenshotPath,
             previewAvailability = state.previewAvailability,
             fields = state.fields,
+            sections = state.sections,
             highlightedFields = state.highlightedFields,
             blockingFields = state.blockingFields,
+            blockerSummary = state.blockerSummary,
+            attentionSummary = state.attentionSummary,
             canConfirm = state.canConfirm
         )
     }
