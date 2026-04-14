@@ -30,11 +30,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    if: >
-      ${{
-        hashFiles('src/main/kotlin/com/kingsmetric/app/ReviewScreenIntegration.kt') != '' &&
-        hashFiles('src/test/kotlin/com/kingsmetric/app/ComposeReviewScreenAndViewModelIntegrationTest.kt') != ''
-      }}
 
     steps:
       - name: Checkout
