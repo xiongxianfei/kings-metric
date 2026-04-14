@@ -50,6 +50,9 @@ Rules for this plan:
 - add Android wiring around those rules instead of rewriting them
 - prefer one-way replacement of fake adapters with real implementations
 - add Android tests only after the app module and runtime wiring exist
+- once Android framework storage or `Uri` handling is introduced, validate it
+  on emulator/device early because framework exception behavior can differ from
+  JVM or fake-adapter assumptions
 
 ## Phase Breakdown
 
@@ -79,6 +82,8 @@ Outcome:
 - Replace the JVM picker adapter with real Photo Picker wiring.
 - Implement app-managed file copy from `Uri` to local storage.
 - Preserve stable screenshot identifiers and screenshot/file metadata.
+- Verify unreadable `Uri` handling on emulator/device, not only through fake
+  storage tests, because `ContentResolver` failure behavior is Android-specific.
 
 Outcome:
 - user can select one image and the app stores it locally for downstream work
@@ -232,6 +237,8 @@ Android delivery specs now refine those rules into runnable-app work:
 ## Key Risks
 
 - Gradle/app-module migration may destabilize the current JVM test setup.
+- Android `Uri` and file-storage behavior may differ materially from fake or
+  JVM-only assumptions, especially around unreadable-source failures.
 - ML Kit and bitmap decode behavior may differ materially from the current
   fake adapter assumptions.
 - Room/entity design may force some reshaping of current saved-record
