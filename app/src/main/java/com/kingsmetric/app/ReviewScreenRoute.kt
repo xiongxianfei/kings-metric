@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -42,7 +44,9 @@ fun ReviewScreenRoute(
     }
 
     Column(
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         if (state.previewAvailability == PreviewAvailability.Available) {
@@ -51,7 +55,10 @@ fun ReviewScreenRoute(
                 Image(
                     bitmap = bitmap.asImageBitmap(),
                     contentDescription = "Screenshot preview",
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 280.dp),
+                    contentScale = ContentScale.FillWidth
                 )
             }
             state.screenshotPath?.let { path ->
@@ -86,10 +93,7 @@ fun ReviewScreenRoute(
             Text("Confirm Save")
         }
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.verticalScroll(rememberScrollState())
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             state.fields.values.forEach { field ->
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     OutlinedTextField(

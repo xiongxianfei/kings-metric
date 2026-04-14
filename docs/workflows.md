@@ -88,8 +88,12 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
 - **Output:** `RawFieldMap(Map<FieldKey, ExtractedValue>)`
 - **Rule:** Do not invent values not visible in the screenshot
 - **Rule:** Mark fields with low extraction confidence as unresolved
-- **Error:** OCR extraction fails entirely → abort with error message.
+- **Error:** OCR extraction fails entirely -> abort with error message.
   Do not create a draft with empty fields.
+- **Rule:** Keep at least one Android regression test for this stage on a real
+  supported screenshot fixture. Synthetic text-image fixtures alone can miss
+  ML Kit ordering differences, punctuation, and character-variant output that
+  break field mapping on the actual screenshot template.
 
 **4. Field Normalization**
 
@@ -144,6 +148,9 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
   transaction — if record save fails, do not orphan the screenshot
   reference
 - **Rule:** After successful save, navigate to record list / confirmation
+- **Rule:** When Room backs this stage on Android, do not execute the final
+  record write from the UI thread. A main-thread Room violation can surface as
+  a misleading generic local-save error even when the reviewed data is valid.
 - **Error:** Room write fails → show error, keep user on review screen
   with all data intact. Do not lose edits.
 

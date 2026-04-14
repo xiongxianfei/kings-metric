@@ -97,6 +97,7 @@ If a required spec does not exist, do not invent a full feature contract in code
 - Final records must not be saved if required fields are unresolved.
 - Optional fields may remain empty only when the spec allows it.
 - If screenshot storage succeeds and record persistence fails, report the failure clearly and keep state consistent with the spec.
+- Do not call Room-backed final persistence directly from the Android UI thread. Main-thread database violations can surface as misleading generic save failures.
 - Do not add destructive cleanup behavior unless it is explicitly specified and tested.
 
 ## Testing Expectations

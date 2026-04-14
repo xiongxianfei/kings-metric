@@ -61,3 +61,11 @@ Expected behavior:
 - Compose review UI can render the current draft and screenshot state from a `ViewModel`.
 - Validation and save failures preserve user edits.
 - Blocking vs non-blocking review states are visible to the user.
+
+## Gotchas
+
+- 2026-04-14: A generic `Could not save record locally.` error on a valid review
+  can come from calling Room on the main thread, not only from real storage
+  failure. Keep the repository-backed save path off the UI thread and cover it
+  with an Android test that uses a real Room database rather than only fake
+  record stores.

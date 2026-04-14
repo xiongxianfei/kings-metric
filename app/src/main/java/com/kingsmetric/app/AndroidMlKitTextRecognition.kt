@@ -43,6 +43,8 @@ class AndroidMlKitTextRecognizer(
             Tasks.await(recognizer.process(image))
         } catch (_: Exception) {
             throw OcrExtractionException("ocr failed")
+        } finally {
+            recognizer.close()
         }
         return SupportedTemplateTextMapper.map(result.text, plan.requestedFields)
     }
@@ -50,81 +52,82 @@ class AndroidMlKitTextRecognizer(
 
 private object SupportedTemplateTextMapper {
     private val laneNames = listOf("发育路", "对抗路", "中路", "打野", "游走")
-    private val labelsByField = mapOf(
-        FieldKey.DAMAGE_DEALT to listOf("对英雄输出"),
-        FieldKey.DAMAGE_SHARE to listOf("输出占比"),
-        FieldKey.DAMAGE_TAKEN to listOf("承受英雄伤害"),
-        FieldKey.DAMAGE_TAKEN_SHARE to listOf("承伤占比"),
-        FieldKey.TOTAL_GOLD to listOf("经济"),
-        FieldKey.GOLD_SHARE to listOf("经济占比"),
-        FieldKey.GOLD_FROM_FARMING to listOf("打野经济"),
-        FieldKey.LAST_HITS to listOf("补刀数"),
-        FieldKey.PARTICIPATION_RATE to listOf("参团率"),
-        FieldKey.CONTROL_DURATION to listOf("控制时长"),
-        FieldKey.DAMAGE_DEALT_TO_OPPONENTS to listOf("对塔伤害")
-    )
 
     fun map(text: String, requestedFields: Set<FieldKey>): ScreenshotAnalysis {
-        val normalizedText = text
-            .replace('％', '%')
-            .replace('：', ' ')
-            .replace(Regex("""[ \t]+"""), " ")
+        val normalizedText = normalize(text)
         val lines = normalizedText.lines().map(String::trim).filter(String::isNotEmpty)
         val rawValues = mutableMapOf<FieldKey, String>()
 
-        firstMatch(normalizedText, Regex("""(胜利|失败)"""))?.let {
+        match(normalizedText, Regex("""(胜利|失败)"""))?.let {
             rawValues[FieldKey.RESULT] = it
         }
-        firstMatch(normalizedText, Regex("""(\d+)\s*vs\s*(\d+)""", RegexOption.IGNORE_CASE))?.let {
-            val score = Regex("""(\d+)\s*vs\s*(\d+)""", RegexOption.IGNORE_CASE).find(it)
-            if (score != null) {
-                rawValues[FieldKey.SCORE] = "${score.groupValues[1]} vs ${score.groupValues[2]}"
-            }
+        Regex("""(\d+)\s*vs\s*(\d+)""", RegexOption.IGNORE_CASE).find(normalizedText)?.let { score ->
+            rawValues[FieldKey.SCORE] = "${score.groupValues[1]} vs ${score.groupValues[2]}"
         }
-        firstMatch(normalizedText, Regex("""\d+/\d+/\d+"""))?.let {
+        match(normalizedText, Regex("""\d+/\d+/\d+"""))?.let {
             rawValues[FieldKey.KDA] = it
         }
 
-        laneNames.firstOrNull { normalizedText.contains(it) }?.let { lane ->
+        laneNames.firstOrNull(normalizedText::contains)?.let { lane ->
             rawValues[FieldKey.LANE] = lane
-            val playerLine = lines.firstOrNull { it.contains(lane) && Regex("""\d+/\d+/\d+""").containsMatchIn(it) }
-            playerLine
-                ?.substringBefore(lane)
-                ?.replace(Regex("""[^\p{IsHan}、A-Za-z0-9]"""), " ")
-                ?.trim()
-                ?.takeIf { it.isNotEmpty() }
-                ?.let { rawValues[FieldKey.PLAYER_NAME] = it }
         }
+        extractPlayerName(lines)?.let { rawValues[FieldKey.PLAYER_NAME] = it }
+        extractTotalGold(normalizedText)?.let { rawValues[FieldKey.TOTAL_GOLD] = it }
 
-        labelsByField.forEach { (fieldKey, labels) ->
-            if (fieldKey !in requestedFields) {
-                return@forEach
-            }
-            labels.firstNotNullOfOrNull { label ->
-                extractValueAfterLabel(lines, label)
-            }?.let { rawValues[fieldKey] = it }
-        }
+        extractWithImmediateThenBounded(normalizedText, "对英雄输出", """[0-9]+(?:\.[0-9]+)?k""")
+            ?: extractWithImmediateThenBounded(normalizedText, "对英雄輸出", """[0-9]+(?:\.[0-9]+)?k""")
+        ?.let { rawValues[FieldKey.DAMAGE_DEALT] = it }
+
+        extractWithImmediateThenBounded(normalizedText, "输出占比", """[0-9]+(?:\.[0-9]+)?%""")
+            ?.let { rawValues[FieldKey.DAMAGE_SHARE] = it }
+
+        extractWithImmediateThenBounded(normalizedText, "承受英雄伤害", """[0-9]+(?:\.[0-9]+)?k""")
+            ?.let { rawValues[FieldKey.DAMAGE_TAKEN] = it }
+
+        extractWithImmediateThenBounded(normalizedText, "承伤占比", """[0-9]+(?:\.[0-9]+)?%""")
+            ?.let { rawValues[FieldKey.DAMAGE_TAKEN_SHARE] = it }
+
+        extractLastBounded(normalizedText, "经济占比", """[0-9]+(?:\.[0-9]+)?%""")
+            ?.let { rawValues[FieldKey.GOLD_SHARE] = it }
+
+        extractWithImmediateThenBounded(normalizedText, "打野经济", """[0-9]+(?:\.[0-9]+)?k""")
+            ?.let { rawValues[FieldKey.GOLD_FROM_FARMING] = it }
+
+        extractWithImmediateThenBounded(normalizedText, "补刀数", """[0-9]+""")
+            ?.let { rawValues[FieldKey.LAST_HITS] = it }
+
+        extractLastBounded(normalizedText, "参团率", """[0-9]+(?:\.[0-9]+)?%""")
+            ?.let { rawValues[FieldKey.PARTICIPATION_RATE] = it }
+
+        extractLastBounded(normalizedText, "控制时长", """[0-9]+(?:\.[0-9]+)?s""")
+            ?.let { rawValues[FieldKey.CONTROL_DURATION] = it }
+
+        extractWithImmediateThenBounded(normalizedText, "对塔伤害", """[0-9]+(?:\.[0-9]+)?k""")
+            ?.let { rawValues[FieldKey.DAMAGE_DEALT_TO_OPPONENTS] = it }
+
+        val visibleFields = rawValues.keys.intersect(requestedFields)
+        val filteredValues = rawValues.filterKeys { it in requestedFields }
 
         val anchors = buildSet {
-            if (FieldKey.RESULT in rawValues) {
+            if (FieldKey.RESULT in filteredValues) {
                 add(Anchor.RESULT_HEADER)
             }
             if (normalizedText.contains("数据")) {
                 add(Anchor.DATA_TAB_SELECTED)
             }
-            if (FieldKey.KDA in rawValues && FieldKey.LANE in rawValues) {
+            if (FieldKey.KDA in filteredValues && (FieldKey.LANE in filteredValues || FieldKey.PLAYER_NAME in filteredValues)) {
                 add(Anchor.SUMMARY_CARD)
             }
         }
 
         val visibleSections = buildSet {
-            if (normalizedText.contains("对英雄输出") || normalizedText.contains("输出占比")) {
+            if (normalizedText.contains("对英雄输出") || normalizedText.contains("对英雄輸出") || normalizedText.contains("输出占比")) {
                 add(Section.DAMAGE)
             }
             if (normalizedText.contains("承受英雄伤害") || normalizedText.contains("承伤占比")) {
                 add(Section.DAMAGE_TAKEN)
             }
-            if (normalizedText.contains("经济") || normalizedText.contains("补刀数")) {
+            if (normalizedText.contains("经济占比") || normalizedText.contains("总经济") || normalizedText.contains("打野经济")) {
                 add(Section.ECONOMY)
             }
             if (normalizedText.contains("参团率") || normalizedText.contains("控制时长")) {
@@ -140,20 +143,81 @@ private object SupportedTemplateTextMapper {
             } else {
                 "und"
             },
-            visibleFields = rawValues.keys,
-            rawValues = rawValues,
+            visibleFields = visibleFields,
+            rawValues = filteredValues,
             lowConfidenceFields = emptySet()
         )
     }
 
-    private fun firstMatch(text: String, pattern: Regex): String? {
-        return pattern.find(text)?.value
+    private fun normalize(text: String): String {
+        return text
+            .replace('：', ':')
+            .replace('，', ' ')
+            .replace(Regex("""[ \t]+"""), " ")
     }
 
-    private fun extractValueAfterLabel(lines: List<String>, label: String): String? {
-        val pattern = Regex("""${Regex.escape(label)}\s*([0-9]+(?:\.[0-9]+)?(?:k|%|s)?)""", RegexOption.IGNORE_CASE)
-        return lines.firstNotNullOfOrNull { line ->
-            pattern.find(line)?.groupValues?.getOrNull(1)
+    private fun match(text: String, pattern: Regex): String? = pattern.find(text)?.value
+
+    private fun extractPlayerName(lines: List<String>): String? {
+        val sourceLine = lines.firstOrNull { Regex("""\d+/\d+/\d+""").containsMatchIn(it) } ?: return null
+        val prefix = Regex("""^(.*?)(?:\d+(?:\.\d+)?\s+\d+/\d+/\d+|\d+/\d+/\d+).*$""")
+            .matchEntire(sourceLine)
+            ?.groupValues
+            ?.getOrNull(1)
+            ?: sourceLine
+
+        return prefix
+            .replace(Regex("""[^\p{IsHan}A-Za-z0-9、·]"""), " ")
+            .trim()
+            .takeIf { it.isNotEmpty() }
+    }
+
+    private fun extractTotalGold(text: String): String? {
+        val summaryGold = Regex("""[\p{IsHan}A-Za-z0-9、·]+\s+([0-9]+(?:\.[0-9]+)?)\s+\d+/\d+/\d+""")
+            .find(text)
+            ?.groupValues
+            ?.getOrNull(1)
+        if (summaryGold != null) {
+            return summaryGold
+        }
+
+        return extractWithImmediateThenBounded(text, "总经济", """[0-9]+(?:\.[0-9]+)?k""")
+    }
+
+    private fun extractWithImmediateThenBounded(
+        text: String,
+        label: String,
+        valuePattern: String
+    ): String? {
+        val immediatePattern = Regex(
+            """${Regex.escape(label)}\s*[:：]?\s*($valuePattern)""",
+            RegexOption.IGNORE_CASE
+        )
+        immediatePattern.find(text)?.groupValues?.getOrNull(1)?.let { return it }
+
+        val boundedPattern = Regex(
+            """${Regex.escape(label)}.{0,24}?($valuePattern)""",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+        )
+        return boundedPattern.find(text)?.groupValues?.getOrNull(1)
+    }
+
+    private fun extractLastBounded(
+        text: String,
+        label: String,
+        valuePattern: String
+    ): String? {
+        val immediatePattern = Regex(
+            """${Regex.escape(label)}\s*[:：]?\s*($valuePattern)""",
+            RegexOption.IGNORE_CASE
+        )
+        immediatePattern.find(text)?.groupValues?.getOrNull(1)?.let { return it }
+
+        val labelPattern = Regex(Regex.escape(label), RegexOption.IGNORE_CASE)
+        val valueRegex = Regex(valuePattern, RegexOption.IGNORE_CASE)
+        return labelPattern.findAll(text).lastOrNull()?.range?.last?.plus(1)?.let { startIndex ->
+            val window = text.substring(startIndex, (startIndex + 64).coerceAtMost(text.length))
+            valueRegex.findAll(window).lastOrNull()?.value
         }
     }
 }

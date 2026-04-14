@@ -6,6 +6,7 @@ import com.kingsmetric.AndroidUriScreenshotStorage
 import com.kingsmetric.app.AndroidBitmapLoader
 import com.kingsmetric.app.AndroidMlKitTextRecognizer
 import com.kingsmetric.app.MlKitRecognitionAdapter
+import com.kingsmetric.app.RoomRepositoryRecordStore
 import com.kingsmetric.app.UriScreenshotStorage
 import com.kingsmetric.data.local.KingsMetricDatabase
 import com.kingsmetric.data.local.LocalScreenshotFileStore
@@ -17,7 +18,6 @@ import com.kingsmetric.importflow.DraftParser
 import com.kingsmetric.importflow.FakeScreenshotAnalyzer
 import com.kingsmetric.importflow.FakeScreenshotStore
 import com.kingsmetric.importflow.MatchImportWorkflow
-import com.kingsmetric.importflow.RecordStore
 import com.kingsmetric.importflow.SavedMatchRecord
 import com.kingsmetric.importflow.TemplateValidator
 import dagger.Module
@@ -112,22 +112,9 @@ object AppModule {
         return MatchImportWorkflow(
             screenshotStore = FakeScreenshotStore(),
             analyzer = FakeScreenshotAnalyzer(emptyMap()),
-            recordStore = RepositoryRecordStore(repository),
+            recordStore = RoomRepositoryRecordStore(repository),
             validator = TemplateValidator(),
             parser = DraftParser()
         )
-    }
-}
-
-private class RepositoryRecordStore(
-    private val repository: RoomObservedMatchRepository
-) : RecordStore {
-    override fun save(record: SavedMatchRecord): SavedMatchRecord {
-        return when (repository.save(record)) {
-            is com.kingsmetric.data.local.RepositorySaveResult.Saved -> record
-            is com.kingsmetric.data.local.RepositorySaveResult.Error -> {
-                throw IllegalStateException("Could not save record locally.")
-            }
-        }
     }
 }

@@ -15,7 +15,7 @@ class AndroidPhotoPickerRuntimeWiringTest {
     fun `T1 runtime starts in explicit idle state`() {
         val runtime = photoPickerRuntime()
 
-        assertEquals(ImportRuntimeStatus.Idle, runtime.state.status)
+        assertEquals(ImportRuntimeStatus.Idle, runtime.state.value.status)
     }
 
     @Test
@@ -44,7 +44,7 @@ class AndroidPhotoPickerRuntimeWiringTest {
 
         runtime.handlePickerResult("content://shots/1")
 
-        val status = runtime.state.status
+        val status = runtime.state.value.status
         assertTrue(status is ImportRuntimeStatus.ReviewReady)
         status as ImportRuntimeStatus.ReviewReady
         assertEquals("shot-1", status.draft.screenshotId)
@@ -57,7 +57,7 @@ class AndroidPhotoPickerRuntimeWiringTest {
 
         runtime.handlePickerResult(null)
 
-        assertEquals(ImportRuntimeStatus.Idle, runtime.state.status)
+        assertEquals(ImportRuntimeStatus.Idle, runtime.state.value.status)
     }
 
     @Test
@@ -74,11 +74,11 @@ class AndroidPhotoPickerRuntimeWiringTest {
 
         assertEquals(
             ImportRuntimeStatus.Failed("Could not import screenshot from the selected source."),
-            unreadable.state.status
+            unreadable.state.value.status
         )
         assertEquals(
             ImportRuntimeStatus.Failed("Could not save screenshot locally."),
-            storageFailure.state.status
+            storageFailure.state.value.status
         )
     }
 
@@ -96,11 +96,11 @@ class AndroidPhotoPickerRuntimeWiringTest {
 
         assertEquals(
             ImportRuntimeStatus.Failed("Unsupported screenshot."),
-            unsupported.state.status
+            unsupported.state.value.status
         )
         assertEquals(
             ImportRuntimeStatus.Failed("Could not extract screenshot data for review."),
-            failed.state.status
+            failed.state.value.status
         )
     }
 }

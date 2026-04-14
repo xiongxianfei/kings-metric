@@ -66,3 +66,7 @@ Expected behavior:
   for a missing `file://` `Uri` instead of returning `null`. Treat that as an
   unreadable-source failure and cover it with an instrumented test rather than
   assuming JVM/fake storage behavior matches device behavior.
+- 2026-04-14: A successful picker import must leave the user with an explicit
+  way to enter review. Do not rely only on an automatic navigation side effect
+  after the activity result returns; keep a visible continue/review action when
+  a draft is already ready on the import screen.
