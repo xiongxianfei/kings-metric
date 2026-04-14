@@ -87,6 +87,31 @@ class AppShellNavigationComposeTest {
         }
         composeRule.onNodeWithText("No saved matches yet.").assertIsDisplayed()
     }
+
+    @Test
+    fun importToReviewToSave_navigatesThroughTheRuntimeShell() {
+        composeRule.setContent {
+            HistoryDashboardRoot(
+                repository = testRepository(),
+                uriStorage = FakeUriScreenshotStorage(),
+                recognizeStoredScreenshot = { com.kingsmetric.importflow.ImportResult.Cancelled },
+                reviewWorkflow = AppShellTestFixtures.workflow(recordStore = FakeRecordStore()),
+                testImportedDraft = AppShellTestFixtures.supportedDraft()
+            )
+        }
+
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodesWithText("Use Test Draft").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithText("Use Test Draft").performClick()
+        composeRule.onNodeWithTag("confirm-save").assertIsDisplayed()
+        composeRule.onNodeWithTag("confirm-save").performClick()
+
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodesWithText("No saved matches yet.").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithText("No saved matches yet.").assertIsDisplayed()
+    }
 }
 
 private fun testRepository(): RoomObservedMatchRepository {

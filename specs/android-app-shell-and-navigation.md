@@ -76,3 +76,7 @@ Expected behavior:
   `remember` state. Persist it with `rememberSaveable`, `SavedStateHandle`, or
   another explicit shell-owned state mechanism, and cover the save/restore
   codec with a deterministic test.
+- 2026-04-14: The real import route depends on the system photo picker, which
+  is not a stable Compose-test surface for shell navigation tests. Keep the
+  production picker path unchanged, but add the smallest shell-level test seam
+  needed to drive import -> review -> save navigation deterministically.

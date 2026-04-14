@@ -24,6 +24,10 @@ forces generated-code wiring to execute.
   state serializer or codec with a deterministic unit test. Emulator-side
   state-restoration tooling can fail for framework reasons that are unrelated
   to the actual save/restore logic.
+- If an end-to-end Android flow depends on Photo Picker, permissions UI, or
+  another system surface, keep the real business/runtime path intact but add a
+  narrow shell-level test hook before the framework boundary so Compose
+  instrumentation can still verify navigation and save behavior deterministically.
 - Keep repository-specific Kotlin/KSP compatibility properties in place
   until the toolchain is upgraded and re-verified. Removing them can turn a
   compile-time wiring problem into a runtime crash.
