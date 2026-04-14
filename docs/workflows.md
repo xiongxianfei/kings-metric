@@ -9,6 +9,25 @@ For build order, see `docs/plan.md`.
 
 ---
 
+## Android Build Verification
+
+Before calling an Android integration runnable, verify the build path that
+forces generated-code wiring to execute.
+
+- If a feature introduces Room, Hilt, or another KSP-backed library, the
+  owning Android module must declare both the runtime dependency and the
+  matching compiler/plugin wiring.
+- `:app:assembleDebug` is the minimum verification step for Android runtime
+  wiring. Pure JVM tests do not prove that generated classes such as
+  `*_Impl` or DI components exist.
+- Keep repository-specific Kotlin/KSP compatibility properties in place
+  until the toolchain is upgraded and re-verified. Removing them can turn a
+  compile-time wiring problem into a runtime crash.
+- Treat "generated implementation does not exist" failures as build wiring
+  bugs first, not runtime-only bugs.
+
+---
+
 ## Screenshot Import (v1)
 
 Full pipeline from camera capture to saved record.
