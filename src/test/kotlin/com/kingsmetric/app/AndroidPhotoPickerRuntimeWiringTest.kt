@@ -73,11 +73,11 @@ class AndroidPhotoPickerRuntimeWiringTest {
         storageFailure.handlePickerResult("content://shots/copy-fails")
 
         assertEquals(
-            ImportRuntimeStatus.Failed("Could not import screenshot from the selected source."),
+            ImportRuntimeStatus.Failed("The selected screenshot could not be imported. Try another image."),
             unreadable.state.value.status
         )
         assertEquals(
-            ImportRuntimeStatus.Failed("Could not save screenshot locally."),
+            ImportRuntimeStatus.Failed("The screenshot could not be saved locally. Try again."),
             storageFailure.state.value.status
         )
     }
@@ -95,11 +95,11 @@ class AndroidPhotoPickerRuntimeWiringTest {
         failed.handlePickerResult("content://shots/failed")
 
         assertEquals(
-            ImportRuntimeStatus.Failed("Unsupported screenshot."),
+            ImportRuntimeStatus.Failed("This screenshot isn't supported. Try another post-match personal stats screenshot."),
             unsupported.state.value.status
         )
         assertEquals(
-            ImportRuntimeStatus.Failed("Could not extract screenshot data for review."),
+            ImportRuntimeStatus.Failed("We couldn't read match data from this screenshot. Try another supported screenshot."),
             failed.state.value.status
         )
     }

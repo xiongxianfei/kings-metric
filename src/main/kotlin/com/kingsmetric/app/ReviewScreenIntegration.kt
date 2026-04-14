@@ -55,14 +55,14 @@ class ReviewScreenViewModel(
                 currentDraft = result.draft
                 result.draft.toUiState(
                     status = ReviewScreenStatus.Reviewing,
-                    userMessage = result.reason
+                    userMessage = SharedUxCopy.message(SharedMessageKey.REVIEW_BLOCKED_SAVE).text
                 )
             }
             is SaveResult.StorageFailed -> {
                 currentDraft = result.draft ?: currentDraft
                 currentDraft.toUiState(
                     status = ReviewScreenStatus.Reviewing,
-                    userMessage = result.message
+                    userMessage = SharedUxCopy.message(SharedMessageKey.REVIEW_SAVE_FAILED).text
                 )
             }
         }

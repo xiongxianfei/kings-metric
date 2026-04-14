@@ -65,7 +65,7 @@ fun ReviewScreenRoute(
                 Text(path)
             }
         } else {
-            Text("Screenshot preview unavailable")
+            Text(SharedUxCopy.message(SharedMessageKey.MISSING_SCREENSHOT_PREVIEW).text)
         }
 
         state.userMessage?.let { message ->
@@ -73,16 +73,12 @@ fun ReviewScreenRoute(
         }
 
         if (state.blockingFields.isNotEmpty()) {
-            Text(
-                "Blocking field: ${state.blockingFields.joinToString { it.name }}"
-            )
+            Text(SharedUxCopy.blockingSummary(state.blockingFields))
         }
 
         val nonBlockingHighlights = state.highlightedFields - state.blockingFields
         if (nonBlockingHighlights.isNotEmpty()) {
-            Text(
-                "Needs review: ${nonBlockingHighlights.joinToString { it.name }}"
-            )
+            Text(SharedUxCopy.needsAttentionSummary(nonBlockingHighlights))
         }
 
         Button(
@@ -101,13 +97,13 @@ fun ReviewScreenRoute(
                         onValueChange = { newValue ->
                             viewModel.updateField(field.key, newValue)
                         },
-                        label = { Text(field.key.name) },
+                        label = { Text(SharedUxCopy.field(field.key).label) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("field-${field.key.name}")
                     )
                     when {
-                        field.key in state.blockingFields -> Text("Blocking field")
+                        field.key in state.blockingFields -> Text("Required before saving")
                         field.key in state.highlightedFields -> Text("Needs review")
                     }
                 }

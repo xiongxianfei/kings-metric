@@ -36,26 +36,42 @@ class AndroidPhotoPickerRuntime(
                         ImportRuntimeUiState(ImportRuntimeStatus.ReviewReady(recognition.draft))
                     }
                     is ImportResult.Unsupported -> {
-                        ImportRuntimeUiState(ImportRuntimeStatus.Failed(recognition.reason))
+                        ImportRuntimeUiState(
+                            ImportRuntimeStatus.Failed(
+                                SharedUxCopy.message(SharedMessageKey.IMPORT_UNSUPPORTED).text
+                            )
+                        )
                     }
                     is ImportResult.ImportFailed -> {
-                        ImportRuntimeUiState(ImportRuntimeStatus.Failed(recognition.message))
+                        ImportRuntimeUiState(
+                            ImportRuntimeStatus.Failed(
+                                SharedUxCopy.message(SharedMessageKey.IMPORT_OCR_FAILED).text
+                            )
+                        )
                     }
                     is ImportResult.StorageFailed -> {
-                        ImportRuntimeUiState(ImportRuntimeStatus.Failed(recognition.message))
+                        ImportRuntimeUiState(
+                            ImportRuntimeStatus.Failed(
+                                SharedUxCopy.message(SharedMessageKey.IMPORT_STORAGE_FAILED).text
+                            )
+                        )
                     }
                     ImportResult.Cancelled -> ImportRuntimeUiState(ImportRuntimeStatus.Idle)
                 }
             }
             is PickerImportResult.ImportFailed -> {
                 ImportRuntimeUiState(
-                    ImportRuntimeStatus.Failed("Could not import screenshot from the selected source.")
+                    ImportRuntimeStatus.Failed(
+                        SharedUxCopy.message(SharedMessageKey.IMPORT_SOURCE_FAILED).text
+                    )
                 )
             }
             is PickerImportResult.StorageFailed -> {
-                    ImportRuntimeUiState(
-                        ImportRuntimeStatus.Failed("Could not save screenshot locally.")
+                ImportRuntimeUiState(
+                    ImportRuntimeStatus.Failed(
+                        SharedUxCopy.message(SharedMessageKey.IMPORT_STORAGE_FAILED).text
                     )
+                )
             }
         }
     }
