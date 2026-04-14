@@ -1,5 +1,7 @@
 package com.kingsmetric
 
+import android.graphics.Bitmap
+import android.graphics.Color
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -10,9 +12,17 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.room.Room
 import com.kingsmetric.app.ReviewScreenRoute
 import com.kingsmetric.app.ReviewScreenViewModel
+import com.kingsmetric.app.RoomRepositoryRecordStore
+import com.kingsmetric.data.local.KingsMetricDatabase
+import com.kingsmetric.data.local.LocalScreenshotFileStore
+import com.kingsmetric.data.local.RecordIdProvider
+import com.kingsmetric.data.local.RoomObservedMatchRepository
+import com.kingsmetric.data.local.SavedAtProvider
 import com.kingsmetric.importflow.Anchor
 import com.kingsmetric.importflow.DraftParser
 import com.kingsmetric.importflow.DraftRecord
@@ -27,6 +37,8 @@ import com.kingsmetric.importflow.TemplateValidator
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
+import java.io.FileOutputStream
 
 @RunWith(AndroidJUnit4::class)
 class ReviewScreenComposeTest {
@@ -91,16 +103,56 @@ class ReviewScreenComposeTest {
         composeRule.onNodeWithText("Could not save record locally.").assertIsDisplayed()
         composeRule.onNodeWithText("Farm Lane").assertIsDisplayed()
     }
+
+    @Test
+    fun reviewScreen_tallPreviewStillShowsConfirmAndFields() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val previewFile = createPreviewImage(context, "review-preview.png")
+
+        composeRule.setContent {
+            ReviewScreenRoute(
+                viewModel = reviewViewModel(
+                    draft = ReviewScreenFixtures.supportedDraft().copy(
+                        screenshotPath = previewFile.absolutePath
+                    )
+                )
+            )
+        }
+
+        composeRule.onNodeWithTag("confirm-save").assertIsDisplayed()
+        composeRule.onNodeWithTag("field-RESULT").assertIsDisplayed()
+    }
+
+    @Test
+    fun reviewScreen_realRepositorySaveCompletesWithoutLocalSaveError() {
+        var saveSucceeded = false
+
+        composeRule.setContent {
+            ReviewScreenRoute(
+                viewModel = reviewViewModel(
+                    draft = ReviewScreenFixtures.supportedDraft(),
+                    workflow = ReviewScreenFixtures.realRepositoryWorkflow()
+                ),
+                onSaveSucceeded = { saveSucceeded = true }
+            )
+        }
+
+        composeRule.onNodeWithTag("confirm-save").performClick()
+
+        composeRule.waitUntil(timeoutMillis = 5_000) { saveSucceeded }
+        composeRule.onNodeWithText("Could not save record locally.").assertDoesNotExist()
+    }
 }
 
 private fun reviewViewModel(
     draft: DraftRecord,
     previewAvailable: Boolean = true,
-    recordStore: FakeRecordStore = FakeRecordStore()
+    recordStore: FakeRecordStore = FakeRecordStore(),
+    workflow: MatchImportWorkflow = ReviewScreenFixtures.workflow(recordStore)
 ): ReviewScreenViewModel {
     return ReviewScreenViewModel(
         draft = draft,
-        workflow = ReviewScreenFixtures.workflow(recordStore),
+        workflow = workflow,
         previewAvailableResolver = { previewAvailable }
     )
 }
@@ -113,6 +165,33 @@ private object ReviewScreenFixtures {
             screenshotStore = FakeScreenshotStore(),
             analyzer = FakeScreenshotAnalyzer(emptyMap()),
             recordStore = recordStore,
+            validator = TemplateValidator(),
+            parser = parser
+        )
+    }
+
+    fun realRepositoryWorkflow(): MatchImportWorkflow {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val database = Room.inMemoryDatabaseBuilder(
+            context,
+            KingsMetricDatabase::class.java
+        ).build()
+        val repository = RoomObservedMatchRepository(
+            dao = database.savedMatchDao(),
+            screenshotFiles = object : LocalScreenshotFileStore {
+                override fun exists(path: String): Boolean = true
+            },
+            recordIdProvider = object : RecordIdProvider {
+                override fun nextId(): String = "record-1"
+            },
+            savedAtProvider = object : SavedAtProvider {
+                override fun now(): Long = 1L
+            }
+        )
+        return MatchImportWorkflow(
+            screenshotStore = FakeScreenshotStore(),
+            analyzer = FakeScreenshotAnalyzer(emptyMap()),
+            recordStore = RoomRepositoryRecordStore(repository),
             validator = TemplateValidator(),
             parser = parser
         )
@@ -179,4 +258,18 @@ private object ReviewScreenFixtures {
             lowConfidenceFields = emptySet()
         )
     }
+}
+
+private fun createPreviewImage(
+    context: android.content.Context,
+    name: String
+): File {
+    val bitmap = Bitmap.createBitmap(1080, 1920, Bitmap.Config.ARGB_8888)
+    bitmap.eraseColor(Color.BLUE)
+    val file = File(context.cacheDir, name)
+    FileOutputStream(file).use { output ->
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
+    }
+    bitmap.recycle()
+    return file
 }

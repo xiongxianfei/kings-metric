@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.kingsmetric.app.AndroidBitmapLoader
 import com.kingsmetric.app.AndroidMlKitTextRecognizer
 import com.kingsmetric.app.MlKitRecognitionAdapter
@@ -81,6 +82,30 @@ class AndroidMlKitRecognitionAdapterTest {
 
         assertTrue(result is ImportResult.Unsupported)
     }
+
+    @Test
+    fun realSupportedFixtureImage_isRecognizedIntoReviewableDraft() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val screenshot = copyAssetToCache(
+            context = context,
+            assetName = "detailed-data.jpg"
+        )
+        val adapter = adapter(context)
+
+        val result = adapter.recognize(screenshot.absolutePath)
+
+        assertTrue(result is ImportResult.DraftReady)
+        result as ImportResult.DraftReady
+        assertEquals("victory", result.draft.require(FieldKey.RESULT).value)
+        assertEquals("20 vs 10", result.draft.require(FieldKey.SCORE).value)
+        assertEquals("11/1/5", result.draft.require(FieldKey.KDA).value)
+        assertEquals("35.3%", result.draft.require(FieldKey.DAMAGE_SHARE).value)
+        assertEquals("24%", result.draft.require(FieldKey.GOLD_SHARE).value)
+        assertEquals("80.0%", result.draft.require(FieldKey.PARTICIPATION_RATE).value)
+        assertTrue(result.reviewState.highlightedFields.contains(FieldKey.HERO))
+        assertTrue(result.reviewState.blockingFields.contains(FieldKey.HERO))
+        assertTrue(result.reviewState.blockingFields.all { it == FieldKey.HERO })
+    }
 }
 
 private fun adapter(context: android.content.Context): MlKitRecognitionAdapter {
@@ -115,4 +140,17 @@ private fun createScreenshot(
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
     }
     return file
+}
+
+private fun copyAssetToCache(
+    context: android.content.Context,
+    assetName: String
+): File {
+    val target = File(context.cacheDir, assetName)
+    InstrumentationRegistry.getInstrumentation().context.assets.open(assetName).use { input ->
+        FileOutputStream(target).use { output ->
+            input.copyTo(output)
+        }
+    }
+    return target
 }

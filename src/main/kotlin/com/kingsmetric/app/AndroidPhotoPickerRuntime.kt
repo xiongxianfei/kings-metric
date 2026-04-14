@@ -2,6 +2,9 @@ package com.kingsmetric.app
 
 import com.kingsmetric.importflow.DraftRecord
 import com.kingsmetric.importflow.ImportResult
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 sealed interface ImportRuntimeStatus {
     data object Idle : ImportRuntimeStatus
@@ -17,15 +20,15 @@ class AndroidPhotoPickerRuntime(
     private val adapter: AndroidPhotoPickerImportAdapter,
     private val recognizeImportedScreenshot: (ImportedScreenshotRequest) -> ImportResult
 ) {
-    var state: ImportRuntimeUiState = ImportRuntimeUiState(ImportRuntimeStatus.Idle)
-        private set
+    private val _state = MutableStateFlow(ImportRuntimeUiState(ImportRuntimeStatus.Idle))
+    val state: StateFlow<ImportRuntimeUiState> = _state.asStateFlow()
 
     fun reset() {
-        state = ImportRuntimeUiState(ImportRuntimeStatus.Idle)
+        _state.value = ImportRuntimeUiState(ImportRuntimeStatus.Idle)
     }
 
     fun handlePickerResult(uri: String?) {
-        state = when (val result = adapter.handlePickerResult(uri)) {
+        _state.value = when (val result = adapter.handlePickerResult(uri)) {
             PickerImportResult.Idle -> ImportRuntimeUiState(ImportRuntimeStatus.Idle)
             is PickerImportResult.ReadyForImport -> {
                 when (val recognition = recognizeImportedScreenshot(result.request)) {
@@ -50,9 +53,9 @@ class AndroidPhotoPickerRuntime(
                 )
             }
             is PickerImportResult.StorageFailed -> {
-                ImportRuntimeUiState(
-                    ImportRuntimeStatus.Failed("Could not save screenshot locally.")
-                )
+                    ImportRuntimeUiState(
+                        ImportRuntimeStatus.Failed("Could not save screenshot locally.")
+                    )
             }
         }
     }

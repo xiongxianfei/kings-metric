@@ -56,3 +56,12 @@ Expected behavior:
 - Stored screenshots can be processed by an Android ML Kit adapter into the current recognition pipeline.
 - Low-confidence and unsupported cases remain explicit.
 - Android OCR wiring does not change the pure parser contract.
+
+## Gotchas
+
+- 2026-04-14: Synthetic generated text images were not enough to validate the
+  real adapter. The live ML Kit output from the supported screenshot fixture
+  reordered some labels and values, inserted punctuation such as `:`, and mixed
+  simplified and traditional Chinese variants for the same label. The Android
+  mapper must be verified against a real supported screenshot fixture, not only
+  synthetic text-image tests.

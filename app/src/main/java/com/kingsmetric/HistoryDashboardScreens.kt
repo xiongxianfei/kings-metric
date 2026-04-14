@@ -305,17 +305,17 @@ fun ImportScreen(
     testImportedDraft: DraftRecord? = null,
     onReviewDraftReady: (DraftRecord) -> Unit
 ) {
-    var status by remember(runtime) { mutableStateOf(runtime.state.status) }
+    val runtimeState by runtime.state.collectAsState()
+    val status = runtimeState.status
     val scope = rememberCoroutineScope()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         scope.launch {
-            val updated = withContext(Dispatchers.Default) {
+            withContext(Dispatchers.Default) {
                 runtime.handlePickerResult(uri?.toString())
-                runtime.state.status
             }
-            status = updated
+            val updated = runtime.state.value.status
             if (updated is ImportRuntimeStatus.ReviewReady) {
                 onReviewDraftReady(updated.draft)
             }
@@ -326,7 +326,6 @@ fun ImportScreen(
         testImportedDraft?.let { draft ->
             Button(
                 onClick = {
-                    status = ImportRuntimeStatus.ReviewReady(draft)
                     onReviewDraftReady(draft)
                 }
             ) {
@@ -349,6 +348,11 @@ fun ImportScreen(
             is ImportRuntimeStatus.ReviewReady -> {
                 Text("Review draft ready.")
                 Text(current.draft.screenshotPath.orEmpty())
+                Button(
+                    onClick = { onReviewDraftReady(current.draft) }
+                ) {
+                    Text("Continue Review")
+                }
             }
         }
     }
