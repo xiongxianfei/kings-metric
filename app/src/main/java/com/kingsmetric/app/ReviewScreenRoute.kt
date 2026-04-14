@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,13 +74,21 @@ fun ReviewScreenRoute(
             Text(message)
         }
 
-        if (state.blockingFields.isNotEmpty()) {
-            Text(SharedUxCopy.blockingSummary(state.blockingFields))
+        state.blockerSummary?.let { summary ->
+            Card(shape = RoundedCornerShape(16.dp)) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(summary.message)
+                    Text("Review next: ${summary.sectionsToVisit.joinToString()}")
+                    Text("Required fields: ${summary.fieldLabels.joinToString()}")
+                }
+            }
         }
 
-        val nonBlockingHighlights = state.highlightedFields - state.blockingFields
-        if (nonBlockingHighlights.isNotEmpty()) {
-            Text(SharedUxCopy.needsAttentionSummary(nonBlockingHighlights))
+        state.attentionSummary?.let { summary ->
+            Text(summary)
         }
 
         Button(
@@ -89,22 +99,35 @@ fun ReviewScreenRoute(
             Text("Confirm Save")
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            state.fields.values.forEach { field ->
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    OutlinedTextField(
-                        value = field.value.orEmpty(),
-                        onValueChange = { newValue ->
-                            viewModel.updateField(field.key, newValue)
-                        },
-                        label = { Text(SharedUxCopy.field(field.key).label) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("field-${field.key.name}")
-                    )
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            state.sections.forEach { section ->
+                Column(
+                    modifier = Modifier.testTag("review-section"),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(section.title)
                     when {
-                        field.key in state.blockingFields -> Text("Required before saving")
-                        field.key in state.highlightedFields -> Text("Needs review")
+                        section.hasBlockingFields -> Text("Contains required updates")
+                        section.hasHighlightedFields -> Text("Contains fields to check")
+                    }
+                    section.fields.forEach { field ->
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            OutlinedTextField(
+                                value = field.value.orEmpty(),
+                                onValueChange = { newValue ->
+                                    viewModel.updateField(field.key, newValue)
+                                },
+                                label = { Text(field.label) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("field-${field.key.name}")
+                            )
+                            Text(if (field.required) "Required field" else "Optional field")
+                            when {
+                                field.blocking -> Text("Required before saving")
+                                field.highlighted -> Text("Needs review")
+                            }
+                        }
                     }
                 }
             }

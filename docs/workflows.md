@@ -134,6 +134,11 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
 - **Rule:** If `unresolvedFields` is non-empty, at least one blocker
   must exist — the user must resolve before saving
 - **Rule:** User can edit any field, not just flagged ones
+- **Rule:** For long grouped review forms, keep the blocker summary and save
+  availability visible near the top of the screen. Lower sections may sit
+  below the fold on phone-sized devices, so instrumentation should verify
+  visible top guidance plus the existence of grouped content instead of
+  assuming every section is simultaneously visible.
 
 **7. Save Validation**
 

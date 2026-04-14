@@ -105,6 +105,7 @@ If a required spec does not exist, do not invent a full feature contract in code
 - Prefer JVM tests for parser, validator, normalizer, save validation, and other pure logic.
 - Use instrumented tests for Room, file persistence integration, and Android framework-dependent behavior.
 - Use Compose UI tests for import, review, edit, and confirmation flows.
+- If an Android Compose test only needs `setContent` and does not rely on a real app activity, prefer `createComposeRule()` over `createAndroidComposeRule<ComponentActivity>()`. That keeps the test independent from manifest activity resolution and avoids harness-only emulator failures.
 - On the current Android toolchain, avoid backtick test method names with spaces in `app/src/androidTest`. Dexing can fail before the test run even when JVM tests allow that naming style.
 - Add or update regression fixtures when changing validation or parsing behavior.
 - When fixing a bug, add or update a regression test first when feasible.
