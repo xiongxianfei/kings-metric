@@ -1,0 +1,64 @@
+name: Room Repositories And Observed History Dashboard Integration
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/room-repositories-and-observed-history-dashboard-integration.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "core/build.gradle.kts"
+      - "app/src/main/java/com/kingsmetric/data/local/**"
+      - "src/main/kotlin/com/kingsmetric/data/local/**"
+      - "src/main/kotlin/com/kingsmetric/history/**"
+      - "src/main/kotlin/com/kingsmetric/dashboard/**"
+      - "src/main/kotlin/com/kingsmetric/importflow/**"
+      - "src/test/kotlin/com/kingsmetric/data/local/**"
+      - "specs/room-repositories-and-observed-history-dashboard-integration.md"
+      - "specs/room-repositories-and-observed-history-dashboard-integration.test.md"
+  push:
+    branches:
+      - main
+      - feature/**
+    paths:
+      - ".github/workflows/room-repositories-and-observed-history-dashboard-integration.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "core/build.gradle.kts"
+      - "app/src/main/java/com/kingsmetric/data/local/**"
+      - "src/main/kotlin/com/kingsmetric/data/local/**"
+      - "src/main/kotlin/com/kingsmetric/history/**"
+      - "src/main/kotlin/com/kingsmetric/dashboard/**"
+      - "src/main/kotlin/com/kingsmetric/importflow/**"
+      - "src/test/kotlin/com/kingsmetric/data/local/**"
+      - "specs/room-repositories-and-observed-history-dashboard-integration.md"
+      - "specs/room-repositories-and-observed-history-dashboard-integration.test.md"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run Room repository integration tests
+        run: >
+          ./gradlew --no-daemon :core:test
+          --tests "com.kingsmetric.data.local.RoomRepositoryMappingTest"
+          --tests "com.kingsmetric.data.local.RoomRepositoryObservedIntegrationTest"
