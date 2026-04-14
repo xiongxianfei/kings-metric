@@ -43,6 +43,11 @@ forces generated-code wiring to execute.
 - Keep Android instrumented test method names dex-safe on the current
   toolchain. Backtick test names with spaces can compile on the Kotlin side
   but still fail later during `dexBuilderDebugAndroidTest`.
+- For Material 3 bottom navigation, prefer tagged route titles as the primary
+  route-context assertion and use `useUnmergedTree = true` when interacting
+  with `NavigationBarItem` semantics in Compose instrumentation. Selected or
+  merged nav items can disappear from the default semantics tree even when the
+  shell is behaving correctly.
 - Treat emulator API level, profile, and post-boot setup options as explicit
   stability choices. If a hosted runner repeatedly fails during emulator boot
   or action-managed device setup, prefer a proven API/profile combination and

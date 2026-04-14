@@ -8,23 +8,48 @@ import org.junit.Test
 class AndroidAppShellNavigationTest {
 
     @Test
-    fun `T1 navigation route definitions cover import review history dashboard and detail destinations`() {
-        val routes = AppRoutes.all
-
-        assertEquals(
-            setOf(
-                AppRoute.Import.pattern,
-                AppRoute.Review.pattern,
-                AppRoute.History.pattern,
-                AppRoute.Dashboard.pattern,
-                AppRoute.RecordDetail.pattern
-            ),
-            routes.map { it.pattern }.toSet()
-        )
+    fun `T1 shell chrome classifies primary and secondary destinations`() {
+        assertEquals(AppShellDestinationKind.Primary, AppShellChrome.forRoute(AppRoute.Import).kind)
+        assertEquals(AppShellDestinationKind.Primary, AppShellChrome.forRoute(AppRoute.History).kind)
+        assertEquals(AppShellDestinationKind.Primary, AppShellChrome.forRoute(AppRoute.Dashboard).kind)
+        assertEquals(AppShellDestinationKind.Secondary, AppShellChrome.forRoute(AppRoute.Review).kind)
+        assertEquals(AppShellDestinationKind.Secondary, AppShellChrome.forRoute(AppRoute.RecordDetail).kind)
     }
 
     @Test
-    fun `T2 navigation coordinator maps save success to the expected destination`() {
+    fun `T2 shell chrome exposes titles for every route`() {
+        assertEquals("Import Match", AppShellChrome.forRoute(AppRoute.Import).title)
+        assertEquals("Match History", AppShellChrome.forRoute(AppRoute.History).title)
+        assertEquals("Dashboard", AppShellChrome.forRoute(AppRoute.Dashboard).title)
+        assertEquals("Review Match", AppShellChrome.forRoute(AppRoute.Review).title)
+        assertEquals("Match Detail", AppShellChrome.forRoute(AppRoute.RecordDetail).title)
+    }
+
+    @Test
+    fun `T3 missing draft state resolves to a safe fallback instruction`() {
+        val coordinator = appCoordinator()
+
+        val state = coordinator.openReview(
+            currentState = coordinator.resolveLaunchState(hasSavedRecords = false),
+            draftAvailable = false
+        )
+
+        assertEquals(AppRoute.Import, state.currentRoute)
+        assertEquals("Review draft is no longer available.", state.userMessage)
+    }
+
+    @Test
+    fun `T4 missing detail identity resolves to a safe fallback instruction`() {
+        val coordinator = appCoordinator()
+
+        val state = coordinator.openDetail(recordId = null)
+
+        assertEquals(AppRoute.History, state.currentRoute)
+        assertEquals("Saved record is no longer available.", state.userMessage)
+    }
+
+    @Test
+    fun `T5 navigation coordinator maps save success to the expected destination`() {
         val coordinator = appCoordinator()
 
         val state = coordinator.onSaveSucceeded(
@@ -36,16 +61,6 @@ class AndroidAppShellNavigationTest {
     }
 
     @Test
-    fun `T3 missing required route arguments resolve to a safe fallback instruction`() {
-        val coordinator = appCoordinator()
-
-        val state = coordinator.openDetail(recordId = null)
-
-        assertEquals(AppRoute.History, state.currentRoute)
-        assertEquals("Saved record is no longer available.", state.userMessage)
-    }
-
-    @Test
     fun `IT1 app launch shows the root destination without crashing`() {
         val shell = appShell()
 
@@ -53,6 +68,7 @@ class AndroidAppShellNavigationTest {
 
         assertEquals(AppRoute.Import, state.currentRoute)
         assertTrue(state.availableRoutes.contains(AppRoute.History))
+        assertEquals(AppShellDestinationKind.Primary, AppShellChrome.forRoute(state.currentRoute).kind)
     }
 
     @Test
