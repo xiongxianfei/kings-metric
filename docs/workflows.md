@@ -32,6 +32,9 @@ forces generated-code wiring to execute.
   Running the same workflow on feature-branch `push` and `pull_request`
   duplicates expensive emulator work and makes failures harder to read.
 - Add `concurrency` to expensive workflows so stale branch runs are cancelled.
+- Keep PR workflows fast. If an emulator-backed check consistently takes too
+  long for normal review feedback, move it to a scheduled or manual smoke
+  workflow and leave only the smaller assembly/unit checks on the PR path.
 - Keep repository-specific Kotlin/KSP compatibility properties in place
   until the toolchain is upgraded and re-verified. Removing them can turn a
   compile-time wiring problem into a runtime crash.

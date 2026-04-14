@@ -129,6 +129,7 @@ If a required spec does not exist, do not invent a full feature contract in code
 - If an Android flow depends on framework UI that is not deterministic in tests, add the narrowest possible test seam at the app-shell boundary. Do not bypass the business flow itself just to make instrumentation easier.
 - For feature-scoped GitHub Actions workflows, prefer `pull_request` plus `push` on `main` only. Do not also run the same expensive workflow on feature-branch `push` unless there is a specific reason.
 - Add workflow `concurrency` for expensive Android jobs so stale emulator runs are cancelled instead of stacking up across rapid branch updates.
+- If an emulator-backed workflow takes materially longer than the normal PR feedback budget, move it out of the PR path into a scheduled or manual smoke workflow unless the feature explicitly requires that gate before review.
 - When adding Room, Hilt, or other generated-code Android integrations, wire the required KSP/compiler dependency in the owning Android module before treating the feature as runnable.
 - For generated-code Android features, verify at least `:app:assembleDebug` so missing `_Impl` or generated component classes fail in CI instead of at runtime.
 - If the current Android toolchain uses AGP built-in Kotlin with KSP, preserve the compatibility property in `gradle.properties` unless the toolchain is upgraded and verified without it.

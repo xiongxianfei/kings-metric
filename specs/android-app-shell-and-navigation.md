@@ -88,3 +88,6 @@ Expected behavior:
   combinations that work locally may fail in action-managed post-boot setup.
   Keep the workflow on a proven emulator configuration and scope connected
   tests to the app-shell instrumentation class when possible.
+- 2026-04-14: The app-shell emulator check is valuable but slow. Keep the
+  feature PR workflow fast with JVM/unit/assembly checks, and run the
+  emulator-backed shell smoke test on a scheduled or manual workflow instead.
