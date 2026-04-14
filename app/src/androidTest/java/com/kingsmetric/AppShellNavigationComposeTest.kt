@@ -48,7 +48,7 @@ class AppShellNavigationComposeTest {
         }
 
         composeRule.onNodeWithText("Review draft is no longer available.").assertIsDisplayed()
-        composeRule.onNodeWithText("Select one screenshot to import.").assertIsDisplayed()
+        composeRule.onNodeWithText("Select one supported screenshot to start review.").assertIsDisplayed()
     }
 
     @Test
@@ -64,7 +64,7 @@ class AppShellNavigationComposeTest {
         }
 
         composeRule.onNodeWithText("Saved record is no longer available.").assertIsDisplayed()
-        composeRule.onNodeWithText("No saved matches yet.").assertIsDisplayed()
+        composeRule.onNodeWithText("No saved matches yet. Save a reviewed match to see it here.").assertIsDisplayed()
     }
 
     @Test
@@ -83,9 +83,13 @@ class AppShellNavigationComposeTest {
         composeRule.onNodeWithTag("confirm-save").performClick()
 
         composeRule.waitUntil(timeoutMillis = 5_000) {
-            composeRule.onAllNodesWithText("No saved matches yet.").fetchSemanticsNodes().isNotEmpty()
+            composeRule.onAllNodesWithText(
+                "No saved matches yet. Save a reviewed match to see it here."
+            ).fetchSemanticsNodes().isNotEmpty()
         }
-        composeRule.onNodeWithText("No saved matches yet.").assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "No saved matches yet. Save a reviewed match to see it here."
+        ).assertIsDisplayed()
     }
 
     @Test
@@ -108,9 +112,11 @@ class AppShellNavigationComposeTest {
         composeRule.onNodeWithTag("confirm-save").performClick()
 
         composeRule.waitUntil(timeoutMillis = 5_000) {
-            composeRule.onAllNodesWithText("No saved matches yet.").fetchSemanticsNodes().isNotEmpty()
+            composeRule.onAllNodesWithText(
+                "No saved matches yet. Save a reviewed match to see it here."
+            ).fetchSemanticsNodes().isNotEmpty()
         }
-        composeRule.onNodeWithText("No saved matches yet.").assertIsDisplayed()
+        composeRule.onNodeWithText("No saved matches yet. Save a reviewed match to see it here.").assertIsDisplayed()
     }
 
     @Test
@@ -124,11 +130,11 @@ class AppShellNavigationComposeTest {
             )
         }
 
-        composeRule.onNodeWithText("History").performClick()
-        composeRule.onNodeWithText("No saved matches yet.").assertIsDisplayed()
+        composeRule.onNodeWithText("History", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText("No saved matches yet. Save a reviewed match to see it here.").assertIsDisplayed()
 
-        composeRule.onNodeWithText("Dashboard").performClick()
-        composeRule.onNodeWithText("No saved metrics yet.").assertIsDisplayed()
+        composeRule.onNodeWithText("Dashboard", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText("No saved metrics yet. Save a reviewed match to see them here.").assertIsDisplayed()
     }
 }
 

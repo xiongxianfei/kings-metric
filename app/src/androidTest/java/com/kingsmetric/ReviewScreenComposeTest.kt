@@ -54,7 +54,7 @@ class ReviewScreenComposeTest {
             )
         }
 
-        composeRule.onNodeWithText("Blocking field: KDA").assertIsDisplayed()
+        composeRule.onNodeWithText("Complete before saving: KDA Ratio").assertIsDisplayed()
         composeRule.onNodeWithTag("confirm-save").assertIsNotEnabled()
     }
 
@@ -66,7 +66,7 @@ class ReviewScreenComposeTest {
             )
         }
 
-        composeRule.onNodeWithText("Needs review: LAST_HITS").assertIsDisplayed()
+        composeRule.onNodeWithText("Check before saving: Last Hits").assertIsDisplayed()
         composeRule.onNodeWithTag("confirm-save").assertIsEnabled()
     }
 
@@ -81,7 +81,9 @@ class ReviewScreenComposeTest {
             )
         }
 
-        composeRule.onNodeWithText("Screenshot preview unavailable").assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "Screenshot preview unavailable. Match data is still available below."
+        ).assertIsDisplayed()
         composeRule.onNodeWithTag("field-RESULT").assertIsDisplayed()
     }
 
@@ -100,7 +102,7 @@ class ReviewScreenComposeTest {
         composeRule.onNodeWithTag("field-LANE").performTextInput("Farm Lane")
         composeRule.onNodeWithTag("confirm-save").performClick()
 
-        composeRule.onNodeWithText("Could not save record locally.").assertIsDisplayed()
+        composeRule.onNodeWithText("Could not save this match locally. Try again.").assertIsDisplayed()
         composeRule.onNodeWithText("Farm Lane").assertIsDisplayed()
     }
 
@@ -140,7 +142,7 @@ class ReviewScreenComposeTest {
         composeRule.onNodeWithTag("confirm-save").performClick()
 
         composeRule.waitUntil(timeoutMillis = 5_000) { saveSucceeded }
-        composeRule.onNodeWithText("Could not save record locally.").assertDoesNotExist()
+        composeRule.onNodeWithText("Could not save this match locally. Try again.").assertDoesNotExist()
     }
 }
 

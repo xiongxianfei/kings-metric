@@ -49,11 +49,14 @@ import com.kingsmetric.app.ImportRuntimeStatus
 import com.kingsmetric.app.PreviewAvailability
 import com.kingsmetric.app.ReviewScreenRoute
 import com.kingsmetric.app.ReviewScreenViewModel
+import com.kingsmetric.app.SharedMessageKey
+import com.kingsmetric.app.SharedUxCopy
 import com.kingsmetric.app.UriScreenshotStorage
 import com.kingsmetric.dashboard.DashboardContentState
 import com.kingsmetric.data.local.RoomObservedMatchRepository
 import com.kingsmetric.history.HistoryContentState
 import com.kingsmetric.importflow.DraftRecord
+import com.kingsmetric.importflow.FieldKey
 import com.kingsmetric.importflow.ImportResult
 import com.kingsmetric.importflow.MatchImportWorkflow
 import java.io.File
@@ -117,7 +120,7 @@ fun HistoryDashboardRoot(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Text("Loading app...")
+            Text(SharedUxCopy.message(SharedMessageKey.APP_LOADING).text)
         }
         return
     }
@@ -214,7 +217,7 @@ fun HistoryDashboardRoot(
                             launchSingleTop = true
                         }
                     }
-                    Text("Select one screenshot to import.")
+                    Text(SharedUxCopy.message(SharedMessageKey.IMPORT_IDLE).text)
                 } else {
                     val reviewViewModel = remember(draft, reviewWorkflow) {
                         ReviewScreenViewModel(
@@ -339,14 +342,14 @@ fun ImportScreen(
                 )
             }
         ) {
-            Text("Import Screenshot")
+            Text(SharedUxCopy.message(SharedMessageKey.IMPORT_ACTION).text)
         }
 
         when (val current = status) {
-            ImportRuntimeStatus.Idle -> Text("Select one screenshot to import.")
+            ImportRuntimeStatus.Idle -> Text(SharedUxCopy.message(SharedMessageKey.IMPORT_IDLE).text)
             is ImportRuntimeStatus.Failed -> Text(current.message)
             is ImportRuntimeStatus.ReviewReady -> {
-                Text("Review draft ready.")
+                Text(SharedUxCopy.message(SharedMessageKey.IMPORT_REVIEW_READY).text)
                 Text(current.draft.screenshotPath.orEmpty())
                 Button(
                     onClick = { onReviewDraftReady(current.draft) }
@@ -365,7 +368,7 @@ fun HistoryScreen(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         when (val content = state.content) {
-            HistoryContentState.Empty -> Text("No saved matches yet.")
+            HistoryContentState.Empty -> Text(SharedUxCopy.message(SharedMessageKey.HISTORY_EMPTY).text)
             is HistoryContentState.Error -> Text(content.message)
             is HistoryContentState.Loaded -> {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -377,11 +380,11 @@ fun HistoryScreen(
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text(
-                                    record.hero ?: "Unknown Hero",
+                                    SharedUxCopy.labeledValue(FieldKey.HERO, record.hero ?: "Not entered"),
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    record.result ?: "Unknown Result",
+                                    SharedUxCopy.labeledValue(FieldKey.RESULT, record.result ?: "Not entered"),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -400,7 +403,7 @@ fun HistoryScreen(
 @Composable
 fun DashboardScreen(state: DashboardScreenUiState) {
     when (val content = state.content) {
-        DashboardContentState.Empty -> Text("No saved metrics yet.")
+        DashboardContentState.Empty -> Text(SharedUxCopy.message(SharedMessageKey.DASHBOARD_EMPTY).text)
         is DashboardContentState.Error -> Text(content.message)
         is DashboardContentState.Loaded -> {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -424,11 +427,11 @@ fun RecordDetailScreen(state: DetailScreenUiState) {
             if (state.previewAvailability == PreviewAvailability.Available) {
                 state.screenshotPath ?: "Preview available"
             } else {
-                "Screenshot preview unavailable"
+                SharedUxCopy.message(SharedMessageKey.MISSING_SCREENSHOT_PREVIEW).text
             }
         )
         state.fields.forEach { field ->
-            Text("${field.key.name}: ${field.value ?: "-"}")
+            Text(SharedUxCopy.labeledValue(field.key, field.value))
         }
     }
 }

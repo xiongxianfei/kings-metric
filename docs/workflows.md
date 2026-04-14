@@ -40,6 +40,9 @@ forces generated-code wiring to execute.
   compile-time wiring problem into a runtime crash.
 - Treat "generated implementation does not exist" failures as build wiring
   bugs first, not runtime-only bugs.
+- Keep Android instrumented test method names dex-safe on the current
+  toolchain. Backtick test names with spaces can compile on the Kotlin side
+  but still fail later during `dexBuilderDebugAndroidTest`.
 - Treat emulator API level, profile, and post-boot setup options as explicit
   stability choices. If a hosted runner repeatedly fails during emulator boot
   or action-managed device setup, prefer a proven API/profile combination and
