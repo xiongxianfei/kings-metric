@@ -1,0 +1,76 @@
+name: History And Dashboard Screen Binding
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/history-and-dashboard-screen-binding.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "core/build.gradle.kts"
+      - "app/src/main/java/com/kingsmetric/MainActivity.kt"
+      - "app/src/main/java/com/kingsmetric/HistoryDashboardScreens.kt"
+      - "src/main/kotlin/com/kingsmetric/app/HistoryDashboardScreenBinding.kt"
+      - "src/main/kotlin/com/kingsmetric/app/ReviewScreenIntegration.kt"
+      - "src/main/kotlin/com/kingsmetric/history/**"
+      - "src/main/kotlin/com/kingsmetric/dashboard/**"
+      - "src/main/kotlin/com/kingsmetric/data/local/**"
+      - "src/test/kotlin/com/kingsmetric/app/HistoryDashboardScreenBindingTest.kt"
+      - "specs/history-and-dashboard-screen-binding.md"
+      - "specs/history-and-dashboard-screen-binding.test.md"
+  push:
+    branches:
+      - main
+      - feature/**
+    paths:
+      - ".github/workflows/history-and-dashboard-screen-binding.yml"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "app/build.gradle.kts"
+      - "core/build.gradle.kts"
+      - "app/src/main/java/com/kingsmetric/MainActivity.kt"
+      - "app/src/main/java/com/kingsmetric/HistoryDashboardScreens.kt"
+      - "src/main/kotlin/com/kingsmetric/app/HistoryDashboardScreenBinding.kt"
+      - "src/main/kotlin/com/kingsmetric/app/ReviewScreenIntegration.kt"
+      - "src/main/kotlin/com/kingsmetric/history/**"
+      - "src/main/kotlin/com/kingsmetric/dashboard/**"
+      - "src/main/kotlin/com/kingsmetric/data/local/**"
+      - "src/test/kotlin/com/kingsmetric/app/HistoryDashboardScreenBindingTest.kt"
+      - "specs/history-and-dashboard-screen-binding.md"
+      - "specs/history-and-dashboard-screen-binding.test.md"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-36 build-tools;36.0.0
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run screen binding tests
+        run: >
+          ./gradlew --no-daemon :core:test
+          --tests "com.kingsmetric.app.HistoryDashboardScreenStateMapperTest"
+          --tests "com.kingsmetric.app.HistoryDashboardScreenBindingIntegrationTest"
+
+      - name: Assemble debug app
+        run: ./gradlew --no-daemon :app:assembleDebug
