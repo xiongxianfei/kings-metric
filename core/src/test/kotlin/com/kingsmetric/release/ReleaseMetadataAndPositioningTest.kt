@@ -18,8 +18,9 @@ class ReleaseMetadataAndPositioningTest {
     @Test
     fun `T2 version-tag mapping for the first release uses a prerelease-compatible shape and rejects stable-first-release wording`() {
         val metadata = FirstReleaseMetadata.load(resolveRepositoryRoot())
+        val artifactContract = ReleaseArtifactContract.load(resolveRepositoryRoot())
 
-        assertEquals("v0.1.0-alpha.8", metadata.versionTag)
+        assertEquals("v${artifactContract.releaseVersionName}", metadata.versionTag)
         val stableAttempt = metadata.copy(versionTag = "v1.0.0")
 
         assertTrue(stableAttempt.validate().any { issue ->
@@ -89,8 +90,11 @@ class ReleaseMetadataAndPositioningIntegrationTest {
     @Test
     fun `IT1 repository description-tagline and release-positioning metadata resolve to the same maturity level and supported-scope statement`() {
         val metadata = FirstReleaseMetadata.load(resolveRepositoryRoot())
+        val artifactContract = ReleaseArtifactContract.load(resolveRepositoryRoot())
 
         assertTrue(metadata.validate().isEmpty())
+        assertEquals("v${artifactContract.releaseVersionName}", metadata.versionTag)
+        assertTrue(artifactContract.releaseNotesPath.contains(metadata.versionTag))
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.kingsmetric.diagnostics.DiagnosticsStage
 import com.kingsmetric.diagnostics.DiagnosticsEvent
 import com.kingsmetric.diagnostics.DiagnosticsExport
 import com.kingsmetric.diagnostics.DiagnosticsExportEntry
+import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -13,20 +14,59 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DiagnosticsScreenIntegrationTest {
+    private val utcTimeFormatter = DiagnosticsTimeFormatter { ZoneId.of("UTC") }
 
     @Test
-    fun `T1 diagnostics screen exposes explicit empty state and disables export`() {
-        val viewModel = DiagnosticsScreenViewModel(TestDiagnosticsRecorder())
+    fun `T1 diagnostics screen exposes labeled current version from runtime source`() {
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = TestDiagnosticsRecorder(),
+            appVersionProvider = { "0.1.0-alpha.8" },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
 
         val state = viewModel.state.value
 
+        assertEquals("Current Version", state.currentVersionLabel)
+        assertEquals("0.1.0-alpha.8", state.currentVersionValue)
+    }
+
+    @Test
+    fun `T2 empty diagnostics state still exposes version and disables export`() {
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = TestDiagnosticsRecorder(),
+            appVersionProvider = { "0.1.0-alpha.8" },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
+
+        val state = viewModel.state.value
+
+        assertEquals("Current Version", state.currentVersionLabel)
+        assertEquals("0.1.0-alpha.8", state.currentVersionValue)
         assertEquals("No diagnostics captured yet.", state.emptyStateText)
         assertFalse(state.exportEnabled)
         assertEquals("Copy Diagnostics", state.exportButtonLabel)
     }
 
     @Test
-    fun `T2 diagnostics screen shows newest entries first with readable labels`() {
+    fun `T3 diagnostics screen falls back to Unknown when lookup fails`() {
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = TestDiagnosticsRecorder(),
+            appVersionProvider = { error("package lookup failed") },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
+
+        val state = viewModel.state.value
+
+        assertEquals("Current Version", state.currentVersionLabel)
+        assertEquals("Unknown", state.currentVersionValue)
+        assertEquals("No diagnostics captured yet.", state.emptyStateText)
+    }
+
+    @Test
+    fun `T4 diagnostics screen shows newest entries first with readable labels`() {
         val recorder = TestDiagnosticsRecorder().apply {
             record(
                 stage = DiagnosticsStage.IMPORT,
@@ -39,20 +79,27 @@ class DiagnosticsScreenIntegrationTest {
                 summary = "Could not save record locally."
             )
         }
-        val viewModel = DiagnosticsScreenViewModel(recorder)
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = recorder,
+            appVersionProvider = { "0.1.0-alpha.8" },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
 
         val state = viewModel.state.value
 
+        assertEquals("0.1.0-alpha.8", state.currentVersionValue)
         assertEquals(2, state.entries.size)
         assertEquals("Save Failed", state.entries.first().title)
         assertEquals("Save", state.entries.first().stageText)
+        assertEquals("Time: 1970-01-01 00:00:00 UTC", state.entries.first().timestampText)
         assertTrue(state.entries.first().summary.contains("Could not save record locally."))
         assertEquals("Unsupported Screenshot", state.entries.last().title)
         assertTrue(state.exportEnabled)
     }
 
     @Test
-    fun `T3 export formatter produces bounded readable diagnostics text`() {
+    fun `T5 export formatter preserves the same version shown in state`() {
         val recorder = TestDiagnosticsRecorder().apply {
             record(
                 stage = DiagnosticsStage.RECOGNITION,
@@ -66,9 +113,15 @@ class DiagnosticsScreenIntegrationTest {
                 )
             )
         }
-        val viewModel = DiagnosticsScreenViewModel(recorder)
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = recorder,
+            appVersionProvider = { "0.1.0-alpha.8" },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
         var exportedText: String? = null
 
+        val visibleVersion = viewModel.state.value.currentVersionValue
         viewModel.export { text ->
             exportedText = text
             true
@@ -76,7 +129,10 @@ class DiagnosticsScreenIntegrationTest {
 
         requireNotNull(exportedText)
         assertTrue(exportedText!!.contains("Kings Metric Diagnostics"))
+        assertTrue(exportedText!!.contains("Current Version: $visibleVersion"))
+        assertTrue(exportedText!!.contains("Exported At: 1970-01-01 00:00:00 UTC"))
         assertTrue(exportedText!!.contains("Recognition Failed"))
+        assertTrue(exportedText!!.contains("Time: 1970-01-01 00:00:00 UTC"))
         assertTrue(exportedText!!.contains("appVersion: 0.1.0-alpha.8"))
         assertTrue(exportedText!!.contains("detail: Missing damage section values after OCR mapping."))
         assertTrue(exportedText!!.contains("ocrText:"))
@@ -93,7 +149,12 @@ class DiagnosticsScreenIntegrationTest {
                 metadata = mapOf("detail" to "Missing damage section values after OCR mapping.")
             )
         }
-        val viewModel = DiagnosticsScreenViewModel(recorder)
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = recorder,
+            appVersionProvider = { "0.1.0-alpha.8" },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
 
         val state = viewModel.state.value
 
@@ -113,7 +174,12 @@ class DiagnosticsScreenIntegrationTest {
                 )
             )
         }
-        val viewModel = DiagnosticsScreenViewModel(recorder)
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = recorder,
+            appVersionProvider = { "0.1.0-alpha.8" },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
 
         val state = viewModel.state.value
 
@@ -129,7 +195,12 @@ class DiagnosticsScreenIntegrationTest {
                 summary = "Saved locally."
             )
         }
-        val viewModel = DiagnosticsScreenViewModel(recorder)
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = recorder,
+            appVersionProvider = { "0.1.0-alpha.8" },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
 
         viewModel.export { true }
 
@@ -142,7 +213,12 @@ class DiagnosticsScreenIntegrationTest {
     @Test
     fun `T5 failed export updates retryable message`() {
         val recorder = ThrowingDiagnosticsRecorder()
-        val viewModel = DiagnosticsScreenViewModel(recorder)
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = recorder,
+            appVersionProvider = { "0.1.0-alpha.8" },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
 
         viewModel.export { true }
 
@@ -155,7 +231,12 @@ class DiagnosticsScreenIntegrationTest {
     @Test
     fun `IT5 refresh reflects newly captured diagnostics entries`() {
         val recorder = TestDiagnosticsRecorder()
-        val viewModel = DiagnosticsScreenViewModel(recorder)
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = recorder,
+            appVersionProvider = { "0.1.0-alpha.8" },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
 
         recorder.record(
             stage = DiagnosticsStage.IMPORT,
@@ -168,6 +249,24 @@ class DiagnosticsScreenIntegrationTest {
         assertEquals(1, state.entries.size)
         assertEquals("Import Source Failed", state.entries.single().title)
         assertNotNull(state.notice)
+    }
+
+    @Test
+    fun `IT6 refresh updates visible version from the runtime source`() {
+        var currentVersion = "0.1.0-alpha.8"
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = TestDiagnosticsRecorder(),
+            appVersionProvider = { currentVersion },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
+
+        assertEquals("0.1.0-alpha.8", viewModel.state.value.currentVersionValue)
+
+        currentVersion = "0.1.0-alpha.9"
+        viewModel.refresh()
+
+        assertEquals("0.1.0-alpha.9", viewModel.state.value.currentVersionValue)
     }
 }
 
@@ -196,7 +295,7 @@ private class TestDiagnosticsRecorder : DiagnosticsRecorder {
 
     override fun export(): DiagnosticsExport {
         return DiagnosticsExport(
-            exportedAtMillis = 999L,
+            exportedAtMillis = 0L,
             notice = "This export does not include the original screenshot, raw OCR text, or full saved match data.",
             entries = events.map {
                 DiagnosticsExportEntry(

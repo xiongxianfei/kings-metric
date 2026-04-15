@@ -37,6 +37,12 @@ fun DiagnosticsScreenRoute(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(state.notice)
+        Text(state.currentVersionLabel, style = MaterialTheme.typography.labelMedium)
+        Text(
+            state.currentVersionValue,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.testTag("diagnostics-current-version")
+        )
         state.userMessage?.let { Text(it) }
         Button(
             onClick = { viewModel.export(copyAction) },

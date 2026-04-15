@@ -5,9 +5,16 @@ import com.kingsmetric.diagnostics.DiagnosticsExport
 import com.kingsmetric.diagnostics.DiagnosticsOutcome
 import com.kingsmetric.diagnostics.DiagnosticsRecorder
 import com.kingsmetric.diagnostics.DiagnosticsStage
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+
+fun interface AppVersionProvider {
+    fun currentVersion(): String
+}
 
 data class DiagnosticsEntryPresentation(
     val title: String,
@@ -19,6 +26,8 @@ data class DiagnosticsEntryPresentation(
 
 data class DiagnosticsScreenUiState(
     val notice: String,
+    val currentVersionLabel: String,
+    val currentVersionValue: String,
     val entries: List<DiagnosticsEntryPresentation>,
     val emptyStateText: String?,
     val exportEnabled: Boolean,
@@ -26,15 +35,22 @@ data class DiagnosticsScreenUiState(
     val userMessage: String?
 )
 
-class DiagnosticsExportFormatter {
+class DiagnosticsExportFormatter(
+    private val timeFormatter: DiagnosticsTimeFormatter = DiagnosticsTimeFormatter()
+) {
+
     fun defaultNotice(): String {
         return "This export does not include the original screenshot or full saved match data. It may include OCR text captured during a failed recognition attempt."
     }
 
-    fun format(export: DiagnosticsExport): String {
+    fun format(
+        export: DiagnosticsExport,
+        currentVersionValue: String
+    ): String {
         val lines = mutableListOf<String>()
         lines += "Kings Metric Diagnostics"
-        lines += "Exported At: ${export.exportedAtMillis}"
+        lines += "Current Version: $currentVersionValue"
+        lines += "Exported At: ${timeFormatter.format(export.exportedAtMillis)}"
         lines += "Notice: ${export.notice}"
         lines += ""
         if (export.entries.isEmpty()) {
@@ -43,7 +59,7 @@ class DiagnosticsExportFormatter {
             export.entries.forEach { entry ->
                 lines += "- ${outcomeLabel(entry.outcome)}"
                 lines += "  Stage: ${stageLabel(entry.stage)}"
-                lines += "  Time: ${entry.timestampMillis}"
+                lines += "  Time: ${timeFormatter.format(entry.timestampMillis)}"
                 lines += "  Summary: ${entry.summary}"
                 if (entry.metadata.isNotEmpty()) {
                     entry.metadata.toSortedMap().forEach { (key, value) ->
@@ -64,9 +80,25 @@ class DiagnosticsExportFormatter {
     }
 }
 
+class DiagnosticsTimeFormatter(
+    private val zoneIdProvider: () -> ZoneId = { ZoneId.systemDefault() }
+) {
+    fun format(timestampMillis: Long): String {
+        return runCatching {
+            DATE_TIME_FORMATTER
+                .withZone(zoneIdProvider())
+                .format(Instant.ofEpochMilli(timestampMillis))
+        }.getOrElse {
+            timestampMillis.toString()
+        }
+    }
+}
+
 class DiagnosticsScreenViewModel(
     private val recorder: DiagnosticsRecorder,
-    private val formatter: DiagnosticsExportFormatter = DiagnosticsExportFormatter()
+    private val appVersionProvider: AppVersionProvider = AppVersionProvider { UNKNOWN_APP_VERSION },
+    private val formatter: DiagnosticsExportFormatter = DiagnosticsExportFormatter(),
+    private val timeFormatter: DiagnosticsTimeFormatter = DiagnosticsTimeFormatter()
 ) {
     private val _state = MutableStateFlow(buildState())
     val state: StateFlow<DiagnosticsScreenUiState> = _state.asStateFlow()
@@ -76,7 +108,12 @@ class DiagnosticsScreenViewModel(
     }
 
     fun export(copyDiagnosticsText: (String) -> Boolean) {
-        val exportText = runCatching { formatter.format(recorder.export()) }.getOrNull()
+        val exportText = runCatching {
+            formatter.format(
+                export = recorder.export(),
+                currentVersionValue = _state.value.currentVersionValue
+            )
+        }.getOrNull()
         if (exportText == null) {
             _state.value = buildState(
                 userMessage = "Couldn't export diagnostics. Try again."
@@ -95,11 +132,14 @@ class DiagnosticsScreenViewModel(
     }
 
     private fun buildState(userMessage: String? = null): DiagnosticsScreenUiState {
+        val currentVersionValue = safeCurrentVersionValue()
         val entries = recorder.snapshot()
             .asReversed()
             .map { it.toPresentation() }
         return DiagnosticsScreenUiState(
             notice = formatter.defaultNotice(),
+            currentVersionLabel = CURRENT_VERSION_LABEL,
+            currentVersionValue = currentVersionValue,
             entries = entries,
             emptyStateText = if (entries.isEmpty()) "No diagnostics captured yet." else null,
             exportEnabled = entries.isNotEmpty(),
@@ -114,11 +154,22 @@ class DiagnosticsScreenViewModel(
             title = outcomeLabel(outcome),
             stageText = stageLabel(stage),
             summary = if (detail == null) summary else "$summary\nReason: $detail",
-            timestampText = "Time: $timestampMillis",
+            timestampText = "Time: ${timeFormatter.format(timestampMillis)}",
             ocrText = metadata["ocrText"]?.takeIf { it.isNotBlank() }
         )
     }
+
+    private fun safeCurrentVersionValue(): String {
+        return runCatching { appVersionProvider.currentVersion().trim() }
+            .getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?: UNKNOWN_APP_VERSION
+    }
 }
+
+private val DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
+private const val CURRENT_VERSION_LABEL = "Current Version"
+private const val UNKNOWN_APP_VERSION = "Unknown"
 
 private fun stageLabel(stage: DiagnosticsStage): String {
     return when (stage) {

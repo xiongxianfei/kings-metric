@@ -8,6 +8,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.kingsmetric.app.AndroidRuntimeAppVersionProvider
+import com.kingsmetric.app.AppVersionProvider
 import com.kingsmetric.app.MlKitRecognitionAdapter
 import com.kingsmetric.app.UriScreenshotStorage
 import com.kingsmetric.data.local.RoomObservedMatchRepository
@@ -32,7 +34,8 @@ class MainActivity : ComponentActivity() {
                 uriStorage = uriStorage,
                 recognizeStoredScreenshot = recognitionAdapter::recognize,
                 reviewWorkflow = reviewWorkflow,
-                diagnosticsRecorder = diagnosticsRecorder
+                diagnosticsRecorder = diagnosticsRecorder,
+                appVersionProvider = AndroidRuntimeAppVersionProvider(applicationContext)
             )
         }
     }
@@ -44,7 +47,8 @@ private fun KingsMetricApp(
     uriStorage: UriScreenshotStorage,
     recognizeStoredScreenshot: (String) -> com.kingsmetric.importflow.ImportResult,
     reviewWorkflow: MatchImportWorkflow,
-    diagnosticsRecorder: DiagnosticsRecorder
+    diagnosticsRecorder: DiagnosticsRecorder,
+    appVersionProvider: AppVersionProvider
 ) {
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
@@ -53,7 +57,8 @@ private fun KingsMetricApp(
                 uriStorage = uriStorage,
                 recognizeStoredScreenshot = recognizeStoredScreenshot,
                 reviewWorkflow = reviewWorkflow,
-                diagnosticsRecorder = diagnosticsRecorder
+                diagnosticsRecorder = diagnosticsRecorder,
+                appVersionProvider = appVersionProvider
             )
         }
     }
