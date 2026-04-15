@@ -69,3 +69,7 @@ Expected behavior:
   failure. Keep the repository-backed save path off the UI thread and cover it
   with an Android test that uses a real Room database rather than only fake
   record stores.
+- 2026-04-15: Do not decode the full original screenshot bitmap just to render
+  the review preview. Real imported screenshots can be large enough that a
+  full-resolution preview decode crashes the review screen immediately after
+  import. Use a bounded downsampled decode sized for the preview surface.
