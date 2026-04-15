@@ -114,6 +114,10 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
   columns, so first-value metrics should be extracted from a narrow
   label-local window while trailing metrics such as participation or control
   time may still need a later last-occurrence scan.
+- **Rule:** Do not copy garbled terminal or log output into parser constants as
+  if it were a supported label variant. Keep canonical readable screenshot
+  labels in the mapper and treat mojibake from local tooling as an encoding
+  diagnostic problem, not a product input format.
 
 **4. Field Normalization**
 

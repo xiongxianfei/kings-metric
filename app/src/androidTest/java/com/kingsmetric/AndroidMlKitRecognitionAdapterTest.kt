@@ -32,7 +32,7 @@ class AndroidMlKitRecognitionAdapterTest {
                 "胜利",
                 "20 vs 10",
                 "数据",
-                "不败、菜鸟 发育路 11/1/5",
+                "不败丶菜鸟 发育路 11/1/5",
                 "对英雄输出 171.2k 输出占比 35.3%",
                 "承受英雄伤害 82.1k 承伤占比 20.3%",
                 "经济 13.1k 经济占比 24%",
@@ -73,7 +73,7 @@ class AndroidMlKitRecognitionAdapterTest {
             lines = listOf(
                 "胜利",
                 "数据",
-                "不败、菜鸟 发育路 11/1/5"
+                "不败丶菜鸟 发育路 11/1/5"
             )
         )
         val adapter = adapter(context)

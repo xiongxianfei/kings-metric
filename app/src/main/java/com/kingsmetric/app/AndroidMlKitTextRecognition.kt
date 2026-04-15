@@ -54,32 +54,21 @@ class AndroidMlKitTextRecognizer(
 }
 
 private object SupportedTemplateTextMapper {
-    private val resultLabels = listOf("胜利", "失败", "鑳滃埄", "澶辫触")
+    private val resultLabels = listOf("胜利", "失败")
     private val resultPattern = Regex(resultLabels.joinToString("|") { Regex.escape(it) })
-    private val laneNames = listOf(
-        "发育路",
-        "对抗路",
-        "中路",
-        "打野",
-        "游走",
-        "鍙戣偛璺?",
-        "瀵规姉璺?",
-        "涓矾",
-        "鎵撻噹",
-        "娓歌蛋"
-    )
-    private val dataTabLabels = listOf("数据", "鏁版嵁")
-    private val damageDealtLabels = listOf("对英雄输出", "对英雄輸出", "对英雄几出", "瀵硅嫳闆勮緭鍑?", "瀵硅嫳闆勮几鍑?")
-    private val damageShareLabels = listOf("输出占比", "杈撳嚭鍗犳瘮")
-    private val damageTakenLabels = listOf("承受英雄伤害", "鎵垮彈鑻遍泟浼ゅ")
-    private val damageTakenShareLabels = listOf("承伤占比", "鎵夸激鍗犳瘮")
-    private val economyLabels = listOf("总经济", "经济", "鎬荤粡娴?", "缁忔祹")
-    private val goldShareLabels = listOf("经济占比", "缁忔祹鍗犳瘮")
-    private val farmingGoldLabels = listOf("打野经济", "鎵撻噹缁忔祹")
-    private val lastHitsLabels = listOf("补刀数", "琛ュ垁鏁?")
-    private val participationLabels = listOf("参团率", "鍙傚洟鐜?")
-    private val controlDurationLabels = listOf("控制时长", "鎺у埗鏃堕暱")
-    private val towerDamageLabels = listOf("对塔伤害", "瀵瑰浼ゅ")
+    private val laneNames = listOf("发育路", "对抗路", "中路", "打野", "游走")
+    private val dataTabLabels = listOf("数据")
+    private val damageDealtLabels = listOf("对英雄输出", "对英雄輸出", "对英雄几出")
+    private val damageShareLabels = listOf("输出占比")
+    private val damageTakenLabels = listOf("承受英雄伤害")
+    private val damageTakenShareLabels = listOf("承伤占比")
+    private val economyLabels = listOf("总经济", "经济")
+    private val goldShareLabels = listOf("经济占比")
+    private val farmingGoldLabels = listOf("打野经济")
+    private val lastHitsLabels = listOf("补刀数")
+    private val participationLabels = listOf("参团率")
+    private val controlDurationLabels = listOf("控制时长")
+    private val towerDamageLabels = listOf("对塔伤害")
 
     fun map(text: String, requestedFields: Set<FieldKey>): ScreenshotAnalysis {
         val normalizedText = normalize(text)
