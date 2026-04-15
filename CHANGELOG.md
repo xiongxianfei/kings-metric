@@ -2,6 +2,45 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.4] - 2026-04-15
+
+Alpha prerelease replacement for early testers.
+
+### Features
+
+- **In-app diagnostics support** - the app now keeps bounded local diagnostics
+  for import, recognition, and save outcomes, and exposes a `Diagnostics`
+  screen that lets users copy a redacted diagnostics export without adb.
+
+### Bug Fixes
+
+- **Supported screenshots no longer fall through to generic read-failure as
+  often on real devices** - the ML Kit mapper now extracts required first-value
+  metrics from narrow label-local line windows so flattened OCR column ordering
+  does not hide required fields like damage dealt.
+
+### Internal
+
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.3`
+- release gating now requires explicit diagnostics-support readiness before
+  publication
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.3] - 2026-04-15
 
 Alpha prerelease replacement for early testers.

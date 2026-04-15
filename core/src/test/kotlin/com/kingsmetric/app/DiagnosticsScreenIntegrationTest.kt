@@ -58,7 +58,7 @@ class DiagnosticsScreenIntegrationTest {
                 outcome = DiagnosticsOutcome.RECOGNITION_FAILED,
                 summary = "Could not read match data.",
                 metadata = mapOf(
-                    "appVersion" to "0.1.0-alpha.3",
+                    "appVersion" to "0.1.0-alpha.4",
                     "rawOcrText" to "hidden"
                 )
             )
@@ -74,7 +74,7 @@ class DiagnosticsScreenIntegrationTest {
         requireNotNull(exportedText)
         assertTrue(exportedText!!.contains("Kings Metric Diagnostics"))
         assertTrue(exportedText!!.contains("Recognition Failed"))
-        assertTrue(exportedText!!.contains("appVersion: 0.1.0-alpha.3"))
+        assertTrue(exportedText!!.contains("appVersion: 0.1.0-alpha.4"))
         assertFalse(exportedText!!.contains("rawOcrText"))
     }
 
