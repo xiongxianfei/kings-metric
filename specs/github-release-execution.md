@@ -7,8 +7,8 @@ actual product state, gives early users a usable install artifact, and does
 not overstate feature maturity.
 
 This feature covers the release publication step after the release build path,
-release notes, and release gate are already defined. It is about safely
-publishing the release, not about expanding product scope.
+root `CHANGELOG.md`, per-release notes, and release gate are already defined.
+It is about safely publishing the release, not about expanding product scope.
 
 ## Concrete Examples
 
@@ -82,6 +82,8 @@ Expected behavior:
 - If hero still commonly requires manual review, the release notes MUST say so.
 - The release notes MUST NOT claim support for new templates, non-Chinese
   screenshots, cloud sync, or other out-of-scope features.
+- The GitHub release publication path SHOULD preserve clear linkage to the
+  canonical root `CHANGELOG.md` entry for that release.
 
 ### Publication Safety
 

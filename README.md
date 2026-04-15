@@ -20,6 +20,8 @@ The current high-level flow is:
 The first GitHub release is alpha quality. It is intended for early testers,
 not as a stable `1.0.0` release.
 
+Tracked release history lives in [CHANGELOG.md](./CHANGELOG.md).
+
 ## Build
 
 Basic local build path:
@@ -67,6 +69,9 @@ Basic install path:
 
 If installation is blocked by Android, enable installation from the downloaded
 source according to your device's normal APK install flow, then retry.
+
+For the tracked release summary behind the GitHub release page, see
+[CHANGELOG.md](./CHANGELOG.md).
 
 ## Privacy And Data
 

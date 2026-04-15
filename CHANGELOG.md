@@ -1,17 +1,19 @@
-# v0.1.0-alpha.1
+# Changelog
 
-First alpha prerelease for early testers.
+All notable changes to this project should be tracked here.
 
-Canonical tracked changelog entry: `CHANGELOG.md`
+## v0.1.0-alpha.1
 
-## What's Included
+Alpha prerelease for early testers.
+
+### What's Included
 
 - first runnable GitHub alpha release path for the Android app
 - tracked release metadata for alpha positioning and supported scope
 - local screenshot import, review, and local save on the supported path
 - history, detail, and dashboard browsing for saved records
 
-## Supported Scope
+### Supported Scope
 
 - one supported Simplified Chinese post-match detailed-data screenshot
 - local screenshot import
@@ -20,21 +22,8 @@ Canonical tracked changelog entry: `CHANGELOG.md`
 
 Unsupported screenshots are rejected.
 
-## Installation
-
-Download the attached Android release APK from this GitHub prerelease and
-install it on your Android device.
-
-If Android blocks installation from the downloaded source, enable installation
-for that source and retry.
-
-## Known Limitations
+### Known Limitations
 
 - Hero may still require manual entry during review.
-- This is an alpha prerelease, not a stable `1.0.0` release.
 - The app does not support additional templates or non-Chinese screenshots in
   this release.
-
-## Privacy
-
-The app is local-first and processes screenshots on-device.
