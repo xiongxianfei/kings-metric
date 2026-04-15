@@ -2,23 +2,38 @@
 
 ## Objective
 
-Keep the runnable Android app stable, then improve post-UX product quality in
-the smallest reviewable slices:
+Ship the first GitHub release using the smallest safe scope:
 
-- reduce avoidable manual correction during screenshot import
-- harden the import -> review -> save path on real devices
-- tighten release-quality verification without expanding v1 scope
+- publish a usable Android build for real users
+- keep the release local-first and within the current supported screenshot path
+- document known limitations instead of hiding them
+- use a prerelease channel until runtime confidence is stronger
+- make release publication repeatable instead of manual-only
 
-The current priority is reliability and product hardening, not new template or
-cloud scope.
+## Release Recommendation
+
+The first GitHub release should be an `alpha` prerelease, not `v1.0.0`.
+
+Why:
+
+- the main import -> review -> save path works
+- the app is already runnable on Android and manually testable
+- hero extraction is still not reliably automatic on the supported fixture
+- real-device coverage is still limited enough that a stable release would
+  overstate confidence
+
+Recommended first tag shape:
+
+- `v0.1.0-alpha.1`
 
 ## How To Read This Plan
 
 Use this file for:
 
-- current delivery status
-- next implementation track
-- PR-sized feature breakdown
+- current release status
+- release-scope features
+- build order
+- release gates
 - explicit non-goals
 
 Use other docs for detail:
@@ -28,154 +43,174 @@ Use other docs for detail:
 
 ## Current Status
 
-Runnable Android app foundation is `Done`:
+Done:
 
-1. Android bootstrap/build
-2. app shell/navigation
-3. photo picker/local storage
-4. ML Kit recognition adapter
-5. review screen/runtime
-6. Room persistence
-7. history/dashboard binding
-8. Android test harness
+1. runnable Android app foundation
+2. import -> review -> save runtime flow
+3. Room-backed local persistence and history/dashboard screens
+4. first-pass UX polish across import, review, history, detail, and dashboard
+5. focused JVM, Compose, and selected emulator regression coverage
 
-UX polish phase is `Done`:
+Current release blockers:
 
-1. shared UX labels/state messaging
-2. app shell navigation UX
-3. import status and guidance UX
-4. review field grouping and labels
-5. review sticky actions and scroll safety
-6. review input hints and editing assistance
-7. history list readability
-8. record detail usability
-9. dashboard clarity
-10. residual UX regression/device gap fill
-
-Current product state:
-
-- import -> review -> save works in the Android runtime
-- review uses grouped user-facing labels and reachable save actions
-- history, detail, and dashboard are readable and fallback-safe
-- focused JVM and Android Compose regressions cover the main UX path
-
-Current highest-value product gaps:
-
-- hero extraction still often falls back to manual review on the supported
+- no release README or user-facing install guide exists yet
+- no explicit GitHub repo description/tagline source or update path exists yet
+- no release-signing path for the distributed Android artifact is defined yet
+- no automated GitHub release workflow exists yet
+- hero extraction still commonly falls back to manual review on the supported
   screenshot
-- failure/recovery behavior needs more real-device hardening than the current
-  focused tests provide
-- release confidence still depends on a relatively small emulator/device matrix
+- device verification is good enough for alpha planning, not yet for a stable
+  public release claim
 
-## Next Track
+## Release Scope
 
-Design goals for the next phase:
+The first GitHub release should promise only:
 
-- lower manual correction cost without inventing data
-- make failed or interrupted flows easier to recover safely
-- raise confidence that the shipped Android flow behaves the same on real
-  devices as it does in focused emulator tests
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing only
+- required user review before final save
+- local history/detail/dashboard browsing
+
+The first GitHub release should explicitly document:
+
+- hero may still require manual entry during review
+- unsupported screenshots are rejected
+- this is an alpha-quality release intended for early validation
 
 ## Feature List
 
-### 1. Hero Extraction Reliability
+### 1. Release Metadata And Positioning
 
-- Scope: improve supported-template hero extraction so the main screenshot path
-  requires manual hero entry less often, while preserving strict
-  unsupported/low-confidence behavior
-- Dependencies: existing ML Kit adapter and import workflow
-- Risk: medium
-- Size: medium
+- Scope: define first-release versioning, prerelease wording, repository
+  description/tagline, and the supported-scope statements that must stay
+  consistent across GitHub surfaces
+- Dependencies: none
+- Risk: low
+- Size: small
 
-### 2. Import/Review Recovery Hardening
+### 2. README And Install Guidance
 
-- Scope: harden interrupted, retried, and failed import/review flows so users
-  can recover without losing context or seeing misleading states
+- Scope: add a repository README that explains what the app does, who the alpha
+  release is for, how to install the release artifact, privacy/local-first
+  behavior, and current known limitations
+- Dependencies: 1
+- Risk: low
+- Size: small
+
+### 3. Release Signing And Artifact Path
+
+- Scope: define the signed release artifact path for GitHub distribution,
+  including signing inputs, release-build verification, and the exact artifact
+  intended for users
 - Dependencies: 1
 - Risk: medium
 - Size: medium
 
-### 3. Persistence And Linkage Resilience
+### 4. Automated GitHub Release Workflow
 
-- Scope: verify and tighten record/screenshot linkage, failed-save recovery,
-  and missing-file behavior now that the runtime flow is in regular use
-- Dependencies: 2
+- Scope: add a repeatable GitHub workflow that builds the intended release
+  artifact, applies the release metadata, and publishes a prerelease only when
+  the required inputs are present
+- Dependencies: 1, 3
+- Risk: medium
+- Size: medium
+
+### 5. Alpha Hardening For Critical User Path
+
+- Scope: fix the highest-risk release-facing issues on the supported
+  import -> review -> save -> history flow without expanding product scope
+- Dependencies: 1, 3
+- Risk: medium
+- Size: medium
+
+### 6. Device Verification And Release Gate
+
+- Scope: define and run a small release-candidate verification matrix, then
+  codify the minimum pass criteria that the automated/manual release path must
+  respect before publishing the alpha build
+- Dependencies: 2, 3, 5
 - Risk: medium
 - Size: small
 
-### 4. Device Verification Expansion
+### 7. GitHub Release Execution
 
-- Scope: broaden Android runtime verification around the real supported
-  screenshot path, blocker handling, save success, and history/detail
-  continuity across more realistic device conditions
-- Dependencies: 1, 2, 3
-- Risk: medium
-- Size: small
-
-### 5. Release Readiness Tightening
-
-- Scope: convert the now-stable runtime and verification path into a stricter
-  release gate with clearer pass/fail criteria for local release candidates
-- Dependencies: 4
+- Scope: publish the first prerelease with the signed user artifact, final
+  release notes, and matching repository metadata after the release gate passes
+- Dependencies: 2, 4, 6
 - Risk: low
 - Size: small
 
 ## Build Order
 
-1. Hero Extraction Reliability
-2. Import/Review Recovery Hardening
-3. Persistence And Linkage Resilience
-4. Device Verification Expansion
-5. Release Readiness Tightening
+1. Release Metadata And Positioning
+2. README And Install Guidance
+3. Release Signing And Artifact Path
+4. Automated GitHub Release Workflow
+5. Alpha Hardening For Critical User Path
+6. Device Verification And Release Gate
+7. GitHub Release Execution
 
 ## Architecture Decisions
 
-- Keep business rules in workflow/repository layers; hardening work should not
-  move validation or persistence rules into composables.
-- Prefer targeted improvements to the existing supported-template recognition
-  path over introducing a second parallel recognition system.
-- Keep verification split:
-  - JVM for parsing/validation/state logic
-  - Compose/instrumented for Android/runtime behavior
-- Every hardening feature should add the narrowest regression that proves the
-  exact failure or recovery path it changes.
+- Treat the first GitHub release as a distribution milestone, not as permission
+  to expand template, language, or cloud scope.
+- Keep alpha hardening focused on the existing supported path instead of mixing
+  it with new recognition systems or broad refactors.
+- Prefer explicit known-limitation documentation over weak or hidden fallback
+  behavior.
+- Keep repository metadata, README messaging, and GitHub release notes aligned
+  to one supported scope statement so release surfaces do not drift.
+- Treat the GitHub repo description as managed release metadata even though it
+  is not stored as app runtime code.
+- Keep emulator/device verification intentional and limited to the critical
+  path so release gating stays reviewable.
+
+## Release Gates
+
+Do not publish the first GitHub release until all of these are true:
+
+- a signed release build can be produced repeatably from the repository
+- the artifact intended for users is verified before publishing
+- the repository README explains install steps, supported scope, and known
+  limitations
+- repository description/tagline and release notes do not overclaim maturity or
+  support
+- the critical import -> review -> save -> history path passes the release
+  candidate verification matrix
+- the app does not claim stable support for hero auto-extraction if manual hero
+  review is still required in common cases
+- the automated release workflow cannot silently publish an unsigned,
+  unverified, or stable-labeled first release
 
 ## Risks
 
-- better hero extraction can accidentally overfit to one screenshot sample and
-  become less reliable on real variants of the supported template
-- recovery logic can silently weaken strict review/save constraints if retries
-  are implemented too loosely
-- expanding device verification can lengthen feedback cycles unless expensive
-  coverage stays scoped and intentional
-- linkage hardening can surface old assumptions in history/detail flows that
-  were previously hidden by clean test data
-
-## Edge Cases
-
-- supported screenshot where hero text is unreadable but the rest of the draft
-  is usable
-- interrupted import or review flow where a draft exists but navigation state
-  changes
-- save failure after screenshot storage or after partial runtime progress
-- history/detail open path where screenshot preview is missing but record data
-  is still valid
+- trying to force a stable `1.0.0` release too early will overpromise runtime
+  confidence and hero extraction quality
+- release signing/build work can expose Android configuration gaps that normal
+  debug flows do not hit
+- GitHub metadata, README copy, and release notes can drift if they are not
+  treated as one release contract
+- broad hardening can sprawl unless it stays limited to the critical release
+  path
+- release automation can accidentally publish the wrong artifact or wrong
+  channel if safeguards are too weak
 
 ## Non-Goals
 
-- new screenshot templates or non-Chinese support
+- making the first GitHub release a stable `v1.0.0`
+- adding new screenshot templates or non-Chinese support
 - cloud sync, accounts, or server OCR
-- broad visual redesign as a new phase after UX completion
-- advanced analytics beyond the current dashboard metric set
+- broad recognition redesign to solve hero portrait matching before alpha
+- Play Store publishing in the same phase as the first GitHub release
 
 ## Done When
 
-This next track is done when:
+This plan is done when:
 
-- hero extraction quality is meaningfully better on the supported screenshot
-  path without weakening unsupported/low-confidence handling
-- interrupted and failed import/review/save flows recover predictably
-- screenshot linkage and saved-record fallback behavior stay correct under
-  failure conditions
-- device/emulator verification covers the critical real-user path with a clear
+- the repo can produce a verified signed first-release Android artifact
+- the repository has a clear README and release-facing GitHub metadata
+- GitHub has a published prerelease with install steps and known limitations
+- the supported import -> review -> save -> history flow has passed the defined
   release gate
+- the automated release workflow respects the alpha-only first-release policy
