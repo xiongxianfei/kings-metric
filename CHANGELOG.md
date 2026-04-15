@@ -2,6 +2,43 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.7] - 2026-04-15
+
+Alpha prerelease replacement for early testers.
+
+### Bug Fixes
+
+- **Supported screenshots with readable OCR labels now stay on the supported
+  path** - the Android ML Kit mapper now uses canonical readable Chinese label
+  variants such as `对英雄輸出`, `输出占比`, `经济占比`, and `参团率` instead of
+  relying on garbled mojibake parser constants.
+- **Trailing OCR metrics no longer require same-line label/value layout** - the
+  supported mapper now uses a later bounded scan for split-line metrics such as
+  `打野经济`, `补刀数`, `控制时长`, and `对塔伤害`, so real flattened OCR dumps
+  from the supported screenshot can still reach review.
+
+### Internal
+
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.6`
+- aligned the release metadata, artifact contract, and release notes to the
+  `v0.1.0-alpha.7` cut
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.6] - 2026-04-15
 
 Alpha prerelease replacement for early testers.
