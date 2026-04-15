@@ -5,6 +5,7 @@ sealed class AppRoute(val pattern: String) {
     data object Review : AppRoute("review")
     data object History : AppRoute("history")
     data object Dashboard : AppRoute("dashboard")
+    data object Diagnostics : AppRoute("diagnostics")
     data object RecordDetail : AppRoute("detail/{recordId}")
 
     fun path(recordId: String? = null): String {
@@ -13,6 +14,7 @@ sealed class AppRoute(val pattern: String) {
             Review -> "review"
             History -> "history"
             Dashboard -> "dashboard"
+            Diagnostics -> "diagnostics"
             RecordDetail -> "detail/${recordId ?: "{recordId}"}"
         }
     }
@@ -24,6 +26,7 @@ object AppRoutes {
         AppRoute.Review,
         AppRoute.History,
         AppRoute.Dashboard,
+        AppRoute.Diagnostics,
         AppRoute.RecordDetail
     )
 }

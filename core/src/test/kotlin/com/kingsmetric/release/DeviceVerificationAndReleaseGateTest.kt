@@ -15,6 +15,7 @@ class DeviceVerificationAndReleaseGateTest {
         assertTrue(matrix.targets.any { it.check == ReleaseGateCheck.JvmVerification })
         assertTrue(matrix.targets.any { it.check == ReleaseGateCheck.AndroidCriticalPathVerified })
         assertTrue(matrix.targets.any { it.check == ReleaseGateCheck.ManualDeviceFlowConfirmed })
+        assertTrue(matrix.targets.any { it.check == ReleaseGateCheck.DiagnosticsSupportVerified })
     }
 
     @Test
@@ -27,7 +28,7 @@ class DeviceVerificationAndReleaseGateTest {
     }
 
     @Test
-    fun `T3-T6 release gate blocks when required artifact docs device or skipped checks are missing`() {
+    fun `T3-T7 release gate blocks when required artifact docs diagnostics device or skipped checks are missing`() {
         val report = FirstAlphaReleaseGate.default().evaluate(
             completed = setOf(
                 ReleaseGateCheck.JvmVerification,
@@ -35,7 +36,8 @@ class DeviceVerificationAndReleaseGateTest {
             ),
             blocked = mapOf(
                 ReleaseGateCheck.SignedArtifactReady to "Missing signing inputs",
-                ReleaseGateCheck.MetadataAndDocsAligned to "README and changelog drift"
+                ReleaseGateCheck.MetadataAndDocsAligned to "README and changelog drift",
+                ReleaseGateCheck.DiagnosticsSupportVerified to "Diagnostics viewer/export not verified"
             ),
             skipped = mapOf(
                 ReleaseGateCheck.ManualDeviceFlowConfirmed to "No device confirmation recorded"
@@ -45,6 +47,7 @@ class DeviceVerificationAndReleaseGateTest {
         assertEquals(ReleaseGateStatus.Blocked, report.status)
         assertTrue(report.messages.any { it.contains("SignedArtifactReady blocked") })
         assertTrue(report.messages.any { it.contains("MetadataAndDocsAligned blocked") })
+        assertTrue(report.messages.any { it.contains("DiagnosticsSupportVerified blocked") })
         assertTrue(report.messages.any { it.contains("ManualDeviceFlowConfirmed skipped") })
     }
 
@@ -78,7 +81,8 @@ class DeviceVerificationAndReleaseGateIntegrationTest {
             completed = setOf(
                 ReleaseGateCheck.MetadataAndDocsAligned,
                 ReleaseGateCheck.SignedArtifactReady,
-                ReleaseGateCheck.JvmVerification
+                ReleaseGateCheck.JvmVerification,
+                ReleaseGateCheck.DiagnosticsSupportVerified
             ),
             skipped = mapOf(
                 ReleaseGateCheck.AndroidCriticalPathVerified to "Emulator verification skipped",
@@ -98,7 +102,8 @@ class DeviceVerificationAndReleaseGateIntegrationTest {
                 ReleaseGateCheck.MetadataAndDocsAligned,
                 ReleaseGateCheck.SignedArtifactReady,
                 ReleaseGateCheck.JvmVerification,
-                ReleaseGateCheck.AndroidCriticalPathVerified
+                ReleaseGateCheck.AndroidCriticalPathVerified,
+                ReleaseGateCheck.DiagnosticsSupportVerified
             )
         )
 
@@ -113,6 +118,7 @@ class DeviceVerificationAndReleaseGateIntegrationTest {
                 ReleaseGateCheck.MetadataAndDocsAligned,
                 ReleaseGateCheck.JvmVerification,
                 ReleaseGateCheck.AndroidCriticalPathVerified,
+                ReleaseGateCheck.DiagnosticsSupportVerified,
                 ReleaseGateCheck.ManualDeviceFlowConfirmed
             ),
             blocked = mapOf(
@@ -131,5 +137,6 @@ class DeviceVerificationAndReleaseGateIntegrationTest {
         assertTrue(matrix.targets.any { it.check == ReleaseGateCheck.MetadataAndDocsAligned })
         assertTrue(matrix.targets.any { it.check == ReleaseGateCheck.SignedArtifactReady })
         assertTrue(matrix.targets.any { it.check == ReleaseGateCheck.ManualDeviceFlowConfirmed })
+        assertTrue(matrix.targets.any { it.check == ReleaseGateCheck.DiagnosticsSupportVerified })
     }
 }

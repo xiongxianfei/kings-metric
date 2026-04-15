@@ -14,7 +14,7 @@ class ReadmeAndInstallGuidanceTest {
     }
 
     @Test
-    fun `T2-T13 README covers app introduction build-run guidance install guidance supported scope local-first behavior and key limitations`() {
+    fun `T2-T16 README covers app introduction build-run guidance install guidance supported scope local-first behavior diagnostics support and key limitations`() {
         val readme = Files.readString(resolveRepositoryRoot().resolve("README.md"))
 
         assertTrue(readme.contains("Honor of Kings Match Tracker"))
@@ -38,13 +38,17 @@ class ReadmeAndInstallGuidanceTest {
         assertTrue(readme.contains("cloud sync", ignoreCase = true))
         assertTrue(readme.contains("server OCR", ignoreCase = true))
         assertTrue(readme.contains("non-Chinese", ignoreCase = true))
+        assertTrue(readme.contains("## Diagnostics And Support", ignoreCase = true))
+        assertTrue(readme.contains("Diagnostics", ignoreCase = true))
+        assertTrue(readme.contains("Copy Diagnostics", ignoreCase = true))
+        assertTrue(readme.contains("does not include the original screenshot", ignoreCase = true))
     }
 }
 
 class ReadmeAndInstallGuidanceIntegrationTest {
 
     @Test
-    fun `IT1-IT5 README stays consistent with repository build-run path release metadata and release notes`() {
+    fun `IT1-IT6 README stays consistent with repository build-run path release metadata and release notes`() {
         val repositoryRoot = resolveRepositoryRoot()
         val metadata = FirstReleaseMetadata.load(repositoryRoot)
         val readme = Files.readString(repositoryRoot.resolve("README.md"))
@@ -64,5 +68,6 @@ class ReadmeAndInstallGuidanceIntegrationTest {
         }
         assertTrue(readme.contains("GitHub Releases", ignoreCase = true))
         assertTrue(releaseNotes.contains("prerelease", ignoreCase = true))
+        assertTrue(readme.contains("Diagnostics And Support", ignoreCase = true))
     }
 }

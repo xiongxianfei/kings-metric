@@ -1,5 +1,10 @@
 package com.kingsmetric.app
 
+import com.kingsmetric.diagnostics.DiagnosticsOutcome
+import com.kingsmetric.diagnostics.DiagnosticsRecorder
+import com.kingsmetric.diagnostics.DiagnosticsStage
+import com.kingsmetric.diagnostics.NoOpDiagnosticsRecorder
+import com.kingsmetric.diagnostics.recordSafely
 import com.kingsmetric.importflow.DraftField
 import com.kingsmetric.importflow.DraftRecord
 import com.kingsmetric.importflow.FieldKey
@@ -40,6 +45,7 @@ class ReviewScreenViewModel(
     private val workflow: MatchImportWorkflow,
     private val groupingMapper: ReviewFieldGroupingMapper = ReviewFieldGroupingMapper(),
     private val onDraftChanged: (DraftRecord?) -> Unit = {},
+    private val diagnosticsRecorder: DiagnosticsRecorder = NoOpDiagnosticsRecorder,
     private val previewAvailableResolver: (String?) -> Boolean = { screenshotPath ->
         screenshotPath != null
     }
@@ -57,8 +63,20 @@ class ReviewScreenViewModel(
     fun confirmSave(): SaveResult {
         val result = workflow.confirmSave(currentDraft)
         _state.value = when (result) {
-            is SaveResult.Saved -> currentDraft.toUiState(status = ReviewScreenStatus.Saved)
+            is SaveResult.Saved -> {
+                diagnosticsRecorder.recordSafely(
+                    stage = DiagnosticsStage.SAVE,
+                    outcome = DiagnosticsOutcome.SAVE_SUCCEEDED,
+                    summary = "Record saved locally."
+                )
+                currentDraft.toUiState(status = ReviewScreenStatus.Saved)
+            }
             is SaveResult.Blocked -> {
+                diagnosticsRecorder.recordSafely(
+                    stage = DiagnosticsStage.REVIEW,
+                    outcome = DiagnosticsOutcome.REVIEW_BLOCKED,
+                    summary = SharedUxCopy.message(SharedMessageKey.REVIEW_BLOCKED_SAVE).text
+                )
                 currentDraft = result.draft
                 onDraftChanged(currentDraft)
                 result.draft.toUiState(
@@ -67,6 +85,11 @@ class ReviewScreenViewModel(
                 )
             }
             is SaveResult.StorageFailed -> {
+                diagnosticsRecorder.recordSafely(
+                    stage = DiagnosticsStage.SAVE,
+                    outcome = DiagnosticsOutcome.SAVE_FAILED,
+                    summary = SharedUxCopy.message(SharedMessageKey.REVIEW_SAVE_FAILED).text
+                )
                 currentDraft = result.draft ?: currentDraft
                 onDraftChanged(currentDraft)
                 currentDraft.toUiState(

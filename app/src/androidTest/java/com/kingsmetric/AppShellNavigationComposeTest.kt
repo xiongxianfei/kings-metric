@@ -160,8 +160,10 @@ class AppShellNavigationComposeTest {
 
         composeRule.onAllNodesWithTag("nav-history", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onAllNodesWithTag("nav-dashboard", useUnmergedTree = true).assertCountEquals(1)
+        composeRule.onAllNodesWithTag("nav-diagnostics", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onNodeWithTag("nav-history", useUnmergedTree = true).assertIsNotSelected()
         composeRule.onNodeWithTag("nav-dashboard", useUnmergedTree = true).assertIsNotSelected()
+        composeRule.onNodeWithTag("nav-diagnostics", useUnmergedTree = true).assertIsNotSelected()
         composeRule.onNodeWithTag("shell-title").assertTextEquals("Import Match")
     }
 
@@ -185,6 +187,11 @@ class AppShellNavigationComposeTest {
         composeRule.onNodeWithTag("nav-dashboard", useUnmergedTree = true).assertIsSelected()
         composeRule.onNodeWithTag("shell-title").assertTextEquals("Dashboard")
         composeRule.onNodeWithText("No saved metrics yet. Save a reviewed match to see them here.").assertIsDisplayed()
+
+        composeRule.onNodeWithTag("nav-diagnostics", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithTag("nav-diagnostics", useUnmergedTree = true).assertIsSelected()
+        composeRule.onNodeWithTag("shell-title").assertTextEquals("Diagnostics")
+        composeRule.onNodeWithText("No diagnostics captured yet.").assertIsDisplayed()
 
         composeRule.onNodeWithTag("nav-import", useUnmergedTree = true).performClick()
         composeRule.onNodeWithTag("nav-import", useUnmergedTree = true).assertIsSelected()
@@ -213,6 +220,7 @@ class AppShellNavigationComposeTest {
         composeRule.onAllNodesWithTag("nav-import", useUnmergedTree = true).assertCountEquals(0)
         composeRule.onAllNodesWithTag("nav-history", useUnmergedTree = true).assertCountEquals(0)
         composeRule.onAllNodesWithTag("nav-dashboard", useUnmergedTree = true).assertCountEquals(0)
+        composeRule.onAllNodesWithTag("nav-diagnostics", useUnmergedTree = true).assertCountEquals(0)
 
         composeRule.onNodeWithTag("shell-secondary-action").performClick()
         composeRule.waitUntil(timeoutMillis = 5_000) {
@@ -222,6 +230,7 @@ class AppShellNavigationComposeTest {
         composeRule.onAllNodesWithTag("nav-import", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onAllNodesWithTag("nav-history", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onAllNodesWithTag("nav-dashboard", useUnmergedTree = true).assertCountEquals(1)
+        composeRule.onAllNodesWithTag("nav-diagnostics", useUnmergedTree = true).assertCountEquals(1)
     }
 
     @Test
@@ -243,6 +252,7 @@ class AppShellNavigationComposeTest {
         composeRule.onAllNodesWithTag("nav-import", useUnmergedTree = true).assertCountEquals(0)
         composeRule.onAllNodesWithTag("nav-history", useUnmergedTree = true).assertCountEquals(0)
         composeRule.onAllNodesWithTag("nav-dashboard", useUnmergedTree = true).assertCountEquals(0)
+        composeRule.onAllNodesWithTag("nav-diagnostics", useUnmergedTree = true).assertCountEquals(0)
 
         composeRule.onNodeWithTag("shell-secondary-action").performClick()
         composeRule.waitUntil(timeoutMillis = 5_000) {
@@ -252,6 +262,7 @@ class AppShellNavigationComposeTest {
         composeRule.onAllNodesWithTag("nav-import", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onAllNodesWithTag("nav-history", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onAllNodesWithTag("nav-dashboard", useUnmergedTree = true).assertCountEquals(1)
+        composeRule.onAllNodesWithTag("nav-diagnostics", useUnmergedTree = true).assertCountEquals(1)
     }
 
     @Test
@@ -268,6 +279,7 @@ class AppShellNavigationComposeTest {
         composeRule.onAllNodesWithTag("nav-import", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onAllNodesWithTag("nav-history", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onAllNodesWithTag("nav-dashboard", useUnmergedTree = true).assertCountEquals(1)
+        composeRule.onAllNodesWithTag("nav-diagnostics", useUnmergedTree = true).assertCountEquals(1)
     }
 }
 

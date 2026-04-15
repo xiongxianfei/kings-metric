@@ -1,5 +1,8 @@
 package com.kingsmetric.app
 
+import com.kingsmetric.diagnostics.DiagnosticsOutcome
+import com.kingsmetric.diagnostics.DiagnosticsRecorder
+import com.kingsmetric.diagnostics.DiagnosticsStage
 import com.kingsmetric.importflow.ImportResult
 import com.kingsmetric.importflow.DraftParser
 import com.kingsmetric.importflow.FieldKey
@@ -117,19 +120,76 @@ class AndroidPhotoPickerRuntimeWiringTest {
             runtime.state.value.status
         )
     }
+
+    @Test
+    fun `IT1 import failure records diagnostics while preserving retryable runtime failure`() {
+        val recorder = RecordingDiagnosticsRecorder()
+        val runtime = photoPickerRuntime(
+            diagnosticsRecorder = recorder,
+            recognizeImportedScreenshot = { ImportResult.ImportFailed("Could not extract screenshot data for review.") }
+        )
+
+        runtime.handlePickerResult("content://shots/failed")
+
+        assertEquals(
+            ImportRuntimeStatus.Failed("We couldn't read match data from this screenshot. Try another supported screenshot."),
+            runtime.state.value.status
+        )
+        assertEquals(
+            listOf(DiagnosticsOutcome.RECOGNITION_FAILED),
+            recorder.events.map { it.outcome }
+        )
+    }
+
+    @Test
+    fun `IT2 unsupported screenshot and recognition failure produce distinguishable diagnostics entries`() {
+        val unsupportedRecorder = RecordingDiagnosticsRecorder()
+        val failedRecorder = RecordingDiagnosticsRecorder()
+        val unsupported = photoPickerRuntime(
+            diagnosticsRecorder = unsupportedRecorder,
+            recognizeImportedScreenshot = { ImportResult.Unsupported("Unsupported screenshot.") }
+        )
+        val failed = photoPickerRuntime(
+            diagnosticsRecorder = failedRecorder,
+            recognizeImportedScreenshot = { ImportResult.ImportFailed("Could not extract screenshot data for review.") }
+        )
+
+        unsupported.handlePickerResult("content://shots/unsupported")
+        failed.handlePickerResult("content://shots/failed")
+
+        assertEquals(DiagnosticsOutcome.UNSUPPORTED_SCREENSHOT, unsupportedRecorder.events.single().outcome)
+        assertEquals(DiagnosticsOutcome.RECOGNITION_FAILED, failedRecorder.events.single().outcome)
+    }
+
+    @Test
+    fun `IT7 diagnostics capture failure does not terminate the main import failure flow`() {
+        val runtime = photoPickerRuntime(
+            diagnosticsRecorder = ThrowingDiagnosticsRecorder(),
+            recognizeImportedScreenshot = { ImportResult.ImportFailed("Could not extract screenshot data for review.") }
+        )
+
+        runtime.handlePickerResult("content://shots/failed")
+
+        assertEquals(
+            ImportRuntimeStatus.Failed("We couldn't read match data from this screenshot. Try another supported screenshot."),
+            runtime.state.value.status
+        )
+    }
 }
 
 private fun photoPickerRuntime(
     uriStorage: UriScreenshotStorage = FakeUriScreenshotStorage(),
     importStarter: (ImportedScreenshotRequest) -> ImportResult = { ImportResult.Cancelled },
-    recognizeImportedScreenshot: (ImportedScreenshotRequest) -> ImportResult = { ImportResult.Cancelled }
+    recognizeImportedScreenshot: (ImportedScreenshotRequest) -> ImportResult = { ImportResult.Cancelled },
+    diagnosticsRecorder: DiagnosticsRecorder = RecordingDiagnosticsRecorder()
 ): AndroidPhotoPickerRuntime {
     return AndroidPhotoPickerRuntime(
         adapter = AndroidPhotoPickerImportAdapter(
             uriStorage = uriStorage,
             importStarter = importStarter
         ),
-        recognizeImportedScreenshot = recognizeImportedScreenshot
+        recognizeImportedScreenshot = recognizeImportedScreenshot,
+        diagnosticsRecorder = diagnosticsRecorder
     )
 }
 
@@ -143,4 +203,56 @@ private object RuntimeFixtures {
         screenshotId = "shot-1",
         screenshotPath = "stored/shot-1.png"
     )
+}
+
+class RecordingDiagnosticsRecorder : DiagnosticsRecorder {
+    val events = mutableListOf<com.kingsmetric.diagnostics.DiagnosticsEvent>()
+
+    override val requiresAccount: Boolean = false
+    override val uploadsAutomatically: Boolean = false
+
+    override fun record(
+        stage: DiagnosticsStage,
+        outcome: DiagnosticsOutcome,
+        summary: String,
+        metadata: Map<String, String>
+    ) {
+        events += com.kingsmetric.diagnostics.DiagnosticsEvent(
+            timestampMillis = events.size.toLong(),
+            stage = stage,
+            outcome = outcome,
+            summary = summary,
+            metadata = metadata
+        )
+    }
+
+    override fun snapshot(): List<com.kingsmetric.diagnostics.DiagnosticsEvent> = events.toList()
+
+    override fun export(): com.kingsmetric.diagnostics.DiagnosticsExport {
+        return com.kingsmetric.diagnostics.DiagnosticsExport(
+            exportedAtMillis = 0L,
+            notice = "",
+            entries = emptyList()
+        )
+    }
+}
+
+class ThrowingDiagnosticsRecorder : DiagnosticsRecorder {
+    override val requiresAccount: Boolean = false
+    override val uploadsAutomatically: Boolean = false
+
+    override fun record(
+        stage: DiagnosticsStage,
+        outcome: DiagnosticsOutcome,
+        summary: String,
+        metadata: Map<String, String>
+    ) {
+        throw IllegalStateException("recorder failed")
+    }
+
+    override fun snapshot(): List<com.kingsmetric.diagnostics.DiagnosticsEvent> = emptyList()
+
+    override fun export(): com.kingsmetric.diagnostics.DiagnosticsExport {
+        throw IllegalStateException("recorder failed")
+    }
 }

@@ -320,6 +320,31 @@ verified Android artifact and documented scope.
 
 ---
 
+## Diagnostics Support Flow
+
+The app now has a local-first support path for real-user failures.
+
+1. The supported flow records bounded structured diagnostics during:
+   - import
+   - recognition
+   - review/save
+2. The user opens the in-app `Diagnostics` destination.
+3. The app renders recent entries in readable stage/outcome language.
+4. The user taps `Copy Diagnostics`.
+5. The bounded export text is copied for sharing in a support message.
+
+Rules:
+
+- Diagnostics must stay local-only. No automatic upload or remote telemetry.
+- Diagnostics export must not include the original screenshot, raw OCR text,
+  or full saved match payloads.
+- Diagnostics failures must never replace or break the original user-visible
+  import/review/save failure state.
+- Future release gating should treat diagnostics viewer/export regressions as a
+  supportability blocker for the next prerelease.
+
+---
+
 ## Document Maintenance
 
 Update this file when:

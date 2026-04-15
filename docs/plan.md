@@ -4,7 +4,7 @@ This file is an index of active and closed execution plans. Do not put the full 
 
 ## Active plans
 
-- [ ] [2026-04-15-repository-restructure](./plans/2026-04-15-repository-restructure.md)
+- None.
 
 ## Blocked plans
 
@@ -12,7 +12,8 @@ This file is an index of active and closed execution plans. Do not put the full 
 
 ## Closed plans
 
-- None.
+- [x] [2026-04-15-repository-restructure](./plans/2026-04-15-repository-restructure.md)
+- [x] [2026-04-15-user-diagnostics-and-error-logs](./plans/2026-04-15-user-diagnostics-and-error-logs.md)
 
 ## Rules
 

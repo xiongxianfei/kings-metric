@@ -163,6 +163,7 @@ class GitHubReleaseExecutionIntegrationTest {
         assertTrue(workflow.contains("workflow_dispatch:"))
         assertTrue(workflow.contains("confirm_release_gate_ready"))
         assertTrue(workflow.contains("confirm_manual_device_flow"))
+        assertTrue(workflow.contains("confirm_diagnostics_support_ready"))
         assertTrue(workflow.contains("prerelease: true"))
     }
 

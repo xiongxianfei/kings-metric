@@ -12,6 +12,7 @@ class AndroidAppShellNavigationTest {
         assertEquals(AppShellDestinationKind.Primary, AppShellChrome.forRoute(AppRoute.Import).kind)
         assertEquals(AppShellDestinationKind.Primary, AppShellChrome.forRoute(AppRoute.History).kind)
         assertEquals(AppShellDestinationKind.Primary, AppShellChrome.forRoute(AppRoute.Dashboard).kind)
+        assertEquals(AppShellDestinationKind.Primary, AppShellChrome.forRoute(AppRoute.Diagnostics).kind)
         assertEquals(AppShellDestinationKind.Secondary, AppShellChrome.forRoute(AppRoute.Review).kind)
         assertEquals(AppShellDestinationKind.Secondary, AppShellChrome.forRoute(AppRoute.RecordDetail).kind)
     }
@@ -21,6 +22,7 @@ class AndroidAppShellNavigationTest {
         assertEquals("Import Match", AppShellChrome.forRoute(AppRoute.Import).title)
         assertEquals("Match History", AppShellChrome.forRoute(AppRoute.History).title)
         assertEquals("Dashboard", AppShellChrome.forRoute(AppRoute.Dashboard).title)
+        assertEquals("Diagnostics", AppShellChrome.forRoute(AppRoute.Diagnostics).title)
         assertEquals("Review Match", AppShellChrome.forRoute(AppRoute.Review).title)
         assertEquals("Match Detail", AppShellChrome.forRoute(AppRoute.RecordDetail).title)
     }
@@ -68,6 +70,7 @@ class AndroidAppShellNavigationTest {
 
         assertEquals(AppRoute.Import, state.currentRoute)
         assertTrue(state.availableRoutes.contains(AppRoute.History))
+        assertTrue(state.availableRoutes.contains(AppRoute.Diagnostics))
         assertEquals(AppShellDestinationKind.Primary, AppShellChrome.forRoute(state.currentRoute).kind)
     }
 
@@ -102,6 +105,7 @@ class AndroidAppShellNavigationTest {
 
         assertTrue(state.availableRoutes.contains(AppRoute.History))
         assertTrue(state.availableRoutes.contains(AppRoute.Dashboard))
+        assertTrue(state.availableRoutes.contains(AppRoute.Diagnostics))
         assertEquals(AppRoute.Import, state.currentRoute)
     }
 }

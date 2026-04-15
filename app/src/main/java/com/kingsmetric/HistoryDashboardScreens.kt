@@ -54,6 +54,8 @@ import com.kingsmetric.app.AppShellState
 import com.kingsmetric.app.DashboardScreenBinder
 import com.kingsmetric.app.DashboardScreenUiState
 import com.kingsmetric.app.DetailScreenUiState
+import com.kingsmetric.app.DiagnosticsScreenRoute
+import com.kingsmetric.app.DiagnosticsScreenViewModel
 import com.kingsmetric.app.HistoryScreenBinder
 import com.kingsmetric.app.HistoryScreenUiState
 import com.kingsmetric.app.ImportScreenUiStateMapper
@@ -64,6 +66,8 @@ import com.kingsmetric.app.ReviewScreenViewModel
 import com.kingsmetric.app.SharedMessageKey
 import com.kingsmetric.app.SharedUxCopy
 import com.kingsmetric.app.UriScreenshotStorage
+import com.kingsmetric.diagnostics.DiagnosticsRecorder
+import com.kingsmetric.diagnostics.NoOpDiagnosticsRecorder
 import com.kingsmetric.dashboard.DashboardContentState
 import com.kingsmetric.data.local.RoomObservedMatchRepository
 import com.kingsmetric.history.HistoryContentState
@@ -83,6 +87,7 @@ fun HistoryDashboardRoot(
     uriStorage: UriScreenshotStorage,
     recognizeStoredScreenshot: (String) -> ImportResult,
     reviewWorkflow: MatchImportWorkflow,
+    diagnosticsRecorder: DiagnosticsRecorder = NoOpDiagnosticsRecorder,
     navigationCoordinator: AppNavigationCoordinator = remember { AppNavigationCoordinator() },
     initialRoute: String? = null,
     initialReviewDraft: DraftRecord? = null,
@@ -102,7 +107,8 @@ fun HistoryDashboardRoot(
             adapter = importAdapter,
             recognizeImportedScreenshot = { request ->
                 recognizeStoredScreenshot(request.localPath)
-            }
+            },
+            diagnosticsRecorder = diagnosticsRecorder
         )
     }
     val scope = rememberCoroutineScope()
@@ -266,6 +272,7 @@ fun HistoryDashboardRoot(
                                 onDraftChanged = { updatedDraft ->
                                     reviewDraft = updatedDraft
                                 },
+                                diagnosticsRecorder = diagnosticsRecorder,
                                 previewAvailableResolver = { path ->
                                     path?.let(::File)?.exists() == true
                                 }
@@ -298,6 +305,12 @@ fun HistoryDashboardRoot(
                 }
                 composable(AppRoute.Dashboard.pattern) {
                     DashboardScreen(state = dashboardState)
+                }
+                composable(AppRoute.Diagnostics.pattern) {
+                    val diagnosticsViewModel = remember(diagnosticsRecorder) {
+                        DiagnosticsScreenViewModel(diagnosticsRecorder)
+                    }
+                    DiagnosticsScreenRoute(viewModel = diagnosticsViewModel)
                 }
                 composable(
                     route = AppRoute.RecordDetail.pattern,

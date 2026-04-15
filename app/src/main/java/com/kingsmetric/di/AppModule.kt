@@ -14,6 +14,8 @@ import com.kingsmetric.data.local.RecordIdProvider
 import com.kingsmetric.data.local.RoomObservedMatchRepository
 import com.kingsmetric.data.local.SavedAtProvider
 import com.kingsmetric.data.local.SavedMatchDao
+import com.kingsmetric.diagnostics.DiagnosticsRecorder
+import com.kingsmetric.diagnostics.FileBackedDiagnosticsRecorder
 import com.kingsmetric.importflow.DraftParser
 import com.kingsmetric.importflow.FakeScreenshotAnalyzer
 import com.kingsmetric.importflow.FakeScreenshotStore
@@ -92,6 +94,16 @@ object AppModule {
     fun provideUriScreenshotStorage(
         @ApplicationContext context: Context
     ): UriScreenshotStorage = AndroidUriScreenshotStorage(context)
+
+    @Provides
+    @Singleton
+    fun provideDiagnosticsRecorder(
+        @ApplicationContext context: Context
+    ): DiagnosticsRecorder {
+        return FileBackedDiagnosticsRecorder(
+            storageFile = File(context.filesDir, "diagnostics/events.log")
+        )
+    }
 
     @Provides
     @Singleton

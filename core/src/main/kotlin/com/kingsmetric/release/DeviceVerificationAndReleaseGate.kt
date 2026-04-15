@@ -5,7 +5,8 @@ enum class ReleaseGateCheck {
     SignedArtifactReady,
     JvmVerification,
     AndroidCriticalPathVerified,
-    ManualDeviceFlowConfirmed
+    ManualDeviceFlowConfirmed,
+    DiagnosticsSupportVerified
 }
 
 enum class ReleaseGateStatus {
@@ -44,6 +45,10 @@ data class ReleaseCandidateVerificationMatrix(
                     ReleaseGateTarget(
                         check = ReleaseGateCheck.ManualDeviceFlowConfirmed,
                         label = "Manual device flow confirmed"
+                    ),
+                    ReleaseGateTarget(
+                        check = ReleaseGateCheck.DiagnosticsSupportVerified,
+                        label = "Diagnostics support verified"
                     )
                 )
             )
