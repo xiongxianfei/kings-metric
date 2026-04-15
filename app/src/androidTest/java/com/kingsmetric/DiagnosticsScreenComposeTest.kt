@@ -9,18 +9,22 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.kingsmetric.app.DiagnosticsExportFormatter
 import com.kingsmetric.app.DiagnosticsScreenRoute
+import com.kingsmetric.app.DiagnosticsTimeFormatter
 import com.kingsmetric.app.DiagnosticsScreenViewModel
 import com.kingsmetric.diagnostics.DiagnosticsEvent
 import com.kingsmetric.diagnostics.DiagnosticsExport
 import com.kingsmetric.diagnostics.DiagnosticsOutcome
 import com.kingsmetric.diagnostics.DiagnosticsRecorder
 import com.kingsmetric.diagnostics.DiagnosticsStage
+import java.time.ZoneId
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
 class DiagnosticsScreenComposeTest {
+    private val utcTimeFormatter = DiagnosticsTimeFormatter { ZoneId.of("UTC") }
 
     @get:Rule
     val composeRule = createComposeRule()
@@ -29,10 +33,17 @@ class DiagnosticsScreenComposeTest {
     fun diagnostics_screen_empty_state_is_explicit_and_copy_disabled() {
         composeRule.setContent {
             DiagnosticsScreenRoute(
-                viewModel = DiagnosticsScreenViewModel(DiagnosticsTestRecorder())
+                viewModel = DiagnosticsScreenViewModel(
+                    recorder = DiagnosticsTestRecorder(),
+                    appVersionProvider = { "0.1.0-alpha.8" },
+                    formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+                    timeFormatter = utcTimeFormatter
+                )
             )
         }
 
+        composeRule.onNodeWithText("Current Version").assertIsDisplayed()
+        composeRule.onNodeWithText("0.1.0-alpha.8").assertIsDisplayed()
         composeRule.onNodeWithTag("diagnostics-empty-state").assertIsDisplayed()
         composeRule.onNodeWithTag("copy-diagnostics").assertIsNotEnabled()
     }
@@ -50,7 +61,12 @@ class DiagnosticsScreenComposeTest {
 
         composeRule.setContent {
             DiagnosticsScreenRoute(
-                viewModel = DiagnosticsScreenViewModel(recorder),
+                viewModel = DiagnosticsScreenViewModel(
+                    recorder = recorder,
+                    appVersionProvider = { "0.1.0-alpha.8" },
+                    formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+                    timeFormatter = utcTimeFormatter
+                ),
                 copyDiagnosticsText = { text ->
                     copiedText = text
                     true
@@ -59,10 +75,14 @@ class DiagnosticsScreenComposeTest {
         }
 
         composeRule.onAllNodesWithTag("diagnostics-entry-0").assertCountEquals(1)
+        composeRule.onNodeWithText("Current Version").assertIsDisplayed()
+        composeRule.onNodeWithText("0.1.0-alpha.8").assertIsDisplayed()
         composeRule.onNodeWithText("Save Failed").assertIsDisplayed()
+        composeRule.onNodeWithText("Time: 1970-01-01 00:00:00 UTC").assertIsDisplayed()
         composeRule.onNodeWithTag("copy-diagnostics").assertIsEnabled()
         composeRule.onNodeWithTag("copy-diagnostics").performClick()
         composeRule.onNodeWithText("Diagnostics copied. Paste them into your support message.").assertIsDisplayed()
+        assertTrue(copiedText?.contains("Current Version: 0.1.0-alpha.8") == true)
         assertTrue(copiedText?.contains("Save Failed") == true)
     }
 
@@ -82,7 +102,12 @@ class DiagnosticsScreenComposeTest {
 
         composeRule.setContent {
             DiagnosticsScreenRoute(
-                viewModel = DiagnosticsScreenViewModel(recorder)
+                viewModel = DiagnosticsScreenViewModel(
+                    recorder = recorder,
+                    appVersionProvider = { "0.1.0-alpha.8" },
+                    formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+                    timeFormatter = utcTimeFormatter
+                )
             )
         }
 
@@ -115,7 +140,7 @@ private class DiagnosticsTestRecorder : DiagnosticsRecorder {
 
     override fun export(): DiagnosticsExport {
         return DiagnosticsExport(
-            exportedAtMillis = 1L,
+            exportedAtMillis = 0L,
             notice = "This export does not include the original screenshot or full saved match data. It may include OCR text captured during a failed recognition attempt.",
             entries = now.map {
                 com.kingsmetric.diagnostics.DiagnosticsExportEntry(

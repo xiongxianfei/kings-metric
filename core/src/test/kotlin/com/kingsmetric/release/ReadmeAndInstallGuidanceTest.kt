@@ -14,7 +14,7 @@ class ReadmeAndInstallGuidanceTest {
     }
 
     @Test
-    fun `T2-T16 README covers app introduction build-run guidance install guidance supported scope local-first behavior diagnostics support and key limitations`() {
+    fun `T2-T17 README covers app introduction build-run guidance install guidance supported scope local-first behavior diagnostics support visible version reporting and key limitations`() {
         val readme = Files.readString(resolveRepositoryRoot().resolve("README.md"))
 
         assertTrue(readme.contains("Honor of Kings Match Tracker"))
@@ -40,6 +40,7 @@ class ReadmeAndInstallGuidanceTest {
         assertTrue(readme.contains("non-Chinese", ignoreCase = true))
         assertTrue(readme.contains("## Diagnostics And Support", ignoreCase = true))
         assertTrue(readme.contains("Diagnostics", ignoreCase = true))
+        assertTrue(readme.contains("Current Version", ignoreCase = true))
         assertTrue(readme.contains("Copy Diagnostics", ignoreCase = true))
         assertTrue(readme.contains("does not include the original screenshot", ignoreCase = true))
     }
@@ -69,5 +70,6 @@ class ReadmeAndInstallGuidanceIntegrationTest {
         assertTrue(readme.contains("GitHub Releases", ignoreCase = true))
         assertTrue(releaseNotes.contains("prerelease", ignoreCase = true))
         assertTrue(readme.contains("Diagnostics And Support", ignoreCase = true))
+        assertTrue(readme.contains("Current Version", ignoreCase = true))
     }
 }

@@ -51,6 +51,7 @@ import com.kingsmetric.app.AppNavigationCoordinator
 import com.kingsmetric.app.AppRoute
 import com.kingsmetric.app.AppRoutes
 import com.kingsmetric.app.AppShellState
+import com.kingsmetric.app.AppVersionProvider
 import com.kingsmetric.app.DashboardScreenBinder
 import com.kingsmetric.app.DashboardScreenUiState
 import com.kingsmetric.app.DetailScreenUiState
@@ -88,6 +89,7 @@ fun HistoryDashboardRoot(
     recognizeStoredScreenshot: (String) -> ImportResult,
     reviewWorkflow: MatchImportWorkflow,
     diagnosticsRecorder: DiagnosticsRecorder = NoOpDiagnosticsRecorder,
+    appVersionProvider: AppVersionProvider = AppVersionProvider { "Unknown" },
     navigationCoordinator: AppNavigationCoordinator = remember { AppNavigationCoordinator() },
     initialRoute: String? = null,
     initialReviewDraft: DraftRecord? = null,
@@ -307,8 +309,11 @@ fun HistoryDashboardRoot(
                     DashboardScreen(state = dashboardState)
                 }
                 composable(AppRoute.Diagnostics.pattern) {
-                    val diagnosticsViewModel = remember(diagnosticsRecorder) {
-                        DiagnosticsScreenViewModel(diagnosticsRecorder)
+                    val diagnosticsViewModel = remember(diagnosticsRecorder, appVersionProvider) {
+                        DiagnosticsScreenViewModel(
+                            recorder = diagnosticsRecorder,
+                            appVersionProvider = appVersionProvider
+                        )
                     }
                     DiagnosticsScreenRoute(viewModel = diagnosticsViewModel)
                 }

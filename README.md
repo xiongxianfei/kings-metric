@@ -87,9 +87,10 @@ Basic support flow:
 
 1. reproduce the problem if possible
 2. open `Diagnostics`
-3. review the recent entries
-4. tap `Copy Diagnostics`
-5. paste the copied text into your support message or issue report
+3. note the visible `Current Version` shown near the top of the screen
+4. review the recent entries
+5. tap `Copy Diagnostics`
+6. paste the copied text and the visible version into your support message or issue report
 
 The diagnostics export is bounded and privacy-safe by default:
 
