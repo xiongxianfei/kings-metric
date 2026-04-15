@@ -49,9 +49,18 @@ class AndroidMlKitTextRecognizer(
         } finally {
             recognizer.close()
         }
+        val ocrText = result.text
+        val analysis = try {
+            SupportedTemplateTextMapper.map(ocrText, plan.requestedFields)
+        } catch (exception: Exception) {
+            throw OcrExtractionException(
+                message = exception.message ?: "ocr mapping failed",
+                ocrText = ocrText
+            )
+        }
         return RecognitionOutput(
-            analysis = SupportedTemplateTextMapper.map(result.text, plan.requestedFields),
-            ocrText = result.text
+            analysis = analysis,
+            ocrText = ocrText
         )
     }
 }

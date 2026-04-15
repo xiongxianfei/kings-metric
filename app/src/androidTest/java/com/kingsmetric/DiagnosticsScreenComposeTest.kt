@@ -65,6 +65,29 @@ class DiagnosticsScreenComposeTest {
         composeRule.onNodeWithText("Diagnostics copied. Paste them into your support message.").assertIsDisplayed()
         assertTrue(copiedText?.contains("Save Failed") == true)
     }
+
+    @Test
+    fun diagnostics_screen_shows_ocr_text_when_present() {
+        val recorder = DiagnosticsTestRecorder().apply {
+            record(
+                stage = DiagnosticsStage.RECOGNITION,
+                outcome = DiagnosticsOutcome.RECOGNITION_FAILED,
+                summary = "Could not read match data.",
+                metadata = mapOf(
+                    "detail" to "Missing damage section values after OCR mapping.",
+                    "ocrText" to "胜利\n数据 复盘\n对英雄出: 171.2k"
+                )
+            )
+        }
+
+        composeRule.setContent {
+            DiagnosticsScreenRoute(
+                viewModel = DiagnosticsScreenViewModel(recorder)
+            )
+        }
+
+        composeRule.onNodeWithText("OCR Text:\n胜利\n数据 复盘\n对英雄出: 171.2k").assertIsDisplayed()
+    }
 }
 
 private class DiagnosticsTestRecorder : DiagnosticsRecorder {
@@ -93,7 +116,7 @@ private class DiagnosticsTestRecorder : DiagnosticsRecorder {
     override fun export(): DiagnosticsExport {
         return DiagnosticsExport(
             exportedAtMillis = 1L,
-            notice = "This export does not include the original screenshot, raw OCR text, or full saved match data.",
+            notice = "This export does not include the original screenshot or full saved match data. It may include OCR text captured during a failed recognition attempt.",
             entries = now.map {
                 com.kingsmetric.diagnostics.DiagnosticsExportEntry(
                     timestampMillis = it.timestampMillis,

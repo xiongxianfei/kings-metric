@@ -101,6 +101,26 @@ class DiagnosticsScreenIntegrationTest {
     }
 
     @Test
+    fun `T3c diagnostics viewer includes OCR text when present`() {
+        val recorder = TestDiagnosticsRecorder().apply {
+            record(
+                stage = DiagnosticsStage.RECOGNITION,
+                outcome = DiagnosticsOutcome.RECOGNITION_FAILED,
+                summary = "Could not read match data.",
+                metadata = mapOf(
+                    "detail" to "Missing damage section values after OCR mapping.",
+                    "ocrText" to "胜利\n数据 复盘\n对英雄出: 171.2k"
+                )
+            )
+        }
+        val viewModel = DiagnosticsScreenViewModel(recorder)
+
+        val state = viewModel.state.value
+
+        assertEquals("胜利\n数据 复盘\n对英雄出: 171.2k", state.entries.single().ocrText)
+    }
+
+    @Test
     fun `T4 successful copy updates user message`() {
         val recorder = TestDiagnosticsRecorder().apply {
             record(

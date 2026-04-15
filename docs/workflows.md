@@ -347,10 +347,16 @@ Rules:
   import or recognition failures, diagnostics may include the OCR text itself
   as long as the screenshot binary is still excluded and the export copy makes
   that tradeoff explicit.
+- If OCR text is captured for a failure entry, keep it visible in the
+  diagnostics viewer itself in addition to the copied export. Do not require
+  users to guess whether OCR text exists but is hidden off-screen.
 - Diagnostics export should include a bounded failure detail when the app
   already has one, such as a template-validation reason or retryable import
   failure detail. Do not reduce real support data to the same generic summary
   string for every recognition failure.
+- If the recognition stack already has OCR text when a mapper-stage exception
+  happens, preserve that OCR text on the returned import failure instead of
+  collapsing to a generic message with no diagnostic payload.
 - Diagnostics failures must never replace or break the original user-visible
   import/review/save failure state.
 - Future release gating should treat diagnostics viewer/export regressions as a

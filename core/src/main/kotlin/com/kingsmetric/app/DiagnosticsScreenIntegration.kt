@@ -13,7 +13,8 @@ data class DiagnosticsEntryPresentation(
     val title: String,
     val stageText: String,
     val summary: String,
-    val timestampText: String
+    val timestampText: String,
+    val ocrText: String?
 )
 
 data class DiagnosticsScreenUiState(
@@ -113,7 +114,8 @@ class DiagnosticsScreenViewModel(
             title = outcomeLabel(outcome),
             stageText = stageLabel(stage),
             summary = if (detail == null) summary else "$summary\nReason: $detail",
-            timestampText = "Time: $timestampMillis"
+            timestampText = "Time: $timestampMillis",
+            ocrText = metadata["ocrText"]?.takeIf { it.isNotBlank() }
         )
     }
 }

@@ -91,7 +91,10 @@ class MlKitRecognitionAdapterIntegrationTest {
                     bitmap: LoadedBitmap,
                     plan: RecognitionRegionPlan
                 ): RecognitionOutput {
-                    throw IllegalStateException("unexpected mapper failure")
+                    throw com.kingsmetric.importflow.OcrExtractionException(
+                        "unexpected mapper failure",
+                        ocrText = "胜利\n数据 复盘\n对英雄出: 171.2k"
+                    )
                 }
             }
         )
@@ -99,6 +102,8 @@ class MlKitRecognitionAdapterIntegrationTest {
         val result = adapter.recognize("stored/shot-1.png")
 
         assertTrue(result is ImportResult.ImportFailed)
+        result as ImportResult.ImportFailed
+        assertEquals("胜利\n数据 复盘\n对英雄出: 171.2k", result.ocrText)
     }
 
     @Test

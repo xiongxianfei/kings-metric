@@ -75,6 +75,10 @@ Expected behavior:
   partially supported screenshot text can still trigger parser or mapper
   exceptions; those cases must surface as a retryable import failure instead of
   crashing the import flow.
+- 2026-04-15: If the adapter already has OCR text when a mapper-stage failure
+  happens, preserve that OCR text on the returned import failure so diagnostics
+  can explain what ML Kit actually read instead of collapsing to only a generic
+  failure summary.
 - 2026-04-15: Real supported screenshots can flatten ML Kit text in a
   cross-column order that does not match the on-screen card layout. For
   required first-value metrics such as damage dealt, avoid broad full-text
@@ -82,8 +86,9 @@ Expected behavior:
   extractions label-local, then use wider last-occurrence scans only for
   metrics whose values intentionally trail their labels in the OCR stream.
 - 2026-04-15: Real-device and share-sized supported screenshots can produce
-  traditional-Chinese or truncated label variants such as `对英雄輸出`,
-  `對英雄出`, or `团率` even though the template is still the same supported
-  screenshot. Keep alias handling narrow to the supported template, but prefer
-  reaching a reviewable draft with highlighted missing fields over rejecting
-  the whole screenshot when section-level evidence is still present.
+  traditional-Chinese or truncated label variants such as `对英雄输出`,
+  truncated `对英雄出`, or abbreviated `团率` even though the template is still
+  the same supported screenshot. Keep alias handling narrow to the supported
+  template, but prefer reaching a reviewable draft with highlighted missing
+  fields over rejecting the whole screenshot when section-level evidence is
+  still present.
