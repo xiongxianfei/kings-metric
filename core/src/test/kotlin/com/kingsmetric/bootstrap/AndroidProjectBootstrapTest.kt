@@ -19,13 +19,17 @@ class AndroidProjectBootstrapTest {
     }
 
     @Test
-    fun `T2 pure logic source set remains accessible to Android code`() {
+    fun `T2 pure logic source set lives inside the core module`() {
         val coreBuild = repoFile("core/build.gradle.kts")
         val buildText = coreBuild.readText()
+        val mainSourceDir = repoFile("core/src/main/kotlin")
+        val testSourceDir = repoFile("core/src/test/kotlin")
 
         assertTrue(Files.exists(coreBuild))
-        assertTrue(buildText.contains("../src/main/kotlin"))
-        assertTrue(buildText.contains("../src/test/kotlin"))
+        assertTrue(Files.exists(mainSourceDir))
+        assertTrue(Files.exists(testSourceDir))
+        assertTrue(!buildText.contains("../src/main/kotlin"))
+        assertTrue(!buildText.contains("../src/test/kotlin"))
     }
 
     @Test
