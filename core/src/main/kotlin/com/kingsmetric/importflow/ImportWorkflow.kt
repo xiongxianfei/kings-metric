@@ -297,7 +297,10 @@ interface ScreenshotAnalyzer {
     fun analyze(sourcePath: String): ScreenshotAnalysis
 }
 
-class OcrExtractionException(message: String) : IllegalStateException(message)
+class OcrExtractionException(
+    message: String,
+    val ocrText: String? = null
+) : IllegalStateException(message)
 
 interface RecordStore {
     fun save(record: SavedMatchRecord): SavedMatchRecord

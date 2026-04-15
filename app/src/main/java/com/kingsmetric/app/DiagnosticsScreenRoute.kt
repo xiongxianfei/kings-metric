@@ -69,6 +69,12 @@ fun DiagnosticsScreenRoute(
                             Text(entry.title, style = MaterialTheme.typography.titleMedium)
                             Text(entry.stageText, style = MaterialTheme.typography.labelMedium)
                             Text(entry.summary, style = MaterialTheme.typography.bodyMedium)
+                            entry.ocrText?.let { ocrText ->
+                                Text(
+                                    "OCR Text:\n$ocrText",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
                             Text(entry.timestampText, style = MaterialTheme.typography.bodySmall)
                         }
                     }

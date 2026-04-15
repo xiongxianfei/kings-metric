@@ -58,8 +58,11 @@ class MlKitRecognitionAdapter(
 
         val recognitionOutput = try {
             recognizer.recognize(bitmap, regionPlanFor(path))
-        } catch (_: OcrExtractionException) {
-            return ImportResult.ImportFailed("Could not extract screenshot data for review.")
+        } catch (exception: OcrExtractionException) {
+            return ImportResult.ImportFailed(
+                "Could not extract screenshot data for review.",
+                ocrText = exception.ocrText
+            )
         } catch (_: Exception) {
             return ImportResult.ImportFailed("Could not extract screenshot data for review.")
         }

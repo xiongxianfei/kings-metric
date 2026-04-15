@@ -34,8 +34,9 @@ supported alpha flow.
   distinguishable from import/recognition failure and leaves review usable.
 - `IT4` Successful save records a success-category diagnostics entry without
   exposing full saved-record payload content.
-- `IT5` Diagnostics viewer shows recent entries in readable language and keeps
-  empty state explicit when no entries exist.
+- `IT5` Diagnostics viewer shows recent entries in readable language, renders
+  OCR text when a failure entry includes it, and keeps empty state explicit
+  when no entries exist.
 - `IT6` Exported diagnostics artifact excludes screenshot binaries while still
   including enough bounded context for support, including OCR text for
   import/recognition failures.

@@ -62,6 +62,8 @@ Input:
 
 Expected behavior:
 - The screen shows recent bounded diagnostics entries in readable language.
+- If a failure entry includes OCR text, the diagnostics surface shows that OCR
+  text directly in the entry instead of hiding it only in the copied export.
 - The user can export the diagnostics artifact without adb or logcat.
 - The user can see what the export does and does not include.
 
@@ -164,6 +166,9 @@ Expected behavior:
 - The user MUST be able to export diagnostics on demand.
 - The export flow MUST use readable, support-oriented wording rather than raw
   internal exception text alone.
+- When diagnostics include OCR text for an import or recognition failure, the
+  diagnostics surface MUST show that OCR text in a readable bounded form in
+  addition to preserving it in the export artifact.
 - If export fails, the app MUST show a retryable, user-visible export failure.
 
 ### R7. Failure-Path Independence
