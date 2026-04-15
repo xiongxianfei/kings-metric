@@ -62,7 +62,7 @@ class DiagnosticsScreenIntegrationTest {
                     "appVersion" to "0.1.0-alpha.4",
                     "surface" to "import",
                     "detail" to "Missing damage section values after OCR mapping.",
-                    "rawOcrText" to "hidden"
+                    "ocrText" to "胜利\n数据 复盘\n对英雄出: 171.2k"
                 )
             )
         }
@@ -79,7 +79,8 @@ class DiagnosticsScreenIntegrationTest {
         assertTrue(exportedText!!.contains("Recognition Failed"))
         assertTrue(exportedText!!.contains("appVersion: 0.1.0-alpha.4"))
         assertTrue(exportedText!!.contains("detail: Missing damage section values after OCR mapping."))
-        assertFalse(exportedText!!.contains("rawOcrText"))
+        assertTrue(exportedText!!.contains("ocrText:"))
+        assertTrue(exportedText!!.contains("对英雄出: 171.2k"))
     }
 
     @Test
@@ -184,7 +185,7 @@ private class TestDiagnosticsRecorder : DiagnosticsRecorder {
                     outcome = it.outcome,
                     summary = it.summary,
                     metadata = it.metadata.filterKeys { key ->
-                        key == "appVersion" || key == "surface" || key == "buildType" || key == "detail"
+                        key == "appVersion" || key == "surface" || key == "buildType" || key == "detail" || key == "ocrText"
                     }
                 )
             }

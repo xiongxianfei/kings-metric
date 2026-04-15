@@ -343,6 +343,10 @@ Rules:
 - Diagnostics must stay local-only. No automatic upload or remote telemetry.
 - Diagnostics export must not include the original screenshot, raw OCR text,
   or full saved match payloads.
+- Exception: if a support workflow explicitly opts into OCR-result capture for
+  import or recognition failures, diagnostics may include the OCR text itself
+  as long as the screenshot binary is still excluded and the export copy makes
+  that tradeoff explicit.
 - Diagnostics export should include a bounded failure detail when the app
   already has one, such as a template-validation reason or retryable import
   failure detail. Do not reduce real support data to the same generic summary

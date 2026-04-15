@@ -27,7 +27,7 @@ data class DiagnosticsScreenUiState(
 
 class DiagnosticsExportFormatter {
     fun defaultNotice(): String {
-        return "This export does not include the original screenshot, raw OCR text, or full saved match data."
+        return "This export does not include the original screenshot or full saved match data. It may include OCR text captured during a failed recognition attempt."
     }
 
     fun format(export: DiagnosticsExport): String {
@@ -46,7 +46,14 @@ class DiagnosticsExportFormatter {
                 lines += "  Summary: ${entry.summary}"
                 if (entry.metadata.isNotEmpty()) {
                     entry.metadata.toSortedMap().forEach { (key, value) ->
-                        lines += "  $key: $value"
+                        if (key == "ocrText") {
+                            lines += "  ocrText:"
+                            value.lines().forEach { line ->
+                                lines += "    $line"
+                            }
+                        } else {
+                            lines += "  $key: $value"
+                        }
                     }
                 }
                 lines += ""

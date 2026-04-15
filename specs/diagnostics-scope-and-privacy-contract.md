@@ -25,8 +25,22 @@ Expected behavior:
 - The app still shows the normal retryable import failure.
 - The app records a diagnostics entry describing the stage, outcome category,
   and a user-shareable summary.
-- The diagnostics export does not include the screenshot itself or a raw OCR
-  dump.
+- The diagnostics export includes the bounded OCR result text for that failed
+  recognition attempt so support can inspect what ML Kit actually read.
+- The diagnostics export still does not include the screenshot itself.
+
+Example diagnostics export snippet:
+```text
+- Recognition Failed
+  Stage: Recognition
+  Summary: We couldn't read match data from this screenshot. Try another supported screenshot.
+  detail: Image does not match the supported personal-stats template. Missing damage section.
+  ocrText:
+    胜利
+    数据 复盘
+    对英雄出: 171.2k
+    输出占比: 35.3%
+```
 
 ### Example 2: Save Fails After Review
 
@@ -58,8 +72,9 @@ Input:
 - The user exports diagnostics.
 
 Expected behavior:
-- The export excludes the image binary, raw full OCR text, and full saved-match
-  payloads.
+- The export excludes the image binary and full saved-match payloads.
+- The export may include the OCR result text when it is needed to diagnose an
+  import or recognition failure.
 - The export may include privacy-bounded identifiers or summaries only when
   needed to explain the failure category and stage.
 
@@ -128,6 +143,9 @@ Expected behavior:
     needed for support
 - Diagnostics MAY include privacy-bounded summaries or identifiers only when
   they help explain stage, outcome category, or app/build context.
+- Diagnostics MAY include the OCR result text for import or recognition
+  failures when that text is needed to diagnose supported-template parsing
+  problems.
 - The diagnostics UI and export flow MUST clearly state that the export is
   limited and does not include the original screenshot.
 
@@ -210,5 +228,6 @@ Expected behavior:
   privacy-bounded.
 - Unsupported screenshot, recognition failure, review/save failure, and
   successful save are distinguishable in diagnostics.
-- Diagnostics do not include screenshot binaries or raw full OCR dumps.
+- Diagnostics do not include screenshot binaries, but they may include OCR text
+  for import or recognition failures.
 - Diagnostics failure does not crash the supported app flow.

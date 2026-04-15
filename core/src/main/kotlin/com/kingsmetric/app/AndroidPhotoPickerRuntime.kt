@@ -77,7 +77,8 @@ class AndroidPhotoPickerRuntime(
                             summary = SharedUxCopy.message(SharedMessageKey.IMPORT_UNSUPPORTED).text,
                             metadata = diagnosticsMetadata(
                                 surface = "import",
-                                detail = recognition.reason
+                                detail = recognition.reason,
+                                ocrText = recognition.ocrText
                             )
                         )
                         ImportRuntimeUiState(
@@ -93,7 +94,8 @@ class AndroidPhotoPickerRuntime(
                             summary = SharedUxCopy.message(SharedMessageKey.IMPORT_OCR_FAILED).text,
                             metadata = diagnosticsMetadata(
                                 surface = "import",
-                                detail = recognition.message
+                                detail = recognition.message,
+                                ocrText = recognition.ocrText
                             )
                         )
                         ImportRuntimeUiState(
@@ -157,9 +159,10 @@ class AndroidPhotoPickerRuntime(
     }
 }
 
-private fun diagnosticsMetadata(surface: String, detail: String?): Map<String, String> {
+private fun diagnosticsMetadata(surface: String, detail: String?, ocrText: String? = null): Map<String, String> {
     return buildMap {
         put("surface", surface)
         detail?.takeIf { it.isNotBlank() }?.let { put("detail", it) }
+        ocrText?.takeIf { it.isNotBlank() }?.let { put("ocrText", it) }
     }
 }

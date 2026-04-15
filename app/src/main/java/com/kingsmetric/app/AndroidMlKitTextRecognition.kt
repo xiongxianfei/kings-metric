@@ -32,7 +32,7 @@ class AndroidBitmapLoader : BitmapLoader {
 class AndroidMlKitTextRecognizer(
     private val context: Context
 ) : MlKitRecognizer {
-    override fun recognize(bitmap: LoadedBitmap, plan: RecognitionRegionPlan): ScreenshotAnalysis {
+    override fun recognize(bitmap: LoadedBitmap, plan: RecognitionRegionPlan): RecognitionOutput {
         val image = try {
             InputImage.fromFilePath(context, Uri.fromFile(File(bitmap.path)))
         } catch (_: Exception) {
@@ -49,7 +49,10 @@ class AndroidMlKitTextRecognizer(
         } finally {
             recognizer.close()
         }
-        return SupportedTemplateTextMapper.map(result.text, plan.requestedFields)
+        return RecognitionOutput(
+            analysis = SupportedTemplateTextMapper.map(result.text, plan.requestedFields),
+            ocrText = result.text
+        )
     }
 }
 

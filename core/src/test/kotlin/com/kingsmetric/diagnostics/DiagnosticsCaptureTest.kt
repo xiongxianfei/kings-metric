@@ -76,8 +76,8 @@ class DiagnosticsCaptureTest {
             metadata = mapOf(
                 "appVersion" to "0.1.0-alpha.4",
                 "detail" to "Missing damage section values after OCR mapping.",
+                "ocrText" to "胜利\n数据 复盘\n对英雄出: 171.2k",
                 "screenshotPath" to "/private/screenshot.png",
-                "rawOcrText" to "raw text",
                 "savedRecordPayload" to "{...}",
                 "token" to "secret"
             )
@@ -88,8 +88,8 @@ class DiagnosticsCaptureTest {
 
         assertEquals("0.1.0-alpha.4", entry.metadata["appVersion"])
         assertEquals("Missing damage section values after OCR mapping.", entry.metadata["detail"])
+        assertEquals("胜利\n数据 复盘\n对英雄出: 171.2k", entry.metadata["ocrText"])
         assertFalse(entry.metadata.containsKey("screenshotPath"))
-        assertFalse(entry.metadata.containsKey("rawOcrText"))
         assertFalse(entry.metadata.containsKey("savedRecordPayload"))
         assertFalse(entry.metadata.containsKey("token"))
         assertTrue(export.notice.contains("does not include the original screenshot"))

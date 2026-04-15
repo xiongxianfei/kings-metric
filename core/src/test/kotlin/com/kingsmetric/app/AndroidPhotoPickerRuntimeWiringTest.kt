@@ -126,7 +126,12 @@ class AndroidPhotoPickerRuntimeWiringTest {
         val recorder = RecordingDiagnosticsRecorder()
         val runtime = photoPickerRuntime(
             diagnosticsRecorder = recorder,
-            recognizeImportedScreenshot = { ImportResult.ImportFailed("Could not extract screenshot data for review.") }
+            recognizeImportedScreenshot = {
+                ImportResult.ImportFailed(
+                    "Could not extract screenshot data for review.",
+                    ocrText = "胜利\n数据 复盘\n对英雄出: 171.2k"
+                )
+            }
         )
 
         runtime.handlePickerResult("content://shots/failed")
@@ -139,6 +144,7 @@ class AndroidPhotoPickerRuntimeWiringTest {
         assertEquals(DiagnosticsOutcome.RECOGNITION_FAILED, diagnostics.outcome)
         assertEquals("import", diagnostics.metadata["surface"])
         assertEquals("Could not extract screenshot data for review.", diagnostics.metadata["detail"])
+        assertEquals("胜利\n数据 复盘\n对英雄出: 171.2k", diagnostics.metadata["ocrText"])
     }
 
     @Test

@@ -24,8 +24,13 @@ data class LoadedBitmap(
     val path: String
 )
 
+data class RecognitionOutput(
+    val analysis: ScreenshotAnalysis,
+    val ocrText: String
+)
+
 interface MlKitRecognizer {
-    fun recognize(bitmap: LoadedBitmap, plan: RecognitionRegionPlan): ScreenshotAnalysis
+    fun recognize(bitmap: LoadedBitmap, plan: RecognitionRegionPlan): RecognitionOutput
 }
 
 class BitmapDecodeException : IllegalStateException("bitmap decode failed")
@@ -51,13 +56,14 @@ class MlKitRecognitionAdapter(
             return ImportResult.ImportFailed("Could not decode screenshot for recognition.")
         }
 
-        val analysis = try {
+        val recognitionOutput = try {
             recognizer.recognize(bitmap, regionPlanFor(path))
         } catch (_: OcrExtractionException) {
             return ImportResult.ImportFailed("Could not extract screenshot data for review.")
         } catch (_: Exception) {
             return ImportResult.ImportFailed("Could not extract screenshot data for review.")
         }
+        val analysis = recognitionOutput.analysis
 
         return when (val validation = validator.validate(analysis)) {
             TemplateValidationResult.Supported -> {
@@ -78,7 +84,8 @@ class MlKitRecognitionAdapter(
             }
             is TemplateValidationResult.Unsupported -> {
                 ImportResult.Unsupported(
-                    "Image does not match the supported personal-stats template. ${validation.reason}"
+                    "Image does not match the supported personal-stats template. ${validation.reason}",
+                    ocrText = recognitionOutput.ocrText
                 )
             }
         }
@@ -105,14 +112,18 @@ class FakeMlKitRecognizer(
 ) : MlKitRecognizer {
     val recognizedPaths = mutableListOf<String>()
 
-    override fun recognize(bitmap: LoadedBitmap, plan: RecognitionRegionPlan): ScreenshotAnalysis {
+    override fun recognize(bitmap: LoadedBitmap, plan: RecognitionRegionPlan): RecognitionOutput {
         val path = bitmap.path
         recognizedPaths += path
         if (path in failPaths) {
             throw OcrExtractionException("ocr failed")
         }
-        return analysisByPath[path]
+        val analysis = analysisByPath[path]
             ?: error("No ML Kit analysis configured for $path")
+        return RecognitionOutput(
+            analysis = analysis,
+            ocrText = "fake ocr text for $path"
+        )
     }
 }
 

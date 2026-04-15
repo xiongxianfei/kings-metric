@@ -90,7 +90,7 @@ class MlKitRecognitionAdapterIntegrationTest {
                 override fun recognize(
                     bitmap: LoadedBitmap,
                     plan: RecognitionRegionPlan
-                ): com.kingsmetric.importflow.ScreenshotAnalysis {
+                ): RecognitionOutput {
                     throw IllegalStateException("unexpected mapper failure")
                 }
             }
@@ -137,6 +137,31 @@ class MlKitRecognitionAdapterIntegrationTest {
         val result = adapter.recognize("stored/cropped.png")
 
         assertTrue(result is ImportResult.Unsupported)
+    }
+
+    @Test
+    fun `IT6 unsupported result preserves OCR text for diagnostics export`() {
+        val adapter = recognitionAdapter(
+            recognizer = object : MlKitRecognizer {
+                override fun recognize(
+                    bitmap: LoadedBitmap,
+                    plan: RecognitionRegionPlan
+                ): RecognitionOutput {
+                    return RecognitionOutput(
+                        analysis = MlKitFixtures.supportedAnalysis(
+                            visibleSections = setOf(Section.DAMAGE, Section.DAMAGE_TAKEN, Section.ECONOMY)
+                        ),
+                        ocrText = "胜利\n数据 复盘\n对英雄出: 171.2k"
+                    )
+                }
+            }
+        )
+
+        val result = adapter.recognize("stored/cropped.png")
+
+        assertTrue(result is ImportResult.Unsupported)
+        result as ImportResult.Unsupported
+        assertEquals("胜利\n数据 复盘\n对英雄出: 171.2k", result.ocrText)
     }
 }
 
