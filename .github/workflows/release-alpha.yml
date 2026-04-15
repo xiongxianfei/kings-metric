@@ -59,11 +59,14 @@ jobs:
           fi
 
       - name: Sync repository description
-        if: ${{ secrets.GH_REPO_ADMIN_TOKEN != '' }}
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_REPO_ADMIN_TOKEN }}
         run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "GH_REPO_ADMIN_TOKEN not configured; skipping repository description sync."
+            exit 0
+          fi
           gh api "repos/${GITHUB_REPOSITORY}" \
             --method PATCH \
             -f description="${{ steps.metadata.outputs.repository_description }}"
