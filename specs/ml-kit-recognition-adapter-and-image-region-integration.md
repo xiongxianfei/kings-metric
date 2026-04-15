@@ -65,3 +65,8 @@ Expected behavior:
   simplified and traditional Chinese variants for the same label. The Android
   mapper must be verified against a real supported screenshot fixture, not only
   synthetic text-image tests.
+- 2026-04-15: Avoid a redundant full-size `BitmapFactory.decodeFile()` just to
+  confirm the stored screenshot exists before ML Kit runs. Large screenshots can
+  crash the import path on real devices if the adapter decodes the image twice.
+  Use a bounds-only decode to validate readability, then let the recognizer own
+  the real image load.

@@ -1,6 +1,5 @@
 package com.kingsmetric.app
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +18,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,11 +38,25 @@ fun ReviewScreenRoute(
     onSaveSucceeded: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
+    val previewLoader = remember { AndroidPreviewBitmapLoader() }
     val previewBitmap = remember(state.screenshotPath, state.previewAvailability) {
         if (state.previewAvailability == PreviewAvailability.Available) {
-            state.screenshotPath?.let(BitmapFactory::decodeFile)
+            state.screenshotPath?.let { path ->
+                runCatching {
+                    previewLoader.load(
+                        path = path,
+                        maxDimensionPx = 1080
+                    )
+                }.getOrNull()
+            }
         } else {
             null
+        }
+    }
+
+    DisposableEffect(previewBitmap) {
+        onDispose {
+            previewBitmap?.recycle()
         }
     }
 

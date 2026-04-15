@@ -1,7 +1,6 @@
 package com.kingsmetric.app
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.net.Uri
 import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.vision.common.InputImage
@@ -15,13 +14,17 @@ import com.kingsmetric.importflow.Section
 import java.io.File
 
 class AndroidBitmapLoader : BitmapLoader {
+    private val boundsReader = AndroidImageBoundsReader()
+
     override fun load(path: String): LoadedBitmap {
         val file = File(path)
         if (!file.exists()) {
             throw BitmapDecodeException()
         }
-        val decoded = BitmapFactory.decodeFile(file.absolutePath) ?: throw BitmapDecodeException()
-        decoded.recycle()
+        val bounds = boundsReader.read(file.absolutePath)
+        if (bounds.width <= 0 || bounds.height <= 0) {
+            throw BitmapDecodeException()
+        }
         return LoadedBitmap(path)
     }
 }

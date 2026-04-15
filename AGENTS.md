@@ -137,6 +137,7 @@ If a required spec does not exist, do not invent a full feature contract in code
 - When adding Room, Hilt, or other generated-code Android integrations, wire the required KSP/compiler dependency in the owning Android module before treating the feature as runnable.
 - For generated-code Android features, verify at least `:app:assembleDebug` so missing `_Impl` or generated component classes fail in CI instead of at runtime.
 - If the current Android toolchain uses AGP built-in Kotlin with KSP, preserve the compatibility property in `gradle.properties` unless the toolchain is upgraded and verified without it.
+- For Android screenshot flows, do not fully decode the original screenshot bitmap just to validate file readability or render a small preview. Use bounds-only decode for validation and downsampled decode for previews so large real-device screenshots do not crash the import or review path.
 
 ## Repository Layout Guidance
 

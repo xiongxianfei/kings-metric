@@ -98,6 +98,10 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
 - **Rule:** Mark fields with low extraction confidence as unresolved
 - **Error:** OCR extraction fails entirely -> abort with error message.
   Do not create a draft with empty fields.
+- **Rule:** On Android, avoid a second full-size decode just to prove the file
+  is readable before OCR starts. Use a bounds-only probe for validation and
+  let the real recognizer own the actual image load, or large screenshots can
+  crash the import path on lower-memory devices.
 - **Rule:** Keep at least one Android regression test for this stage on a real
   supported screenshot fixture. Synthetic text-image fixtures alone can miss
   ML Kit ordering differences, punctuation, and character-variant output that
@@ -147,6 +151,10 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
   content surface plus an anchored save action outside that scroll region.
   Phone-sized screens are much more reliable when the primary action is not
   buried inside the form content.
+- **Rule:** Screenshot preview rendering on Android should use a bounded,
+  downsampled bitmap sized for the preview surface, not a full-resolution
+  decode of the original screenshot. Large imported screenshots can otherwise
+  crash as soon as review opens even if the rest of the flow is valid.
 - **Rule:** When history, detail, or dashboard presentation moves to grouped
   cards, keep Compose assertions on visible labels, fallback copy, and
   separate value nodes. Avoid brittle tests that depend on old flat
