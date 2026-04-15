@@ -105,3 +105,8 @@ Expected behavior:
   screenshots, treat those section-line percentages as a valid fallback for
   `DAMAGE_SHARE` and `DAMAGE_TAKEN_SHARE` instead of collapsing to a generic
   recognition failure.
+- 2026-04-15: Do not let one helper-level parser exception abort the whole
+  supported-template analysis. If anchors and other visible values still prove
+  the screenshot is on the supported path, degrade to a reviewable partial
+  draft with unresolved fields instead of collapsing into a generic
+  recognition failure.
