@@ -9,6 +9,7 @@ import com.kingsmetric.importflow.FakeScreenshotStore
 import com.kingsmetric.importflow.FieldKey
 import com.kingsmetric.importflow.MatchImportWorkflow
 import com.kingsmetric.importflow.ReviewFlag
+import com.kingsmetric.importflow.ReviewState
 import com.kingsmetric.importflow.SaveResult
 import com.kingsmetric.importflow.ScreenshotAnalysis
 import com.kingsmetric.importflow.Section
@@ -51,6 +52,38 @@ class ComposeReviewScreenAndViewModelIntegrationTest {
 
         assertTrue(result is SaveResult.Blocked)
         assertEquals("Farm Lane", viewModel.state.value.fields.getValue(FieldKey.LANE).value)
+    }
+
+    @Test
+    fun `T4 edited drafts are reported back to the shell owner for recovery`() {
+        var latestDraft: DraftRecord? = null
+        val viewModel = ReviewScreenViewModel(
+            draft = ReviewScreenFixtures.heroMissingDraft(),
+            workflow = ReviewScreenFixtures.workflow(),
+            onDraftChanged = { latestDraft = it }
+        )
+
+        viewModel.updateField(FieldKey.HERO, "Li Bai")
+
+        requireNotNull(latestDraft)
+        assertEquals("Li Bai", latestDraft!!.fields.getValue(FieldKey.HERO).value)
+        assertTrue(ReviewState.fromDraft(latestDraft!!).canConfirm)
+    }
+
+    @Test
+    fun `T5 successful save leaves shell cleanup to the route owner`() {
+        var callbackCount = 0
+        val viewModel = ReviewScreenViewModel(
+            draft = ReviewScreenFixtures.supportedDraft(),
+            workflow = ReviewScreenFixtures.workflow(),
+            onDraftChanged = { callbackCount += 1 }
+        )
+
+        val result = viewModel.confirmSave()
+
+        assertTrue(result is SaveResult.Saved)
+        assertEquals(0, callbackCount)
+        assertEquals(ReviewScreenStatus.Saved, viewModel.state.value.status)
     }
 
     @Test
@@ -153,6 +186,13 @@ private object ReviewScreenFixtures {
     fun requiredMissingDraft(): DraftRecord =
         parser.createDraft(
             analysis = supportedAnalysis(visibleFields = FieldKey.all - FieldKey.KDA),
+            screenshotId = "shot-1",
+            screenshotPath = "stored/1-fixture.png"
+        )
+
+    fun heroMissingDraft(): DraftRecord =
+        parser.createDraft(
+            analysis = supportedAnalysis(visibleFields = FieldKey.all - FieldKey.HERO),
             screenshotId = "shot-1",
             screenshotPath = "stored/1-fixture.png"
         )

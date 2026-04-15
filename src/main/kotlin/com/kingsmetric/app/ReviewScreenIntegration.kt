@@ -39,6 +39,7 @@ class ReviewScreenViewModel(
     draft: DraftRecord,
     private val workflow: MatchImportWorkflow,
     private val groupingMapper: ReviewFieldGroupingMapper = ReviewFieldGroupingMapper(),
+    private val onDraftChanged: (DraftRecord?) -> Unit = {},
     private val previewAvailableResolver: (String?) -> Boolean = { screenshotPath ->
         screenshotPath != null
     }
@@ -49,6 +50,7 @@ class ReviewScreenViewModel(
 
     fun updateField(fieldKey: FieldKey, value: String) {
         currentDraft = workflow.updateField(currentDraft, fieldKey, value)
+        onDraftChanged(currentDraft)
         _state.value = currentDraft.toUiState(status = _state.value.status)
     }
 
@@ -58,6 +60,7 @@ class ReviewScreenViewModel(
             is SaveResult.Saved -> currentDraft.toUiState(status = ReviewScreenStatus.Saved)
             is SaveResult.Blocked -> {
                 currentDraft = result.draft
+                onDraftChanged(currentDraft)
                 result.draft.toUiState(
                     status = ReviewScreenStatus.Reviewing,
                     userMessage = SharedUxCopy.message(SharedMessageKey.REVIEW_BLOCKED_SAVE).text
@@ -65,6 +68,7 @@ class ReviewScreenViewModel(
             }
             is SaveResult.StorageFailed -> {
                 currentDraft = result.draft ?: currentDraft
+                onDraftChanged(currentDraft)
                 currentDraft.toUiState(
                     status = ReviewScreenStatus.Reviewing,
                     userMessage = SharedUxCopy.message(SharedMessageKey.REVIEW_SAVE_FAILED).text

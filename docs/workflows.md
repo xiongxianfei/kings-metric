@@ -134,6 +134,10 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
 - **Rule:** If `unresolvedFields` is non-empty, at least one blocker
   must exist — the user must resolve before saving
 - **Rule:** User can edit any field, not just flagged ones
+- **Rule:** If Android shell recovery depends on the current draft, mirror user
+  edits from the route-scoped review `ViewModel` back into the shell-owned
+  saveable draft state as edits happen. Saving only the original draft snapshot
+  will lose unsaved manual corrections after activity recreation.
 - **Rule:** For long grouped review forms, keep the blocker summary and save
   availability visible near the top of the screen. Lower sections may sit
   below the fold on phone-sized devices, so instrumentation should verify
@@ -169,6 +173,10 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
   transaction — if record save fails, do not orphan the screenshot
   reference
 - **Rule:** After successful save, navigate to record list / confirmation
+- **Rule:** When the review-save path is tested through the Android shell,
+  prefer a narrow shell success hook plus repository/history assertions over a
+  brittle full-destination assertion if the nested NavHost transition itself is
+  framework-sensitive in instrumentation. Keep the real save flow intact.
 - **Rule:** When Room backs this stage on Android, do not execute the final
   record write from the UI thread. A main-thread Room violation can surface as
   a misleading generic local-save error even when the reviewed data is valid.

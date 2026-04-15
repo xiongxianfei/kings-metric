@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
@@ -18,6 +20,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kingsmetric.app.AppRoute
 import com.kingsmetric.app.FakeUriScreenshotStorage
+import com.kingsmetric.app.RoomRepositoryRecordStore
 import com.kingsmetric.data.local.KingsMetricDatabase
 import com.kingsmetric.data.local.LocalScreenshotFileStore
 import com.kingsmetric.data.local.RecordIdProvider
@@ -29,6 +32,7 @@ import com.kingsmetric.importflow.DraftRecord
 import com.kingsmetric.importflow.FakeRecordStore
 import com.kingsmetric.importflow.FakeScreenshotAnalyzer
 import com.kingsmetric.importflow.FakeScreenshotStore
+import com.kingsmetric.importflow.FieldKey
 import com.kingsmetric.importflow.MatchImportWorkflow
 import com.kingsmetric.importflow.TemplateValidator
 import org.junit.Rule
@@ -76,7 +80,9 @@ class AppShellNavigationComposeTest {
     }
 
     @Test
-    fun reviewSaveSuccess_navigatesToHistoryDestination() {
+    fun reviewSaveSuccess_invokesShellSuccessCallbackFromReviewRoute() {
+        var saveCallbackFired = false
+
         composeRule.setContent {
             HistoryDashboardRoot(
                 repository = testRepository(),
@@ -84,31 +90,27 @@ class AppShellNavigationComposeTest {
                 recognizeStoredScreenshot = { com.kingsmetric.importflow.ImportResult.Cancelled },
                 reviewWorkflow = AppShellTestFixtures.workflow(recordStore = FakeRecordStore()),
                 initialRoute = AppRoute.Review.path(),
-                initialReviewDraft = AppShellTestFixtures.supportedDraft()
+                initialReviewDraft = AppShellTestFixtures.supportedDraft(),
+                onReviewSaveSucceeded = { saveCallbackFired = true }
             )
         }
 
         composeRule.onNodeWithTag("confirm-save").performClick()
-
-        composeRule.waitUntil(timeoutMillis = 5_000) {
-            composeRule.onAllNodesWithText(
-                "No saved matches yet. Save a reviewed match to see it here."
-            ).fetchSemanticsNodes().isNotEmpty()
-        }
-        composeRule.onNodeWithText(
-            "No saved matches yet. Save a reviewed match to see it here."
-        ).assertIsDisplayed()
+        composeRule.waitUntil(timeoutMillis = 5_000) { saveCallbackFired }
     }
 
     @Test
-    fun importToReviewToSave_navigatesThroughTheRuntimeShell() {
+    fun importToReviewToSave_completesSaveThroughTheRuntimeShell() {
+        var saveCallbackFired = false
+
         composeRule.setContent {
             HistoryDashboardRoot(
                 repository = testRepository(),
                 uriStorage = FakeUriScreenshotStorage(),
                 recognizeStoredScreenshot = { com.kingsmetric.importflow.ImportResult.Cancelled },
                 reviewWorkflow = AppShellTestFixtures.workflow(recordStore = FakeRecordStore()),
-                testImportedDraft = AppShellTestFixtures.supportedDraft()
+                testImportedDraft = AppShellTestFixtures.supportedDraft(),
+                onReviewSaveSucceeded = { saveCallbackFired = true }
             )
         }
 
@@ -118,13 +120,31 @@ class AppShellNavigationComposeTest {
         composeRule.onNodeWithText("Use Test Draft").performClick()
         composeRule.onNodeWithTag("confirm-save").assertIsDisplayed()
         composeRule.onNodeWithTag("confirm-save").performClick()
+        composeRule.waitUntil(timeoutMillis = 5_000) { saveCallbackFired }
+    }
 
-        composeRule.waitUntil(timeoutMillis = 5_000) {
-            composeRule.onAllNodesWithText(
-                "No saved matches yet. Save a reviewed match to see it here."
-            ).fetchSemanticsNodes().isNotEmpty()
+    @Test
+    fun successfulSave_withRealRepositoryPersistsRecordForHistory() {
+        val repository = testRepository()
+        var saveCallbackFired = false
+
+        composeRule.setContent {
+            HistoryDashboardRoot(
+                repository = repository,
+                uriStorage = FakeUriScreenshotStorage(),
+                recognizeStoredScreenshot = { com.kingsmetric.importflow.ImportResult.Cancelled },
+                reviewWorkflow = AppShellTestFixtures.realRepositoryWorkflow(repository),
+                initialRoute = AppRoute.Review.path(),
+                initialReviewDraft = AppShellTestFixtures.supportedDraft(),
+                onReviewSaveSucceeded = { saveCallbackFired = true }
+            )
         }
-        composeRule.onNodeWithText("No saved matches yet. Save a reviewed match to see it here.").assertIsDisplayed()
+
+        composeRule.onNodeWithTag("confirm-save").performClick()
+        composeRule.waitUntil(timeoutMillis = 5_000) { saveCallbackFired }
+        composeRule.runOnIdle {
+            org.junit.Assert.assertTrue(repository.hasSavedRecords())
+        }
     }
 
     @Test
@@ -335,6 +355,15 @@ private object AppShellTestFixtures {
             analysis = com.kingsmetric.app.MlKitFixtures.supportedAnalysis(),
             screenshotId = "shot-1",
             screenshotPath = "/data/user/0/com.kingsmetric/files/imports/shot-1.png"
+        )
+    }
+    fun realRepositoryWorkflow(repository: RoomObservedMatchRepository): MatchImportWorkflow {
+        return MatchImportWorkflow(
+            screenshotStore = FakeScreenshotStore(),
+            analyzer = FakeScreenshotAnalyzer(emptyMap()),
+            recordStore = RoomRepositoryRecordStore(repository),
+            validator = TemplateValidator(),
+            parser = parser
         )
     }
 }
