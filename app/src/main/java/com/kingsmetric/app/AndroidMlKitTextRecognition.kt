@@ -58,17 +58,26 @@ private object SupportedTemplateTextMapper {
     private val resultPattern = Regex(resultLabels.joinToString("|") { Regex.escape(it) })
     private val laneNames = listOf("发育路", "对抗路", "中路", "打野", "游走")
     private val dataTabLabels = listOf("数据")
-    private val damageDealtLabels = listOf("对英雄输出", "对英雄輸出", "对英雄几出")
-    private val damageShareLabels = listOf("输出占比")
-    private val damageTakenLabels = listOf("承受英雄伤害")
+    private val damageDealtLabels = listOf(
+        "对英雄输出",
+        "对英雄輸出",
+        "对英雄出",
+        "对英雄伤害",
+        "输出伤害",
+        "輸出伤害",
+        "輸出",
+        "输出"
+    )
+    private val damageShareLabels = listOf("输出占比", "輸出占比")
+    private val damageTakenLabels = listOf("承受英雄伤害", "承受伤害", "承伤")
     private val damageTakenShareLabels = listOf("承伤占比")
     private val economyLabels = listOf("总经济", "经济")
     private val goldShareLabels = listOf("经济占比")
     private val farmingGoldLabels = listOf("打野经济")
-    private val lastHitsLabels = listOf("补刀数")
-    private val participationLabels = listOf("参团率")
-    private val controlDurationLabels = listOf("控制时长")
-    private val towerDamageLabels = listOf("对塔伤害")
+    private val lastHitsLabels = listOf("补刀数", "补刀")
+    private val participationLabels = listOf("参团率", "團率", "团率")
+    private val controlDurationLabels = listOf("控制时长", "种制时长")
+    private val towerDamageLabels = listOf("对塔伤害", "塔伤")
 
     fun map(text: String, requestedFields: Set<FieldKey>): ScreenshotAnalysis {
         val normalizedText = normalize(text)
@@ -86,12 +95,16 @@ private object SupportedTemplateTextMapper {
         extractPlayerName(summaryLine)?.let { rawValues[FieldKey.PLAYER_NAME] = it }
         extractTotalGold(summaryLine, lines)?.let { rawValues[FieldKey.TOTAL_GOLD] = it }
 
-        extractFirstLabeledValue(lines, damageDealtLabels, """[0-9]+(?:\.[0-9]+)?k""")
-            ?.let { rawValues[FieldKey.DAMAGE_DEALT] = it }
+        (
+            extractFirstLabeledValue(lines, damageDealtLabels, """[0-9]+(?:\.[0-9]+)?k""")
+                ?: extractFirstLabeledValue(lines, damageShareLabels, """[0-9]+(?:\.[0-9]+)?k""")
+            )?.let { rawValues[FieldKey.DAMAGE_DEALT] = it }
         extractFirstLabeledValue(lines, damageShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
             ?.let { rawValues[FieldKey.DAMAGE_SHARE] = it }
-        extractFirstLabeledValue(lines, damageTakenLabels, """[0-9]+(?:\.[0-9]+)?k""")
-            ?.let { rawValues[FieldKey.DAMAGE_TAKEN] = it }
+        (
+            extractFirstLabeledValue(lines, damageTakenLabels, """[0-9]+(?:\.[0-9]+)?k""")
+                ?: extractFirstLabeledValue(lines, damageTakenShareLabels, """[0-9]+(?:\.[0-9]+)?k""")
+            )?.let { rawValues[FieldKey.DAMAGE_TAKEN] = it }
         extractFirstLabeledValue(lines, damageTakenShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
             ?.let { rawValues[FieldKey.DAMAGE_TAKEN_SHARE] = it }
         extractLastLabeledValue(normalizedText, goldShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
@@ -123,16 +136,24 @@ private object SupportedTemplateTextMapper {
         }
 
         val visibleSections = buildSet {
-            if (containsAny(normalizedText, damageDealtLabels + damageShareLabels)) {
+            if (FieldKey.DAMAGE_DEALT in rawValues || FieldKey.DAMAGE_SHARE in rawValues ||
+                containsAny(normalizedText, damageDealtLabels + damageShareLabels)
+            ) {
                 add(Section.DAMAGE)
             }
-            if (containsAny(normalizedText, damageTakenLabels + damageTakenShareLabels)) {
+            if (FieldKey.DAMAGE_TAKEN in rawValues || FieldKey.DAMAGE_TAKEN_SHARE in rawValues ||
+                containsAny(normalizedText, damageTakenLabels + damageTakenShareLabels)
+            ) {
                 add(Section.DAMAGE_TAKEN)
             }
-            if (containsAny(normalizedText, economyLabels + goldShareLabels + farmingGoldLabels)) {
+            if (FieldKey.TOTAL_GOLD in rawValues || FieldKey.GOLD_SHARE in rawValues ||
+                containsAny(normalizedText, economyLabels + goldShareLabels + farmingGoldLabels)
+            ) {
                 add(Section.ECONOMY)
             }
-            if (containsAny(normalizedText, participationLabels + controlDurationLabels)) {
+            if (FieldKey.PARTICIPATION_RATE in rawValues || FieldKey.CONTROL_DURATION in rawValues ||
+                containsAny(normalizedText, participationLabels + controlDurationLabels)
+            ) {
                 add(Section.TEAM_PARTICIPATION)
             }
         }
@@ -173,7 +194,7 @@ private object SupportedTemplateTextMapper {
         val cleaned = laneNames.fold(prefix) { current, lane -> current.replace(lane, " ") }
 
         return cleaned
-            .replace(Regex("""[^\p{IsHan}A-Za-z0-9、·丶•]"""), " ")
+            .replace(Regex("""[^\p{IsHan}A-Za-z0-9、·]"""), " ")
             .replace(Regex("""\s+"""), " ")
             .trim()
             .takeIf { it.isNotEmpty() }
@@ -282,6 +303,15 @@ private object SupportedTemplateTextMapper {
             setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
         )
         val matches = boundedPattern.findAll(window).map { it.groupValues[1] }.toList()
-        return if (preferLastMatch) matches.lastOrNull() else matches.firstOrNull()
+        if (matches.isNotEmpty()) {
+            return if (preferLastMatch) matches.lastOrNull() else matches.firstOrNull()
+        }
+
+        val valueBeforeLabelPattern = Regex(
+            """($valuePattern).{0,24}?${Regex.escape(label)}""",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+        )
+        val reversedMatches = valueBeforeLabelPattern.findAll(window).map { it.groupValues[1] }.toList()
+        return if (preferLastMatch) reversedMatches.lastOrNull() else reversedMatches.firstOrNull()
     }
 }

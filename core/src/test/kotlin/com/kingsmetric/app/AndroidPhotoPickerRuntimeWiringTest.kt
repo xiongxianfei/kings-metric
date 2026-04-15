@@ -135,10 +135,10 @@ class AndroidPhotoPickerRuntimeWiringTest {
             ImportRuntimeStatus.Failed("We couldn't read match data from this screenshot. Try another supported screenshot."),
             runtime.state.value.status
         )
-        assertEquals(
-            listOf(DiagnosticsOutcome.RECOGNITION_FAILED),
-            recorder.events.map { it.outcome }
-        )
+        val diagnostics = recorder.events.single()
+        assertEquals(DiagnosticsOutcome.RECOGNITION_FAILED, diagnostics.outcome)
+        assertEquals("import", diagnostics.metadata["surface"])
+        assertEquals("Could not extract screenshot data for review.", diagnostics.metadata["detail"])
     }
 
     @Test

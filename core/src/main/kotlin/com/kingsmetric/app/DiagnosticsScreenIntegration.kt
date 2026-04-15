@@ -101,10 +101,11 @@ class DiagnosticsScreenViewModel(
     }
 
     private fun DiagnosticsEvent.toPresentation(): DiagnosticsEntryPresentation {
+        val detail = metadata["detail"]?.takeIf { it.isNotBlank() }
         return DiagnosticsEntryPresentation(
             title = outcomeLabel(outcome),
             stageText = stageLabel(stage),
-            summary = summary,
+            summary = if (detail == null) summary else "$summary\nReason: $detail",
             timestampText = "Time: $timestampMillis"
         )
     }

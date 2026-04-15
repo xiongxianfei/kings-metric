@@ -81,3 +81,9 @@ Expected behavior:
   scans that can skip the intended value or steal a nearby one. Keep those
   extractions label-local, then use wider last-occurrence scans only for
   metrics whose values intentionally trail their labels in the OCR stream.
+- 2026-04-15: Real-device and share-sized supported screenshots can produce
+  traditional-Chinese or truncated label variants such as `对英雄輸出`,
+  `對英雄出`, or `团率` even though the template is still the same supported
+  screenshot. Keep alias handling narrow to the supported template, but prefer
+  reaching a reviewable draft with highlighted missing fields over rejecting
+  the whole screenshot when section-level evidence is still present.

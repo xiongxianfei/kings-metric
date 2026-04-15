@@ -46,6 +46,7 @@ class DiagnosticsScreenIntegrationTest {
         assertEquals(2, state.entries.size)
         assertEquals("Save Failed", state.entries.first().title)
         assertEquals("Save", state.entries.first().stageText)
+        assertTrue(state.entries.first().summary.contains("Could not save record locally."))
         assertEquals("Unsupported Screenshot", state.entries.last().title)
         assertTrue(state.exportEnabled)
     }
@@ -59,6 +60,8 @@ class DiagnosticsScreenIntegrationTest {
                 summary = "Could not read match data.",
                 metadata = mapOf(
                     "appVersion" to "0.1.0-alpha.4",
+                    "surface" to "import",
+                    "detail" to "Missing damage section values after OCR mapping.",
                     "rawOcrText" to "hidden"
                 )
             )
@@ -75,7 +78,25 @@ class DiagnosticsScreenIntegrationTest {
         assertTrue(exportedText!!.contains("Kings Metric Diagnostics"))
         assertTrue(exportedText!!.contains("Recognition Failed"))
         assertTrue(exportedText!!.contains("appVersion: 0.1.0-alpha.4"))
+        assertTrue(exportedText!!.contains("detail: Missing damage section values after OCR mapping."))
         assertFalse(exportedText!!.contains("rawOcrText"))
+    }
+
+    @Test
+    fun `T3b diagnostics viewer includes bounded detail when present`() {
+        val recorder = TestDiagnosticsRecorder().apply {
+            record(
+                stage = DiagnosticsStage.RECOGNITION,
+                outcome = DiagnosticsOutcome.RECOGNITION_FAILED,
+                summary = "Could not read match data.",
+                metadata = mapOf("detail" to "Missing damage section values after OCR mapping.")
+            )
+        }
+        val viewModel = DiagnosticsScreenViewModel(recorder)
+
+        val state = viewModel.state.value
+
+        assertTrue(state.entries.single().summary.contains("Reason: Missing damage section values after OCR mapping."))
     }
 
     @Test
@@ -162,7 +183,9 @@ private class TestDiagnosticsRecorder : DiagnosticsRecorder {
                     stage = it.stage,
                     outcome = it.outcome,
                     summary = it.summary,
-                    metadata = it.metadata.filterKeys { key -> key == "appVersion" || key == "surface" || key == "buildType" }
+                    metadata = it.metadata.filterKeys { key ->
+                        key == "appVersion" || key == "surface" || key == "buildType" || key == "detail"
+                    }
                 )
             }
         )

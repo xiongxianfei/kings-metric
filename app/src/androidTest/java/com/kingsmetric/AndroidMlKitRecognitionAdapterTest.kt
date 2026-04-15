@@ -1,6 +1,7 @@
 package com.kingsmetric
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -106,7 +107,7 @@ class AndroidMlKitRecognitionAdapterTest {
         assertEquals("80.0%", result.draft.require(FieldKey.PARTICIPATION_RATE).value)
         assertTrue(result.reviewState.highlightedFields.contains(FieldKey.HERO))
         assertTrue(result.reviewState.blockingFields.contains(FieldKey.HERO))
-        assertTrue(result.reviewState.blockingFields.all { it == FieldKey.HERO })
+        assertTrue(result.reviewState.blockingFields.toString(), result.reviewState.blockingFields.all { it == FieldKey.HERO })
     }
 
     @Test
@@ -139,6 +140,58 @@ class AndroidMlKitRecognitionAdapterTest {
         assertEquals("35.3%", result.draft.require(FieldKey.DAMAGE_SHARE).value)
         assertEquals("24%", result.draft.require(FieldKey.GOLD_SHARE).value)
         assertEquals("80.0%", result.draft.require(FieldKey.PARTICIPATION_RATE).value)
+    }
+
+    @Test
+    fun readableChineseSupportedScreenshot_isRecognizedIntoReviewableDraft() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val screenshot = createScreenshot(
+            context = context,
+            name = "supported-readable-chinese.png",
+            lines = listOf(
+                "胜利",
+                "20 vs 10",
+                "总览 数据 复盘",
+                "不吹、菜鸟 发育路 13.1 11/1/5",
+                "对英雄输出 171.2k 输出占比 35.3%",
+                "承受英雄伤害 82.1k 承伤占比 20.3%",
+                "经济 13.1k 经济占比 24%",
+                "打野经济 1.4k 补刀数 50",
+                "参团率 80.0% 控制时长 3s",
+                "对塔伤害 10.9k"
+            )
+        )
+        val adapter = adapter(context)
+
+        val result = adapter.recognize(screenshot.absolutePath)
+
+        assertTrue(result.toString(), result is ImportResult.DraftReady)
+        result as ImportResult.DraftReady
+        assertEquals("victory", result.draft.require(FieldKey.RESULT).value)
+        assertEquals("11/1/5", result.draft.require(FieldKey.KDA).value)
+        assertEquals("35.3%", result.draft.require(FieldKey.DAMAGE_SHARE).value)
+        assertEquals("24%", result.draft.require(FieldKey.GOLD_SHARE).value)
+        assertEquals("80.0%", result.draft.require(FieldKey.PARTICIPATION_RATE).value)
+    }
+
+    @Test
+    fun downscaledSupportedFixtureImage_isRecognizedIntoReviewableDraft() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val screenshot = downscaleAssetToCache(
+            context = context,
+            assetName = "detailed-data.jpg",
+            targetWidth = 384,
+            targetHeight = 683
+        )
+        val adapter = adapter(context)
+
+        val result = adapter.recognize(screenshot.absolutePath)
+
+        assertTrue(result.toString(), result is ImportResult.DraftReady)
+        result as ImportResult.DraftReady
+        assertEquals("victory", result.draft.require(FieldKey.RESULT).value)
+        assertEquals("11/1/5", result.draft.require(FieldKey.KDA).value)
+        assertTrue(result.reviewState.blockingFields.contains(FieldKey.DAMAGE_SHARE))
     }
 }
 
@@ -185,6 +238,25 @@ private fun copyAssetToCache(
         FileOutputStream(target).use { output ->
             input.copyTo(output)
         }
+    }
+    return target
+}
+
+private fun downscaleAssetToCache(
+    context: android.content.Context,
+    assetName: String,
+    targetWidth: Int,
+    targetHeight: Int
+): File {
+    val target = File(context.cacheDir, "scaled-$assetName")
+    InstrumentationRegistry.getInstrumentation().context.assets.open(assetName).use { input ->
+        val original = BitmapFactory.decodeStream(input)
+        val scaled = Bitmap.createScaledBitmap(original, targetWidth, targetHeight, true)
+        FileOutputStream(target).use { output ->
+            scaled.compress(Bitmap.CompressFormat.JPEG, 95, output)
+        }
+        original.recycle()
+        scaled.recycle()
     }
     return target
 }

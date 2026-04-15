@@ -113,6 +113,10 @@ Expected behavior:
   logcat lines as the primary contract.
 - Diagnostics entries MUST distinguish unsupported-screenshot outcomes from
   supported-path processing failures.
+- When a stage already has a bounded internal reason such as a template
+  rejection reason or retryable import/save failure detail, diagnostics SHOULD
+  preserve that reason in a privacy-safe structured field instead of exporting
+  only the generic user-facing summary.
 
 ### R4. Privacy And Redaction
 
