@@ -99,3 +99,9 @@ Expected behavior:
   to the supported template, but prefer reaching a reviewable draft with
   highlighted missing fields over rejecting the whole screenshot when
   section-level evidence is still present.
+- 2026-04-15: Real readable-Chinese OCR can also place the share percentage on
+  the same line as the section label such as `输出伤害 35.3%` or `承伤 20.3%`
+  even when the explicit share label line is not nearby. For supported
+  screenshots, treat those section-line percentages as a valid fallback for
+  `DAMAGE_SHARE` and `DAMAGE_TAKEN_SHARE` instead of collapsing to a generic
+  recognition failure.

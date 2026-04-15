@@ -96,6 +96,9 @@ class SupportedTemplateTextMapperTest {
         assertTrue(Anchor.RESULT_HEADER in analysis.anchors)
         assertTrue(Anchor.DATA_TAB_SELECTED in analysis.anchors)
         assertTrue(Anchor.SUMMARY_CARD in analysis.anchors)
-        assertEquals(setOf(Section.DAMAGE, Section.DAMAGE_TAKEN, Section.ECONOMY, Section.TEAM_PARTICIPATION), analysis.visibleSections)
+        assertEquals(
+            setOf(Section.DAMAGE, Section.DAMAGE_TAKEN, Section.ECONOMY, Section.TEAM_PARTICIPATION),
+            analysis.visibleSections
+        )
     }
 }

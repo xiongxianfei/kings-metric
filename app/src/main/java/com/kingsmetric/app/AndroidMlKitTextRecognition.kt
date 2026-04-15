@@ -120,13 +120,19 @@ internal object SupportedTemplateTextMapper {
             extractFirstLabeledValue(lines, damageDealtLabels, """[0-9]+(?:\.[0-9]+)?k""")
                 ?: extractFirstLabeledValue(lines, damageShareLabels, """[0-9]+(?:\.[0-9]+)?k""")
             )?.let { rawValues[FieldKey.DAMAGE_DEALT] = it }
-        extractFirstLabeledValue(lines, damageShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
+        (
+            extractFirstLabeledValue(lines, damageShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
+                ?: extractFirstLabeledValue(lines, damageDealtLabels, """[0-9]+(?:\.[0-9]+)?%""")
+            )
             ?.let { rawValues[FieldKey.DAMAGE_SHARE] = it }
         (
             extractFirstLabeledValue(lines, damageTakenLabels, """[0-9]+(?:\.[0-9]+)?k""")
                 ?: extractFirstLabeledValue(lines, damageTakenShareLabels, """[0-9]+(?:\.[0-9]+)?k""")
             )?.let { rawValues[FieldKey.DAMAGE_TAKEN] = it }
-        extractFirstLabeledValue(lines, damageTakenShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
+        (
+            extractFirstLabeledValue(lines, damageTakenShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
+                ?: extractFirstLabeledValue(lines, damageTakenLabels, """[0-9]+(?:\.[0-9]+)?%""")
+            )
             ?.let { rawValues[FieldKey.DAMAGE_TAKEN_SHARE] = it }
         extractLastLabeledValue(normalizedText, goldShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
             ?.let { rawValues[FieldKey.GOLD_SHARE] = it }
@@ -196,9 +202,7 @@ internal object SupportedTemplateTextMapper {
     private fun normalize(text: String): String {
         return text
             .replace('：', ':')
-            .replace('｜', ' ')
-            .replace('丨', ' ')
-            .replace('，', ' ')
+            .replace('｜', '|')
             .replace('\u3000', ' ')
             .replace(Regex("""[ \t]+"""), " ")
     }
@@ -223,7 +227,7 @@ internal object SupportedTemplateTextMapper {
         val cleaned = laneNames.fold(prefix) { current, lane -> current.replace(lane, " ") }
 
         return cleaned
-            .replace(Regex("""[^\p{IsHan}A-Za-z0-9、·]"""), " ")
+            .replace(Regex("""[^\p{IsHan}A-Za-z0-9、]"""), " ")
             .replace(Regex("""\s+"""), " ")
             .trim()
             .takeIf { it.isNotEmpty() }
@@ -282,7 +286,7 @@ internal object SupportedTemplateTextMapper {
     ): String? {
         labels.forEach { label ->
             val immediatePattern = Regex(
-                """${Regex.escape(label)}\s*[:：]?\s*($valuePattern)""",
+                """${Regex.escape(label)}\s*[:]?\s*($valuePattern)""",
                 RegexOption.IGNORE_CASE
             )
             immediatePattern.find(text)?.groupValues?.getOrNull(1)?.let { return it }
@@ -311,7 +315,7 @@ internal object SupportedTemplateTextMapper {
         preferLastMatch: Boolean
     ): String? {
         val immediatePattern = Regex(
-            """${Regex.escape(label)}\s*[:：]?\s*($valuePattern)""",
+            """${Regex.escape(label)}\s*[:]?\s*($valuePattern)""",
             RegexOption.IGNORE_CASE
         )
         immediatePattern.find(window)?.groupValues?.getOrNull(1)?.let { return it }
