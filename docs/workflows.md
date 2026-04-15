@@ -239,6 +239,39 @@ Flow for viewing and editing a saved record.
 
 ---
 
+## GitHub Release (Alpha)
+
+Flow for publishing the first GitHub prerelease without drifting away from the
+verified Android artifact and documented scope.
+
+1. Load release-facing metadata from the tracked repository source
+2. Resolve the first-release version/tag and release notes path
+3. Optionally sync the GitHub repository description from the same tracked
+   metadata source
+4. Validate release signing inputs
+5. Produce the signed release artifact through the release build path
+6. Verify the release gate inputs used for publication
+7. Publish the GitHub release as a prerelease with the verified user artifact
+   and release notes
+
+**Error path:**
+- Signing inputs missing -> fail closed before treating any artifact as the
+  signed release build
+- Release metadata incomplete -> stop before publication
+- Repository description sync token missing -> keep release publication
+  independent; repo description sync is optional and needs a separate
+  admin-scoped token
+- Release artifact missing or wrong -> do not publish a misleading release
+
+**Rules:**
+- The first GitHub release stays alpha-only until a later plan changes that
+  policy explicitly.
+- Release metadata, README wording, and release notes should stay aligned to
+  one supported-scope statement.
+- The published artifact must come from the release path, not a debug fallback.
+
+---
+
 ## UX Regression Coverage
 
 - Focused feature tests should own their primary screen or route promises.

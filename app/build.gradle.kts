@@ -1,8 +1,28 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.compose")
+}
+
+fun loadProperties(path: String): Properties {
+    return Properties().apply {
+        rootProject.file(path).inputStream().use(::load)
+    }
+}
+
+val releaseArtifact = loadProperties(".github/release-artifact.properties")
+val firstReleaseVersionName = releaseArtifact.getProperty("releaseVersionName")
+val requiredReleaseSigningEnvVars = listOf(
+    "ANDROID_KEYSTORE_PATH",
+    "ANDROID_KEYSTORE_PASSWORD",
+    "ANDROID_KEY_ALIAS",
+    "ANDROID_KEY_PASSWORD"
+)
+val hasReleaseSigningInputs = requiredReleaseSigningEnvVars.all { name ->
+    !System.getenv(name).isNullOrBlank()
 }
 
 android {
@@ -14,7 +34,7 @@ android {
         minSdk = 28
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = firstReleaseVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -22,9 +42,23 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            if (hasReleaseSigningInputs) {
+                storeFile = file(System.getenv("ANDROID_KEYSTORE_PATH"))
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (hasReleaseSigningInputs) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -79,4 +113,24 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+}
+
+val verifyReleaseSigningInputs by tasks.registering {
+    doLast {
+        val missing = requiredReleaseSigningEnvVars.filter { name ->
+            System.getenv(name).isNullOrBlank()
+        }
+        if (missing.isNotEmpty()) {
+            error(
+                "Missing required release signing inputs: " +
+                    missing.joinToString(", ")
+            )
+        }
+    }
+}
+
+tasks.matching { task ->
+    task.name in setOf("assembleRelease", "bundleRelease", "packageRelease")
+}.configureEach {
+    dependsOn(verifyReleaseSigningInputs)
 }
