@@ -1,8 +1,12 @@
 .gradle/
 .gradle-home/
+.gradle-user-home/
+.kotlin/
 build/
 out/
 .idea/
 *.iml
 .codex/
+.codex-pr-body-*.md
+.codex.zip
 local.properties

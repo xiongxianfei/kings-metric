@@ -1,24 +1,23 @@
 # AGENTS.md
 
-## Mission
-
 This repository builds an Android app that extracts Honor of Kings personal match data from screenshots. The app is local-first: users import a screenshot from device storage, the app processes it on-device, the user reviews the extracted data, and the app saves both the original screenshot and the confirmed structured record locally.
 
-Agents working in this repository should optimize for correctness, explicitness, and spec compliance over speed or speculative feature work.
+Optimize for correctness, explicitness, and spec compliance over speed or speculative feature work.
 
-## Instruction Precedence
+## Instruction precedence
 
 When instructions conflict, follow this order:
 
 1. Direct user request
-2. Current feature spec in `specs/`
+2. Approved feature spec in `specs/`
 3. Matching test spec in `specs/`
-4. `docs/plan.md`
-5. This file
+4. Active execution plan file in `docs/plans/`
+5. `docs/workflows.md`
+6. This file
 
-Do not silently resolve conflicts between these sources. Call out the conflict and ask for direction if the correct behavior is not already implied by the higher-priority source.
+Do not silently resolve conflicts between higher-priority sources. Call out the conflict, state the impact, and ask for direction only if the higher-priority source does not already imply the answer.
 
-## Repository Context
+## Repository context
 
 - Platform: Android
 - Language: Kotlin
@@ -32,55 +31,84 @@ Do not silently resolve conflicts between these sources. Call out the conflict a
 - Initial locale support: Simplified Chinese screenshots only
 - Initial template support: one post-match personal-stats detailed-data screenshot layout only
 
-## Product Constraints
+## Product constraints
 
 - Reliability over automation. If extraction is uncertain, surface it for review instead of guessing.
-- Local-first by default. Do not add server-side OCR, sync, or cloud dependencies unless explicitly required by spec.
+- Local-first by default. Do not add server-side OCR, sync, or cloud dependencies unless a spec explicitly requires them.
 - Strict template support. Unsupported layouts, languages, or regional variants must be rejected clearly.
 - User review is required before final save.
 - Do not invent data. Only normalize values that are explicitly visible in the screenshot when the spec allows it.
+- Final saved records must preserve stable linkage to the original screenshot.
+- Local persistence failures must fail closed and keep the user’s data intact.
 
-## Required Working Flow
+## Planning and workflow
 
-Before implementing a feature:
+Use a plan first for work that is multi-file, risky, ambiguous, architecture-affecting, migration-heavy, or large enough that it should be split into reviewable PR-sized milestones.
 
-1. Read `docs/plan.md`.
+Use the standard workflow for behavior-changing feature work:
+
+`plan -> spec -> spec-review -> test-spec -> implement -> code-review`
+
+Add `plan-review` before spec work when the task is risky, cross-cutting, or hard to sequence cleanly.
+
+Add `learn` after implementation or review when the same mistake appears twice, a new durable convention emerges, or `docs/workflows.md` no longer matches reality.
+
+Use `bugfix` for bugs. Use `ci` for scoped GitHub Actions work. Use `pr` only when the branch is already ready for review.
+
+## Plan file policy
+
+- `docs/roadmap.md` stores future ideas and unapproved work.
+- `docs/plan.md` is an index of active and closed execution plans. It is not the body of the plan.
+- Every approved initiative gets its own living plan file under `docs/plans/YYYY-MM-DD-slug.md`.
+- Never overwrite an older plan when starting a new initiative.
+- If a new plan replaces an older one, keep the old file and mark it as superseded.
+- Specs and reviews must reference the concrete plan file they are based on.
+- Execution plans should follow `.codex/PLANS.md`.
+
+## Required reading before implementation
+
+Before implementing a behavior-changing feature:
+
+1. Read `docs/plan.md`, then open the concrete active plan file in `docs/plans/`.
 2. Read the relevant feature spec in `specs/<feature>.md`.
 3. Read the matching test spec in `specs/<feature>.test.md` when it exists.
-4. Inspect the files that will be touched.
-5. Confirm the request does not conflict with the current spec.
+4. Read `docs/workflows.md` when the feature touches an existing flow or handoff.
+5. Inspect the files that will be touched.
+6. Confirm the request does not conflict with the current spec or plan.
 
-Implementation flow:
+If a required spec does not exist and the work changes externally observable behavior, do not invent the contract in code. Create or request the missing spec first.
 
-1. Write or update tests first.
-2. Run the smallest relevant test scope and confirm failure for the expected reason.
-3. Implement the minimum code required to satisfy the spec.
-4. Re-run the relevant tests.
-5. Expand verification only as needed.
+## Spec and test conventions
 
-If a required spec does not exist, do not invent a full feature contract in code. Ask for or create the missing spec first if the user requests that workflow.
-
-## Spec Conventions
-
-- `docs/plan.md` is the implementation plan and build-order source.
-- `specs/<feature>.md` defines requirements, examples, edge cases, non-goals, and acceptance criteria.
-- `specs/<feature>.test.md` defines the required coverage for that feature.
-- Every MUST in a spec should map to at least one test.
+- `specs/<feature>.md` defines the contract: requirements, examples, edge cases, non-goals, compatibility expectations, and acceptance criteria.
+- `specs/<feature>.test.md` defines requirement-to-test coverage for that feature.
+- Every `MUST` in a spec should map to at least one test.
 - Every named edge case should map to at least one test.
-- Code should follow the spec, not old chat context or inferred product wishes.
+- The test spec does not override the feature spec; it operationalizes it.
+- Code should follow the current spec, not old chat context or inferred product wishes.
 
-## Architecture Rules
+## Implementation rules
+
+- Work from the active execution plan milestone by milestone.
+- Keep diffs scoped. Do not add non-goal features while implementing a milestone.
+- Write or update tests first for the milestone you are changing.
+- Run the smallest relevant verification scope first, then expand only as needed.
+- If validation fails after a milestone, stop and fix the failure before moving on.
+- Update the active plan’s `Progress`, `Decision Log`, `Surprises & Discoveries`, and `Validation Notes` as work proceeds.
+- If a spec gap blocks safe implementation, state it explicitly instead of silently guessing.
+
+## Architecture rules
 
 - Keep business rules out of Compose UI code.
 - Keep parsing, validation, normalization, and save rules in testable Kotlin classes.
 - Expose UI state explicitly from `ViewModel`s.
 - Prefer unidirectional data flow: events in, state out.
-- Keep OCR/template recognition logic separate from persistence logic.
+- Keep OCR and template recognition logic separate from persistence logic.
 - Keep file storage separate from Room entities, DAOs, and repositories.
 - Keep dashboard and metrics calculations out of UI code.
-- Avoid premature module splitting, but preserve boundaries so modularization remains easy later.
+- Avoid premature module splitting, but preserve boundaries so future modularization stays easy.
 
-## Recognition Pipeline Rules
+## Recognition and persistence rules
 
 - v1 supports only the approved Chinese screenshot template.
 - Validation must verify required anchors before a screenshot is considered supported.
@@ -89,38 +117,22 @@ If a required spec does not exist, do not invent a full feature contract in code
 - Low-confidence, missing, or invalid values must be flagged for review.
 - Do not derive non-visible fields from other fields unless the spec explicitly permits that exact normalization.
 - Do not silently coerce unsupported screenshots into partial supported records.
-
-## Data and Persistence Rules
-
 - Save the original screenshot locally when import begins.
-- Preserve stable linkage between the stored screenshot and the saved record.
 - Final records must not be saved if required fields are unresolved.
 - Optional fields may remain empty only when the spec allows it.
-- If screenshot storage succeeds and record persistence fails, report the failure clearly and keep state consistent with the spec.
-- Do not call Room-backed final persistence directly from the Android UI thread. Main-thread database violations can surface as misleading generic save failures.
 - Do not add destructive cleanup behavior unless it is explicitly specified and tested.
 
-## Testing Expectations
+## Verification expectations
 
 - Prefer JVM tests for parser, validator, normalizer, save validation, and other pure logic.
 - Use instrumented tests for Room, file persistence integration, and Android framework-dependent behavior.
 - Use Compose UI tests for import, review, edit, and confirmation flows.
-- If an Android Compose test only needs `setContent` and does not rely on a real app activity, prefer `createComposeRule()` over `createAndroidComposeRule<ComponentActivity>()`. That keeps the test independent from manifest activity resolution and avoids harness-only emulator failures.
-- On the current Android toolchain, avoid backtick test method names with spaces in `app/src/androidTest`. Dexing can fail before the test run even when JVM tests allow that naming style.
-- Add or update regression fixtures when changing validation or parsing behavior.
 - When fixing a bug, add or update a regression test first when feasible.
 - Do not report success without stating what was actually verified.
+- For generated-code Android features, verify at least `./gradlew :app:assembleDebug` so missing `_Impl` or generated DI classes fail before runtime.
+- If the exact command set is unclear, inspect existing Gradle tasks or GitHub Actions workflows and record the concrete commands in the active plan before proceeding.
 
-## Code Quality Rules
-
-- Make the smallest change that fully satisfies the spec.
-- Prefer explicit names over clever abstractions.
-- Add comments only where they reduce real ambiguity.
-- Avoid speculative generalization for unsupported templates, languages, or workflows.
-- Do not add libraries without a clear need tied to the current plan or spec.
-- Keep ASCII by default unless the file already requires non-ASCII content.
-
-## Kotlin and Android Conventions
+## Android and Kotlin conventions
 
 - Use `camelCase` for functions and variables.
 - Use `PascalCase` for classes, objects, and Composables.
@@ -129,17 +141,19 @@ If a required spec does not exist, do not invent a full feature contract in code
 - Use `sealed` hierarchies for closed UI or domain state models when variants carry different data.
 - Keep validation close to the domain or `ViewModel` layer, not buried in composables.
 - If an Android route depends on in-memory user progress, do not keep that state in plain `remember` alone. Use `rememberSaveable`, `SavedStateHandle`, or another explicit state owner that survives activity recreation.
-- If a route-scoped `ViewModel` edits a draft or form state that the shell also needs to recover after activity recreation, push those edits back into the shell-owned saveable state as they happen. Preserving only the initial draft snapshot is not enough.
+- If a route-scoped `ViewModel` edits a draft or form state that the shell also needs to recover after activity recreation, push those edits back into the shell-owned saveable state as they happen.
 - If an Android flow depends on framework UI that is not deterministic in tests, add the narrowest possible test seam at the app-shell boundary. Do not bypass the business flow itself just to make instrumentation easier.
-- For feature-scoped GitHub Actions workflows, prefer `pull_request` plus `push` on `main` only. Do not also run the same expensive workflow on feature-branch `push` unless there is a specific reason.
-- Add workflow `concurrency` for expensive Android jobs so stale emulator runs are cancelled instead of stacking up across rapid branch updates.
-- If an emulator-backed workflow takes materially longer than the normal PR feedback budget, move it out of the PR path into a scheduled or manual smoke workflow unless the feature explicitly requires that gate before review.
-- When adding Room, Hilt, or other generated-code Android integrations, wire the required KSP/compiler dependency in the owning Android module before treating the feature as runnable.
-- For generated-code Android features, verify at least `:app:assembleDebug` so missing `_Impl` or generated component classes fail in CI instead of at runtime.
-- If the current Android toolchain uses AGP built-in Kotlin with KSP, preserve the compatibility property in `gradle.properties` unless the toolchain is upgraded and verified without it.
-- For Android screenshot flows, do not fully decode the original screenshot bitmap just to validate file readability or render a small preview. Use bounds-only decode for validation and downsampled decode for previews so large real-device screenshots do not crash the import or review path.
+- For Android screenshot flows, do not fully decode the original screenshot bitmap just to validate file readability or render a small preview. Use bounds-only decode for validation and downsampled decode for previews.
 
-## Repository Layout Guidance
+## CI conventions
+
+- Prefer `pull_request` plus `push` on `main` only for feature-scoped GitHub Actions workflows.
+- Add `concurrency` for expensive Android jobs so stale emulator runs are cancelled.
+- Keep PR workflows fast. If an emulator-backed check materially exceeds the normal review feedback budget, move it to a scheduled or manual smoke workflow unless the feature explicitly requires it on the PR path.
+- When adding Room, Hilt, or other generated-code Android integrations, wire the required KSP or compiler dependency in the owning Android module before treating the feature as runnable.
+- If the current toolchain uses AGP built-in Kotlin with KSP, preserve compatibility properties until the toolchain is upgraded and re-verified without them.
+
+## Repository layout guidance
 
 Preferred direction as the app grows:
 
@@ -155,15 +169,15 @@ Preferred direction as the app grows:
 
 Agents may keep a simpler structure while the codebase is small, but should preserve boundaries that match this direction.
 
-## Change Management
+## Change management
 
-- Do not rewrite `docs/plan.md` or specs unless the user asks for it.
+- Do not rewrite a plan, spec, or workflow file unless the task actually requires it.
 - Do not revert user changes unless explicitly asked.
-- If a spec gap blocks safe implementation, state the gap explicitly.
 - If a user request conflicts with the current spec, ask whether the spec should change or the implementation should intentionally diverge.
 - Remove or challenge stale instructions when they no longer match the actual repository.
+- Keep `AGENTS.md` practical. When guidance becomes flow-specific, prefer `docs/workflows.md`. When it becomes feature-specific, prefer the relevant spec.
 
-## Non-Goals for v1
+## Non-goals for v1
 
 - Multiple screenshot templates
 - Non-Chinese screenshot support
@@ -172,7 +186,7 @@ Agents may keep a simpler structure while the codebase is small, but should pres
 - Real-time match capture
 - Automatic bulk reprocessing of old screenshots after parser changes
 
-## Definition of Done
+## Definition of done
 
 A feature is not done unless all of the following are true:
 
@@ -180,9 +194,10 @@ A feature is not done unless all of the following are true:
 - Relevant tests exist and pass, or any inability to run them is stated clearly.
 - Named failure paths and edge cases from the spec are handled.
 - The user-visible behavior does not silently exceed the agreed scope.
+- The active plan is updated to reflect what actually happened.
 - Any meaningful assumptions or spec gaps are called out in the final response.
 
-## Code Readability Rules
+## Code readability rules
 
 ### Functions
 
