@@ -123,6 +123,12 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
   if it were a supported label variant. Keep canonical readable screenshot
   labels in the mapper and treat mojibake from local tooling as an encoding
   diagnostic problem, not a product input format.
+- **Rule:** For the supported template, keep canonical readable labels such as
+  `对英雄输出`, `对英雄輸出`, `输出占比`, `经济占比`, and `参团率` in the
+  mapper. Some of those labels can be separated from their values across later
+  OCR lines, so use a later bounded scan for trailing metrics such as
+  `打野经济`, `补刀数`, `控制时长`, and `对塔伤害` instead of assuming the
+  value stays on the same line as the label.
 
 **4. Field Normalization**
 

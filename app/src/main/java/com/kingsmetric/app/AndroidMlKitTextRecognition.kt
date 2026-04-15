@@ -65,47 +65,56 @@ class AndroidMlKitTextRecognizer(
     }
 }
 
-private object SupportedTemplateTextMapper {
+internal object SupportedTemplateTextMapper {
     private val resultLabels = listOf("胜利", "失败")
     private val resultPattern = Regex(resultLabels.joinToString("|") { Regex.escape(it) })
     private val laneNames = listOf("发育路", "对抗路", "中路", "打野", "游走")
     private val dataTabLabels = listOf("数据")
-    private val damageDealtLabels = listOf(
-        "对英雄输出",
-        "对英雄輸出",
-        "对英雄出",
-        "对英雄伤害",
-        "输出伤害",
-        "輸出伤害",
-        "輸出",
-        "输出"
-    )
+    private val damageDealtLabels = listOf("对英雄输出", "对英雄輸出", "对英雄出", "输出伤害", "輸出伤害", "输出")
     private val damageShareLabels = listOf("输出占比", "輸出占比")
-    private val damageTakenLabels = listOf("承受英雄伤害", "承受伤害", "承伤")
+    private val damageTakenLabels = listOf("承受英雄伤害", "总承受伤害", "承受伤害", "承伤")
     private val damageTakenShareLabels = listOf("承伤占比")
     private val economyLabels = listOf("总经济", "经济")
     private val goldShareLabels = listOf("经济占比")
     private val farmingGoldLabels = listOf("打野经济")
     private val lastHitsLabels = listOf("补刀数", "补刀")
-    private val participationLabels = listOf("参团率", "團率", "团率")
-    private val controlDurationLabels = listOf("控制时长", "种制时长")
-    private val towerDamageLabels = listOf("对塔伤害", "塔伤")
+    private val participationLabels = listOf("参团率", "团率")
+    private val controlDurationLabels = listOf("控制时长")
+    private val towerDamageLabels = listOf("对塔伤害")
+    private val playerSummaryExclusionLabels = listOf(
+        "总览",
+        "复盘",
+        "我方胜利",
+        "关键团战输出",
+        "个人数据",
+        "同队对比",
+        "对位对比",
+        "生成精彩时刻",
+        "金牌",
+        "MVP",
+        "输出",
+        "承伤",
+        "经济",
+        "团队"
+    )
+    private val ratingPattern = Regex("""\b\d+(?:\.\d+)\b""")
+    private val kdaPattern = Regex("""(\d{1,4}/\d{1,2}/\d{1,2})""")
 
     fun map(text: String, requestedFields: Set<FieldKey>): ScreenshotAnalysis {
         val normalizedText = normalize(text)
         val lines = normalizedText.lines().map(String::trim).filter(String::isNotEmpty)
         val rawValues = mutableMapOf<FieldKey, String>()
-        val summaryLine = extractSummaryLine(lines)
+        val playerSummaryLine = extractPlayerSummaryLine(lines)
 
         match(normalizedText, resultPattern)?.let { rawValues[FieldKey.RESULT] = it }
         Regex("""(\d+)\s*vs\s*(\d+)""", RegexOption.IGNORE_CASE).find(normalizedText)?.let { score ->
             rawValues[FieldKey.SCORE] = "${score.groupValues[1]} vs ${score.groupValues[2]}"
         }
-        extractKda(summaryLine)?.let { rawValues[FieldKey.KDA] = it }
+        extractKda(lines)?.let { rawValues[FieldKey.KDA] = it }
 
         laneNames.firstOrNull(normalizedText::contains)?.let { rawValues[FieldKey.LANE] = it }
-        extractPlayerName(summaryLine)?.let { rawValues[FieldKey.PLAYER_NAME] = it }
-        extractTotalGold(summaryLine, lines)?.let { rawValues[FieldKey.TOTAL_GOLD] = it }
+        extractPlayerName(playerSummaryLine)?.let { rawValues[FieldKey.PLAYER_NAME] = it }
+        extractTotalGold(playerSummaryLine, lines)?.let { rawValues[FieldKey.TOTAL_GOLD] = it }
 
         (
             extractFirstLabeledValue(lines, damageDealtLabels, """[0-9]+(?:\.[0-9]+)?k""")
@@ -121,15 +130,15 @@ private object SupportedTemplateTextMapper {
             ?.let { rawValues[FieldKey.DAMAGE_TAKEN_SHARE] = it }
         extractLastLabeledValue(normalizedText, goldShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
             ?.let { rawValues[FieldKey.GOLD_SHARE] = it }
-        extractFirstLabeledValue(lines, farmingGoldLabels, """[0-9]+(?:\.[0-9]+)?k""")
+        extractLastLabeledValue(normalizedText, farmingGoldLabels, """[0-9]+(?:\.[0-9]+)?k""")
             ?.let { rawValues[FieldKey.GOLD_FROM_FARMING] = it }
-        extractFirstLabeledValue(lines, lastHitsLabels, """[0-9]+""")
+        extractLastLabeledValue(normalizedText, lastHitsLabels, """[0-9]+""")
             ?.let { rawValues[FieldKey.LAST_HITS] = it }
         extractLastLabeledValue(normalizedText, participationLabels, """[0-9]+(?:\.[0-9]+)?%""")
             ?.let { rawValues[FieldKey.PARTICIPATION_RATE] = it }
         extractLastLabeledValue(normalizedText, controlDurationLabels, """[0-9]+(?:\.[0-9]+)?s""")
             ?.let { rawValues[FieldKey.CONTROL_DURATION] = it }
-        extractFirstLabeledValue(lines, towerDamageLabels, """[0-9]+(?:\.[0-9]+)?k""")
+        extractLastLabeledValue(normalizedText, towerDamageLabels, """[0-9]+(?:\.[0-9]+)?k""")
             ?.let { rawValues[FieldKey.DAMAGE_DEALT_TO_OPPONENTS] = it }
 
         val visibleFields = rawValues.keys.intersect(requestedFields)
@@ -187,6 +196,8 @@ private object SupportedTemplateTextMapper {
     private fun normalize(text: String): String {
         return text
             .replace('：', ':')
+            .replace('｜', ' ')
+            .replace('丨', ' ')
             .replace('，', ' ')
             .replace('\u3000', ' ')
             .replace(Regex("""[ \t]+"""), " ")
@@ -196,13 +207,19 @@ private object SupportedTemplateTextMapper {
 
     private fun containsAny(text: String, labels: List<String>): Boolean = labels.any(text::contains)
 
-    private fun extractSummaryLine(lines: List<String>): String? {
-        return lines.firstOrNull { line -> line.count { it == '/' } >= 2 }
+    private fun extractPlayerSummaryLine(lines: List<String>): String? {
+        return lines.firstOrNull { line ->
+            ratingPattern.containsMatchIn(line) &&
+                line.any { Character.UnicodeScript.of(it.code) == Character.UnicodeScript.HAN } &&
+                !containsAny(line, playerSummaryExclusionLabels)
+        }
     }
 
-    private fun extractPlayerName(summaryLine: String?): String? {
-        val line = summaryLine ?: return null
-        val prefix = summaryLinePrefix(line) ?: line.substringBeforeLast('/')
+    private fun extractPlayerName(playerSummaryLine: String?): String? {
+        val line = playerSummaryLine ?: return null
+        val prefix = ratingPattern.find(line)?.let { rating ->
+            line.substring(0, rating.range.first)
+        } ?: line.substringBeforeLast('/')
         val cleaned = laneNames.fold(prefix) { current, lane -> current.replace(lane, " ") }
 
         return cleaned
@@ -212,12 +229,9 @@ private object SupportedTemplateTextMapper {
             .takeIf { it.isNotEmpty() }
     }
 
-    private fun extractTotalGold(summaryLine: String?, lines: List<String>): String? {
-        val summaryGold = summaryLine?.let { line ->
-            Regex("""([0-9]+(?:\.[0-9]+)?)\s*\d{1,4}/\d{1,2}/\d{1,2}""")
-                .find(line)
-                ?.groupValues
-                ?.getOrNull(1)
+    private fun extractTotalGold(playerSummaryLine: String?, lines: List<String>): String? {
+        val summaryGold = playerSummaryLine?.let { line ->
+            ratingPattern.find(line)?.value
         }
         if (summaryGold != null) {
             return summaryGold
@@ -225,13 +239,12 @@ private object SupportedTemplateTextMapper {
         return extractFirstLabeledValue(lines, economyLabels, """[0-9]+(?:\.[0-9]+)?k?""")
     }
 
-    private fun extractKda(summaryLine: String?): String? {
-        val line = summaryLine ?: return null
-        val candidate = Regex("""(\d{1,4}/\d{1,2}/\d{1,2})""")
-            .findAll(line)
-            .lastOrNull()
-            ?.groupValues
-            ?.getOrNull(1)
+    private fun extractKda(lines: List<String>): String? {
+        val candidate = lines.asReversed()
+            .mapNotNull { line ->
+                kdaPattern.findAll(line).lastOrNull()?.groupValues?.getOrNull(1)
+            }
+            .firstOrNull()
             ?: return null
 
         val parts = candidate.split('/')
@@ -239,13 +252,6 @@ private object SupportedTemplateTextMapper {
             return null
         }
         return "${parts[0].takeLast(2)}/${parts[1]}/${parts[2]}"
-    }
-
-    private fun summaryLinePrefix(line: String): String? {
-        return Regex("""^(.*?)(?:\d+(?:\.\d+)?\s*\d{1,4}/\d{1,2}/\d{1,2}|\d{1,4}/\d{1,2}/\d{1,2}).*$""")
-            .matchEntire(line)
-            ?.groupValues
-            ?.getOrNull(1)
     }
 
     private fun extractFirstLabeledValue(
