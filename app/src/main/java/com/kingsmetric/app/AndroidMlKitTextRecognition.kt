@@ -100,51 +100,57 @@ internal object SupportedTemplateTextMapper {
     private val ratingPattern = Regex("""\b\d+(?:\.\d+)\b""")
     private val kdaPattern = Regex("""(\d{1,4}/\d{1,2}/\d{1,2})""")
 
-    fun map(text: String, requestedFields: Set<FieldKey>): ScreenshotAnalysis {
+    fun map(
+        text: String,
+        requestedFields: Set<FieldKey>,
+        playerSummaryLineExtractor: (List<String>) -> String? = ::extractPlayerSummaryLine
+    ): ScreenshotAnalysis {
         val normalizedText = normalize(text)
         val lines = normalizedText.lines().map(String::trim).filter(String::isNotEmpty)
         val rawValues = mutableMapOf<FieldKey, String>()
-        val playerSummaryLine = extractPlayerSummaryLine(lines)
+        val playerSummaryLine = runCatching { playerSummaryLineExtractor(lines) }.getOrNull()
 
-        match(normalizedText, resultPattern)?.let { rawValues[FieldKey.RESULT] = it }
+        fun <T> safeExtract(extractor: () -> T?): T? {
+            return runCatching(extractor).getOrNull()
+        }
+
+        safeExtract { match(normalizedText, resultPattern) }?.let { rawValues[FieldKey.RESULT] = it }
         Regex("""(\d+)\s*vs\s*(\d+)""", RegexOption.IGNORE_CASE).find(normalizedText)?.let { score ->
             rawValues[FieldKey.SCORE] = "${score.groupValues[1]} vs ${score.groupValues[2]}"
         }
-        extractKda(lines)?.let { rawValues[FieldKey.KDA] = it }
+        safeExtract { extractKda(lines) }?.let { rawValues[FieldKey.KDA] = it }
 
         laneNames.firstOrNull(normalizedText::contains)?.let { rawValues[FieldKey.LANE] = it }
-        extractPlayerName(playerSummaryLine)?.let { rawValues[FieldKey.PLAYER_NAME] = it }
-        extractTotalGold(playerSummaryLine, lines)?.let { rawValues[FieldKey.TOTAL_GOLD] = it }
+        safeExtract { extractPlayerName(playerSummaryLine) }?.let { rawValues[FieldKey.PLAYER_NAME] = it }
+        safeExtract { extractTotalGold(playerSummaryLine, lines) }?.let { rawValues[FieldKey.TOTAL_GOLD] = it }
 
-        (
+        safeExtract {
             extractFirstLabeledValue(lines, damageDealtLabels, """[0-9]+(?:\.[0-9]+)?k""")
                 ?: extractFirstLabeledValue(lines, damageShareLabels, """[0-9]+(?:\.[0-9]+)?k""")
-            )?.let { rawValues[FieldKey.DAMAGE_DEALT] = it }
-        (
+        }?.let { rawValues[FieldKey.DAMAGE_DEALT] = it }
+        safeExtract {
             extractFirstLabeledValue(lines, damageShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
                 ?: extractFirstLabeledValue(lines, damageDealtLabels, """[0-9]+(?:\.[0-9]+)?%""")
-            )
-            ?.let { rawValues[FieldKey.DAMAGE_SHARE] = it }
-        (
+        }?.let { rawValues[FieldKey.DAMAGE_SHARE] = it }
+        safeExtract {
             extractFirstLabeledValue(lines, damageTakenLabels, """[0-9]+(?:\.[0-9]+)?k""")
                 ?: extractFirstLabeledValue(lines, damageTakenShareLabels, """[0-9]+(?:\.[0-9]+)?k""")
-            )?.let { rawValues[FieldKey.DAMAGE_TAKEN] = it }
-        (
+        }?.let { rawValues[FieldKey.DAMAGE_TAKEN] = it }
+        safeExtract {
             extractFirstLabeledValue(lines, damageTakenShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
                 ?: extractFirstLabeledValue(lines, damageTakenLabels, """[0-9]+(?:\.[0-9]+)?%""")
-            )
-            ?.let { rawValues[FieldKey.DAMAGE_TAKEN_SHARE] = it }
-        extractLastLabeledValue(normalizedText, goldShareLabels, """[0-9]+(?:\.[0-9]+)?%""")
+        }?.let { rawValues[FieldKey.DAMAGE_TAKEN_SHARE] = it }
+        safeExtract { extractLastLabeledValue(normalizedText, goldShareLabels, """[0-9]+(?:\.[0-9]+)?%""") }
             ?.let { rawValues[FieldKey.GOLD_SHARE] = it }
-        extractLastLabeledValue(normalizedText, farmingGoldLabels, """[0-9]+(?:\.[0-9]+)?k""")
+        safeExtract { extractLastLabeledValue(normalizedText, farmingGoldLabels, """[0-9]+(?:\.[0-9]+)?k""") }
             ?.let { rawValues[FieldKey.GOLD_FROM_FARMING] = it }
-        extractLastLabeledValue(normalizedText, lastHitsLabels, """[0-9]+""")
+        safeExtract { extractLastLabeledValue(normalizedText, lastHitsLabels, """[0-9]+""") }
             ?.let { rawValues[FieldKey.LAST_HITS] = it }
-        extractLastLabeledValue(normalizedText, participationLabels, """[0-9]+(?:\.[0-9]+)?%""")
+        safeExtract { extractLastLabeledValue(normalizedText, participationLabels, """[0-9]+(?:\.[0-9]+)?%""") }
             ?.let { rawValues[FieldKey.PARTICIPATION_RATE] = it }
-        extractLastLabeledValue(normalizedText, controlDurationLabels, """[0-9]+(?:\.[0-9]+)?s""")
+        safeExtract { extractLastLabeledValue(normalizedText, controlDurationLabels, """[0-9]+(?:\.[0-9]+)?s""") }
             ?.let { rawValues[FieldKey.CONTROL_DURATION] = it }
-        extractLastLabeledValue(normalizedText, towerDamageLabels, """[0-9]+(?:\.[0-9]+)?k""")
+        safeExtract { extractLastLabeledValue(normalizedText, towerDamageLabels, """[0-9]+(?:\.[0-9]+)?k""") }
             ?.let { rawValues[FieldKey.DAMAGE_DEALT_TO_OPPONENTS] = it }
 
         val visibleFields = rawValues.keys.intersect(requestedFields)
