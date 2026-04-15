@@ -39,7 +39,19 @@ class AndroidPhotoPickerRuntime(
         _state.value = when (val result = adapter.handlePickerResult(uri)) {
             PickerImportResult.Idle -> ImportRuntimeUiState(ImportRuntimeStatus.Idle)
             is PickerImportResult.ReadyForImport -> {
-                when (val recognition = recognizeImportedScreenshot(result.request)) {
+                val recognition = try {
+                    recognizeImportedScreenshot(result.request)
+                } catch (_: Exception) {
+                    null
+                }
+
+                if (recognition == null) {
+                    ImportRuntimeUiState(
+                        ImportRuntimeStatus.Failed(
+                            SharedUxCopy.message(SharedMessageKey.IMPORT_OCR_FAILED).text
+                        )
+                    )
+                } else when (recognition) {
                     is ImportResult.DraftReady -> {
                         ImportRuntimeUiState(ImportRuntimeStatus.ReviewReady(recognition.draft))
                     }

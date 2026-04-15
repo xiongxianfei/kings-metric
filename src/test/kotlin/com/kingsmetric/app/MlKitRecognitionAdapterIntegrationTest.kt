@@ -84,7 +84,25 @@ class MlKitRecognitionAdapterIntegrationTest {
     }
 
     @Test
-    fun `IT3 supported screenshot with one unreadable required field still produces a draftable unresolved result`() {
+    fun `IT3 unexpected OCR mapping exception becomes import failure instead of crashing import`() {
+        val adapter = recognitionAdapter(
+            recognizer = object : MlKitRecognizer {
+                override fun recognize(
+                    bitmap: LoadedBitmap,
+                    plan: RecognitionRegionPlan
+                ): com.kingsmetric.importflow.ScreenshotAnalysis {
+                    throw IllegalStateException("unexpected mapper failure")
+                }
+            }
+        )
+
+        val result = adapter.recognize("stored/shot-1.png")
+
+        assertTrue(result is ImportResult.ImportFailed)
+    }
+
+    @Test
+    fun `IT4 supported screenshot with one unreadable required field still produces a draftable unresolved result`() {
         val adapter = recognitionAdapter(
             recognizer = FakeMlKitRecognizer(
                 analysisByPath = mapOf(
@@ -104,7 +122,7 @@ class MlKitRecognitionAdapterIntegrationTest {
     }
 
     @Test
-    fun `IT4 unsupported cropped screenshot remains rejected`() {
+    fun `IT5 unsupported cropped screenshot remains rejected`() {
         val adapter = recognitionAdapter(
             recognizer = FakeMlKitRecognizer(
                 analysisByPath = mapOf(
@@ -124,7 +142,7 @@ class MlKitRecognitionAdapterIntegrationTest {
 
 private fun recognitionAdapter(
     bitmapLoader: FakeBitmapLoader = FakeBitmapLoader(),
-    recognizer: FakeMlKitRecognizer = FakeMlKitRecognizer(
+    recognizer: MlKitRecognizer = FakeMlKitRecognizer(
         analysisByPath = mapOf("stored/shot-1.png" to MlKitFixtures.supportedAnalysis())
     )
 ): MlKitRecognitionAdapter {

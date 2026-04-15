@@ -55,6 +55,8 @@ class MlKitRecognitionAdapter(
             recognizer.recognize(bitmap, regionPlanFor(path))
         } catch (_: OcrExtractionException) {
             return ImportResult.ImportFailed("Could not extract screenshot data for review.")
+        } catch (_: Exception) {
+            return ImportResult.ImportFailed("Could not extract screenshot data for review.")
         }
 
         return when (val validation = validator.validate(analysis)) {

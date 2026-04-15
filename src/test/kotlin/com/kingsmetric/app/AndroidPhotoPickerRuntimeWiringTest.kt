@@ -103,6 +103,20 @@ class AndroidPhotoPickerRuntimeWiringTest {
             failed.state.value.status
         )
     }
+
+    @Test
+    fun `T6 unexpected recognition exception is converted into retryable runtime failure`() {
+        val runtime = photoPickerRuntime(
+            recognizeImportedScreenshot = { throw IllegalStateException("unexpected mapper failure") }
+        )
+
+        runtime.handlePickerResult("content://shots/crash")
+
+        assertEquals(
+            ImportRuntimeStatus.Failed("We couldn't read match data from this screenshot. Try another supported screenshot."),
+            runtime.state.value.status
+        )
+    }
 }
 
 private fun photoPickerRuntime(

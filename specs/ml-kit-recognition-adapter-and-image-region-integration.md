@@ -70,3 +70,8 @@ Expected behavior:
   crash the import path on real devices if the adapter decodes the image twice.
   Use a bounds-only decode to validate readability, then let the recognizer own
   the real image load.
+- 2026-04-15: The Android recognition adapter must fail closed on unexpected
+  OCR-mapper/runtime exceptions, not only explicit ML Kit failures. Novel or
+  partially supported screenshot text can still trigger parser or mapper
+  exceptions; those cases must surface as a retryable import failure instead of
+  crashing the import flow.
