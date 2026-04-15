@@ -6,8 +6,8 @@ import java.util.Base64
 
 private const val DEFAULT_RETENTION_LIMIT = 50
 private const val DEFAULT_EXPORT_NOTICE =
-    "This export does not include the original screenshot, raw OCR text, or full saved match data."
-private val ALLOWED_EXPORT_METADATA_KEYS = setOf("appVersion", "buildType", "surface")
+    "This export does not include the original screenshot or full saved match data. It may include OCR text captured during a failed recognition attempt."
+private val ALLOWED_EXPORT_METADATA_KEYS = setOf("appVersion", "buildType", "surface", "detail", "ocrText")
 
 enum class DiagnosticsStage {
     IMPORT,

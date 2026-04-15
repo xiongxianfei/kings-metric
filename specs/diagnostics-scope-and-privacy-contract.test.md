@@ -14,8 +14,9 @@ supported alpha flow.
   unsupported screenshots, save outcomes, and successful save.
 - `T3` Diagnostics event formatter produces bounded structured entries with
   timestamp, stage, outcome category, and user-visible summary.
-- `T4` Export redaction excludes screenshot payloads, raw full OCR text, full
-  saved-record payloads, and unrelated secret material.
+- `T4` Export redaction excludes screenshot payloads, full saved-record
+  payloads, and unrelated secret material while preserving OCR text for
+  import/recognition failures.
 - `T5` Retention policy keeps a deterministic bounded recent set when the
   buffer limit is exceeded.
 - `T6` Diagnostics export failure is modeled as retryable and does not require
@@ -35,8 +36,9 @@ supported alpha flow.
   exposing full saved-record payload content.
 - `IT5` Diagnostics viewer shows recent entries in readable language and keeps
   empty state explicit when no entries exist.
-- `IT6` Exported diagnostics artifact excludes screenshot binaries and raw full
-  OCR dumps while still including enough bounded context for support.
+- `IT6` Exported diagnostics artifact excludes screenshot binaries while still
+  including enough bounded context for support, including OCR text for
+  import/recognition failures.
 - `IT7` If diagnostics capture/export throws internally, the main user-visible
   failure path remains usable and the app does not terminate.
 

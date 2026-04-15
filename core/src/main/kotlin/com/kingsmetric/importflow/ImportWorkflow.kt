@@ -244,10 +244,18 @@ sealed interface ImportResult {
         val reviewState: ReviewState
     ) : ImportResult
 
-    data class Unsupported(val reason: String, val nextAction: FailureAction = FailureAction.RETRY_IMPORT) : ImportResult
+    data class Unsupported(
+        val reason: String,
+        val nextAction: FailureAction = FailureAction.RETRY_IMPORT,
+        val ocrText: String? = null
+    ) : ImportResult
 
     data class StorageFailed(val message: String, val nextAction: FailureAction = FailureAction.RETRY_IMPORT) : ImportResult
-    data class ImportFailed(val message: String, val nextAction: FailureAction = FailureAction.RETRY_IMPORT) : ImportResult
+    data class ImportFailed(
+        val message: String,
+        val nextAction: FailureAction = FailureAction.RETRY_IMPORT,
+        val ocrText: String? = null
+    ) : ImportResult
     data object Cancelled : ImportResult
 }
 

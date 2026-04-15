@@ -114,6 +114,11 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
   columns, so first-value metrics should be extracted from a narrow
   label-local window while trailing metrics such as participation or control
   time may still need a later last-occurrence scan.
+- **Rule:** On real devices or share-sized screenshots, ML Kit can also
+  degrade supported labels into traditional or truncated variants such as
+  `对英雄輸出` or `团率`. Keep the alias set narrow to the approved template,
+  but do not force a false unsupported result when the screenshot still has
+  enough section evidence to reach review with highlighted missing fields.
 - **Rule:** Do not copy garbled terminal or log output into parser constants as
   if it were a supported label variant. Keep canonical readable screenshot
   labels in the mapper and treat mojibake from local tooling as an encoding
@@ -338,6 +343,14 @@ Rules:
 - Diagnostics must stay local-only. No automatic upload or remote telemetry.
 - Diagnostics export must not include the original screenshot, raw OCR text,
   or full saved match payloads.
+- Exception: if a support workflow explicitly opts into OCR-result capture for
+  import or recognition failures, diagnostics may include the OCR text itself
+  as long as the screenshot binary is still excluded and the export copy makes
+  that tradeoff explicit.
+- Diagnostics export should include a bounded failure detail when the app
+  already has one, such as a template-validation reason or retryable import
+  failure detail. Do not reduce real support data to the same generic summary
+  string for every recognition failure.
 - Diagnostics failures must never replace or break the original user-visible
   import/review/save failure state.
 - Future release gating should treat diagnostics viewer/export regressions as a

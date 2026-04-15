@@ -47,11 +47,15 @@ class AndroidPhotoPickerRuntime(
             is PickerImportResult.ReadyForImport -> {
                 val recognition = try {
                     recognizeImportedScreenshot(result.request)
-                } catch (_: Exception) {
+                } catch (exception: Exception) {
                     diagnosticsRecorder.recordSafely(
                         stage = DiagnosticsStage.RECOGNITION,
                         outcome = DiagnosticsOutcome.RECOGNITION_FAILED,
-                        summary = SharedUxCopy.message(SharedMessageKey.IMPORT_OCR_FAILED).text
+                        summary = SharedUxCopy.message(SharedMessageKey.IMPORT_OCR_FAILED).text,
+                        metadata = diagnosticsMetadata(
+                            surface = "import",
+                            detail = exception.message ?: exception::class.simpleName
+                        )
                     )
                     null
                 }
@@ -70,7 +74,12 @@ class AndroidPhotoPickerRuntime(
                         diagnosticsRecorder.recordSafely(
                             stage = DiagnosticsStage.IMPORT,
                             outcome = DiagnosticsOutcome.UNSUPPORTED_SCREENSHOT,
-                            summary = SharedUxCopy.message(SharedMessageKey.IMPORT_UNSUPPORTED).text
+                            summary = SharedUxCopy.message(SharedMessageKey.IMPORT_UNSUPPORTED).text,
+                            metadata = diagnosticsMetadata(
+                                surface = "import",
+                                detail = recognition.reason,
+                                ocrText = recognition.ocrText
+                            )
                         )
                         ImportRuntimeUiState(
                             ImportRuntimeStatus.Unsupported(
@@ -82,7 +91,12 @@ class AndroidPhotoPickerRuntime(
                         diagnosticsRecorder.recordSafely(
                             stage = DiagnosticsStage.RECOGNITION,
                             outcome = DiagnosticsOutcome.RECOGNITION_FAILED,
-                            summary = SharedUxCopy.message(SharedMessageKey.IMPORT_OCR_FAILED).text
+                            summary = SharedUxCopy.message(SharedMessageKey.IMPORT_OCR_FAILED).text,
+                            metadata = diagnosticsMetadata(
+                                surface = "import",
+                                detail = recognition.message,
+                                ocrText = recognition.ocrText
+                            )
                         )
                         ImportRuntimeUiState(
                             ImportRuntimeStatus.Failed(
@@ -94,7 +108,11 @@ class AndroidPhotoPickerRuntime(
                         diagnosticsRecorder.recordSafely(
                             stage = DiagnosticsStage.IMPORT,
                             outcome = DiagnosticsOutcome.IMPORT_STORAGE_FAILED,
-                            summary = SharedUxCopy.message(SharedMessageKey.IMPORT_STORAGE_FAILED).text
+                            summary = SharedUxCopy.message(SharedMessageKey.IMPORT_STORAGE_FAILED).text,
+                            metadata = diagnosticsMetadata(
+                                surface = "import",
+                                detail = recognition.message
+                            )
                         )
                         ImportRuntimeUiState(
                             ImportRuntimeStatus.StorageFailed(
@@ -109,7 +127,11 @@ class AndroidPhotoPickerRuntime(
                 diagnosticsRecorder.recordSafely(
                     stage = DiagnosticsStage.IMPORT,
                     outcome = DiagnosticsOutcome.IMPORT_SOURCE_FAILED,
-                    summary = SharedUxCopy.message(SharedMessageKey.IMPORT_SOURCE_FAILED).text
+                    summary = SharedUxCopy.message(SharedMessageKey.IMPORT_SOURCE_FAILED).text,
+                    metadata = diagnosticsMetadata(
+                        surface = "import",
+                        detail = result.failure.name
+                    )
                 )
                 ImportRuntimeUiState(
                     ImportRuntimeStatus.SourceFailed(
@@ -121,7 +143,11 @@ class AndroidPhotoPickerRuntime(
                 diagnosticsRecorder.recordSafely(
                     stage = DiagnosticsStage.IMPORT,
                     outcome = DiagnosticsOutcome.IMPORT_STORAGE_FAILED,
-                    summary = SharedUxCopy.message(SharedMessageKey.IMPORT_STORAGE_FAILED).text
+                    summary = SharedUxCopy.message(SharedMessageKey.IMPORT_STORAGE_FAILED).text,
+                    metadata = diagnosticsMetadata(
+                        surface = "import",
+                        detail = result.failure.name
+                    )
                 )
                 ImportRuntimeUiState(
                     ImportRuntimeStatus.StorageFailed(
@@ -130,5 +156,13 @@ class AndroidPhotoPickerRuntime(
                 )
             }
         }
+    }
+}
+
+private fun diagnosticsMetadata(surface: String, detail: String?, ocrText: String? = null): Map<String, String> {
+    return buildMap {
+        put("surface", surface)
+        detail?.takeIf { it.isNotBlank() }?.let { put("detail", it) }
+        ocrText?.takeIf { it.isNotBlank() }?.let { put("ocrText", it) }
     }
 }

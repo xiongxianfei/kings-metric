@@ -67,7 +67,8 @@ class ReviewScreenViewModel(
                 diagnosticsRecorder.recordSafely(
                     stage = DiagnosticsStage.SAVE,
                     outcome = DiagnosticsOutcome.SAVE_SUCCEEDED,
-                    summary = "Record saved locally."
+                    summary = "Record saved locally.",
+                    metadata = mapOf("surface" to "review")
                 )
                 currentDraft.toUiState(status = ReviewScreenStatus.Saved)
             }
@@ -75,7 +76,11 @@ class ReviewScreenViewModel(
                 diagnosticsRecorder.recordSafely(
                     stage = DiagnosticsStage.REVIEW,
                     outcome = DiagnosticsOutcome.REVIEW_BLOCKED,
-                    summary = SharedUxCopy.message(SharedMessageKey.REVIEW_BLOCKED_SAVE).text
+                    summary = SharedUxCopy.message(SharedMessageKey.REVIEW_BLOCKED_SAVE).text,
+                    metadata = mapOf(
+                        "surface" to "review",
+                        "detail" to result.reason
+                    )
                 )
                 currentDraft = result.draft
                 onDraftChanged(currentDraft)
@@ -88,7 +93,11 @@ class ReviewScreenViewModel(
                 diagnosticsRecorder.recordSafely(
                     stage = DiagnosticsStage.SAVE,
                     outcome = DiagnosticsOutcome.SAVE_FAILED,
-                    summary = SharedUxCopy.message(SharedMessageKey.REVIEW_SAVE_FAILED).text
+                    summary = SharedUxCopy.message(SharedMessageKey.REVIEW_SAVE_FAILED).text,
+                    metadata = mapOf(
+                        "surface" to "review",
+                        "detail" to result.message
+                    )
                 )
                 currentDraft = result.draft ?: currentDraft
                 onDraftChanged(currentDraft)
