@@ -98,6 +98,9 @@ Screenshot Intake → Template Validation → OCR/Field Mapping
 - **Rule:** Mark fields with low extraction confidence as unresolved
 - **Error:** OCR extraction fails entirely -> abort with error message.
   Do not create a draft with empty fields.
+- **Error:** Unexpected OCR-mapper/runtime exceptions must also collapse into
+  the same retryable import-failure path. The recognition stage must fail
+  closed instead of letting Android runtime exceptions escape and kill the app.
 - **Rule:** On Android, avoid a second full-size decode just to prove the file
   is readable before OCR starts. Use a bounds-only probe for validation and
   let the real recognizer own the actual image load, or large screenshots can
