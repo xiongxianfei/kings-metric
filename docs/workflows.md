@@ -277,6 +277,12 @@ verified Android artifact and documented scope.
 - Release metadata, README wording, and release notes should stay aligned to
   one supported-scope statement.
 - The published artifact must come from the release path, not a debug fallback.
+- Keep the release-candidate gate separate from generic Android readiness.
+  `:app:assembleDebug` and generic smoke checks are necessary inputs, but they
+  are not enough to treat the first GitHub alpha as publishable.
+- If emulator-backed verification or manual device confirmation is skipped,
+  keep that skip visible and blocking in the release-gate result. Do not let a
+  skipped release check disappear into a generic "not ready" bucket.
 
 ---
 
