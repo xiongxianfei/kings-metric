@@ -74,7 +74,7 @@ class DiagnosticsCaptureTest {
             outcome = DiagnosticsOutcome.RECOGNITION_FAILED,
             summary = "Could not read match data.",
             metadata = mapOf(
-                "appVersion" to "0.1.0-alpha.7",
+                "appVersion" to "0.1.0-alpha.8",
                 "detail" to "Missing damage section values after OCR mapping.",
                 "ocrText" to "胜利\n数据 复盘\n对英雄出: 171.2k",
                 "screenshotPath" to "/private/screenshot.png",
@@ -86,7 +86,7 @@ class DiagnosticsCaptureTest {
         val export = recorder.export()
         val entry = export.entries.single()
 
-        assertEquals("0.1.0-alpha.7", entry.metadata["appVersion"])
+        assertEquals("0.1.0-alpha.8", entry.metadata["appVersion"])
         assertEquals("Missing damage section values after OCR mapping.", entry.metadata["detail"])
         assertEquals("胜利\n数据 复盘\n对英雄出: 171.2k", entry.metadata["ocrText"])
         assertFalse(entry.metadata.containsKey("screenshotPath"))

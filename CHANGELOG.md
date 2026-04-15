@@ -2,6 +2,40 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.8] - 2026-04-15
+
+Alpha prerelease replacement for early testers.
+
+### Bug Fixes
+
+- **Supported screenshots no longer fail when share percentages stay on the
+  section line** - the Android ML Kit mapper now treats readable Chinese OCR
+  patterns such as `输出伤害 35.3%` and `承伤 20.3%` as valid fallback sources for
+  output-share and damage-taken-share instead of collapsing to a generic
+  recognition failure.
+
+### Internal
+
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.7`
+- aligned the release metadata, artifact contract, diagnostics appVersion, and
+  release notes to the `v0.1.0-alpha.8` cut
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.7] - 2026-04-15
 
 Alpha prerelease replacement for early testers.
