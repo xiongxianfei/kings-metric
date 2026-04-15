@@ -2,6 +2,40 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.9] - 2026-04-15
+
+Alpha prerelease replacement for early testers.
+
+### Bug Fixes
+
+- **Supported screenshot import no longer aborts when one OCR helper parse path
+  throws** - the Android ML Kit mapper now degrades to a reviewable partial
+  supported analysis when anchors and other visible values still prove the
+  screenshot is on the supported template path, instead of collapsing the whole
+  import into a generic recognition failure.
+
+### Internal
+
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.8`
+- aligned the release metadata, artifact contract, and release notes to the
+  `v0.1.0-alpha.9` cut
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.8] - 2026-04-15
 
 Alpha prerelease replacement for early testers.
