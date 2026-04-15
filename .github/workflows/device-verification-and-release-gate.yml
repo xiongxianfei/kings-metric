@@ -1,0 +1,97 @@
+name: Device Verification And Release Gate
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/device-verification-and-release-gate.yml"
+      - ".github/release-artifact.properties"
+      - ".github/release-metadata.properties"
+      - ".github/workflows/release-alpha.yml"
+      - "CHANGELOG.md"
+      - "README.md"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "core/build.gradle.kts"
+      - "docs/releases/**"
+      - "docs/workflows.md"
+      - "src/main/kotlin/com/kingsmetric/release/**"
+      - "src/test/kotlin/com/kingsmetric/release/**"
+      - "specs/device-verification-and-release-gate.md"
+      - "specs/device-verification-and-release-gate.test.md"
+      - "specs/release-metadata-and-positioning.md"
+      - "specs/release-metadata-and-positioning.test.md"
+      - "specs/readme-and-install-guidance.md"
+      - "specs/readme-and-install-guidance.test.md"
+      - "specs/changelog-and-release-notes-contract.md"
+      - "specs/changelog-and-release-notes-contract.test.md"
+      - "specs/release-signing-and-artifact-path.md"
+      - "specs/release-signing-and-artifact-path.test.md"
+      - "specs/automated-github-release-workflow.md"
+      - "specs/automated-github-release-workflow.test.md"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/device-verification-and-release-gate.yml"
+      - ".github/release-artifact.properties"
+      - ".github/release-metadata.properties"
+      - ".github/workflows/release-alpha.yml"
+      - "CHANGELOG.md"
+      - "README.md"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "core/build.gradle.kts"
+      - "docs/releases/**"
+      - "docs/workflows.md"
+      - "src/main/kotlin/com/kingsmetric/release/**"
+      - "src/test/kotlin/com/kingsmetric/release/**"
+      - "specs/device-verification-and-release-gate.md"
+      - "specs/device-verification-and-release-gate.test.md"
+      - "specs/release-metadata-and-positioning.md"
+      - "specs/release-metadata-and-positioning.test.md"
+      - "specs/readme-and-install-guidance.md"
+      - "specs/readme-and-install-guidance.test.md"
+      - "specs/changelog-and-release-notes-contract.md"
+      - "specs/changelog-and-release-notes-contract.test.md"
+      - "specs/release-signing-and-artifact-path.md"
+      - "specs/release-signing-and-artifact-path.test.md"
+      - "specs/automated-github-release-workflow.md"
+      - "specs/automated-github-release-workflow.test.md"
+
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run release gate JVM checks
+        run: >
+          ./gradlew --no-daemon :core:test
+          --tests "com.kingsmetric.release.ReleaseMetadataAndPositioningTest"
+          --tests "com.kingsmetric.release.ReleaseMetadataAndPositioningIntegrationTest"
+          --tests "com.kingsmetric.release.ReadmeAndInstallGuidanceTest"
+          --tests "com.kingsmetric.release.ReadmeAndInstallGuidanceIntegrationTest"
+          --tests "com.kingsmetric.release.ChangelogAndReleaseNotesContractTest"
+          --tests "com.kingsmetric.release.ChangelogAndReleaseNotesContractIntegrationTest"
+          --tests "com.kingsmetric.release.ReleaseArtifactPathTest"
+          --tests "com.kingsmetric.release.ReleaseArtifactPathIntegrationTest"
+          --tests "com.kingsmetric.release.AutomatedGithubReleaseWorkflowTest"
+          --tests "com.kingsmetric.release.AutomatedGithubReleaseWorkflowIntegrationTest"
+          --tests "com.kingsmetric.release.DeviceVerificationAndReleaseGateTest"
+          --tests "com.kingsmetric.release.DeviceVerificationAndReleaseGateIntegrationTest"
