@@ -2,6 +2,47 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.5] - 2026-04-15
+
+Alpha prerelease replacement for early testers.
+
+### Bug Fixes
+
+- **Supported screenshots are more tolerant of real-device OCR variants** -
+  the ML Kit mapper now accepts narrow traditional or truncated label variants
+  such as `对英雄輸出`, `对英雄出`, and `团率`, so supported screenshots are
+  more likely to continue into review instead of falling into a generic import
+  failure.
+
+### Features
+
+- **Diagnostics can now include OCR text for failed recognition attempts** -
+  the in-app Diagnostics screen and clipboard export now preserve the OCR text
+  alongside the bounded failure reason when import or recognition fails, which
+  makes real-user OCR bugs much easier to diagnose.
+
+### Internal
+
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.4`
+- release diagnostics contract now explicitly allows OCR text in recognition
+  failure exports while still excluding the screenshot binary
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.4] - 2026-04-15
 
 Alpha prerelease replacement for early testers.
