@@ -32,7 +32,7 @@ class AndroidMlKitRecognitionAdapterTest {
                 "胜利",
                 "20 vs 10",
                 "数据",
-                "不败、菜鸟 发育路 11/1/5",
+                "不败丶菜鸟 发育路 11/1/5",
                 "对英雄输出 171.2k 输出占比 35.3%",
                 "承受英雄伤害 82.1k 承伤占比 20.3%",
                 "经济 13.1k 经济占比 24%",
@@ -45,7 +45,7 @@ class AndroidMlKitRecognitionAdapterTest {
 
         val result = adapter.recognize(screenshot.absolutePath)
 
-        assertTrue(result is ImportResult.DraftReady)
+        assertTrue(result.toString(), result is ImportResult.DraftReady)
         result as ImportResult.DraftReady
         assertEquals("victory", result.draft.require(FieldKey.RESULT).value)
         assertEquals("11/1/5", result.draft.require(FieldKey.KDA).value)
@@ -73,7 +73,7 @@ class AndroidMlKitRecognitionAdapterTest {
             lines = listOf(
                 "胜利",
                 "数据",
-                "不败、菜鸟 发育路 11/1/5"
+                "不败丶菜鸟 发育路 11/1/5"
             )
         )
         val adapter = adapter(context)
@@ -94,7 +94,9 @@ class AndroidMlKitRecognitionAdapterTest {
 
         val result = adapter.recognize(screenshot.absolutePath)
 
-        assertTrue(result is ImportResult.DraftReady)
+        if (result !is ImportResult.DraftReady) {
+            throw AssertionError("Expected DraftReady but was $result")
+        }
         result as ImportResult.DraftReady
         assertEquals("victory", result.draft.require(FieldKey.RESULT).value)
         assertEquals("20 vs 10", result.draft.require(FieldKey.SCORE).value)
@@ -105,6 +107,38 @@ class AndroidMlKitRecognitionAdapterTest {
         assertTrue(result.reviewState.highlightedFields.contains(FieldKey.HERO))
         assertTrue(result.reviewState.blockingFields.contains(FieldKey.HERO))
         assertTrue(result.reviewState.blockingFields.all { it == FieldKey.HERO })
+    }
+
+    @Test
+    fun generatedSupportedDeviceStyleImage_withRealChineseLabels_isRecognizedIntoReviewableDraft() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val screenshot = createScreenshot(
+            context = context,
+            name = "supported-device-style.png",
+            lines = listOf(
+                "胜利",
+                "20 vs 10",
+                "总览 数据 复盘",
+                "不败丶菜鸟 13.1 11/1/5",
+                "对英雄输出 171.2k 输出占比 35.3%",
+                "承受英雄伤害 82.1k 承伤占比 20.3%",
+                "经济 13.1k 经济占比 24%",
+                "打野经济 1.4k 补刀数 50",
+                "参团率 80.0% 控制时长 3s",
+                "对塔伤害 10.9k"
+            )
+        )
+        val adapter = adapter(context)
+
+        val result = adapter.recognize(screenshot.absolutePath)
+        assertTrue(result.toString(), result is ImportResult.DraftReady)
+        result as ImportResult.DraftReady
+        assertEquals("victory", result.draft.require(FieldKey.RESULT).value)
+        assertEquals("20 vs 10", result.draft.require(FieldKey.SCORE).value)
+        assertEquals("11/1/5", result.draft.require(FieldKey.KDA).value)
+        assertEquals("35.3%", result.draft.require(FieldKey.DAMAGE_SHARE).value)
+        assertEquals("24%", result.draft.require(FieldKey.GOLD_SHARE).value)
+        assertEquals("80.0%", result.draft.require(FieldKey.PARTICIPATION_RATE).value)
     }
 }
 
