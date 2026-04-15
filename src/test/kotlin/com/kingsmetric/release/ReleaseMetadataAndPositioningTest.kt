@@ -19,7 +19,7 @@ class ReleaseMetadataAndPositioningTest {
     fun `T2 version-tag mapping for the first release uses a prerelease-compatible shape and rejects stable-first-release wording`() {
         val metadata = FirstReleaseMetadata.load(resolveRepositoryRoot())
 
-        assertEquals("v0.1.0-alpha.2", metadata.versionTag)
+        assertEquals("v0.1.0-alpha.3", metadata.versionTag)
         val stableAttempt = metadata.copy(versionTag = "v1.0.0")
 
         assertTrue(stableAttempt.validate().any { issue ->

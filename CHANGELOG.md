@@ -2,6 +2,39 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.3] - 2026-04-15
+
+Alpha prerelease replacement for early testers.
+
+### Bug Fixes
+
+- **Import now fails safely when recognition hits an unexpected runtime
+  exception** - the Android recognition path now collapses unexpected
+  OCR-mapper/runtime exceptions into the same retryable import-failure state as
+  explicit OCR failures instead of letting the app quit during screenshot
+  import.
+
+### Internal
+
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.2`
+- published replacement release notes and metadata for the fixed alpha build
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.2] - 2026-04-15
 
 Alpha prerelease replacement for early testers.

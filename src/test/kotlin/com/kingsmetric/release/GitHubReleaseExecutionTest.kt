@@ -184,7 +184,7 @@ private fun alphaMetadata(
 ): FirstReleaseMetadata {
     return FirstReleaseMetadata(
         channel = ReleaseChannel.AlphaPrerelease,
-        versionTag = "v0.1.0-alpha.2",
+        versionTag = "v0.1.0-alpha.3",
         repositoryDescription = "Alpha Android app for local Honor of Kings screenshot import, review, and local save.",
         repositoryTagline = "Alpha local-first Honor of Kings tracker for one supported Chinese results screenshot.",
         releasePositioning = "Alpha prerelease for early testers. Imports one supported Simplified Chinese post-match detailed-data screenshot, processes it on-device, requires review before final save, and rejects unsupported screenshots.",
@@ -204,8 +204,8 @@ private fun alphaArtifactContract(
     artifactPath: String = "app/build/outputs/apk/release/app-release.apk"
 ): ReleaseArtifactContract {
     return ReleaseArtifactContract(
-        releaseVersionCode = 2,
-        releaseVersionName = "0.1.0-alpha.2",
+        releaseVersionCode = 3,
+        releaseVersionName = "0.1.0-alpha.3",
         artifactTask = ":app:assembleRelease",
         artifactPath = artifactPath,
         requiredSigningEnvVars = listOf(
@@ -215,6 +215,6 @@ private fun alphaArtifactContract(
             "ANDROID_KEY_PASSWORD"
         ),
         verificationTasks = listOf(":core:test", ":app:assembleRelease"),
-        releaseNotesPath = "docs/releases/v0.1.0-alpha.2.md"
+        releaseNotesPath = "docs/releases/v0.1.0-alpha.3.md"
     )
 }
