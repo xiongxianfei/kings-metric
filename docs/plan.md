@@ -103,9 +103,11 @@ The first GitHub release should explicitly document:
 
 ### 3. Root Changelog And Release Notes Contract
 
-- Scope: define `CHANGELOG.md` at the repository root as the primary tracked
-  changelog source, then derive per-release notes from that source so each
-  GitHub release has a user-facing change summary and known limitations
+- Scope: define root `CHANGELOG.md` as the primary tracked changelog source
+  using a conventional release-entry format such as
+  `## [v0.1.0-alpha.1] - YYYY-MM-DD`, with clear sections like `Features`,
+  `Bug Fixes`, and `Internal`; derive per-release notes from that source so
+  each GitHub release has a user-facing change summary and known limitations
   statement
 - Dependencies: 1
 - Risk: low
@@ -177,6 +179,11 @@ The first GitHub release should explicitly document:
 - Keep repository metadata, README messaging, root `CHANGELOG.md`, and GitHub
   release notes aligned to one supported scope statement so release surfaces do
   not drift.
+- Keep `CHANGELOG.md` human-scannable and release-oriented:
+  - one dated entry per release
+  - newest release first
+  - stable section headings for feature, fix, and internal changes when used
+  - avoid burying release-facing changes only in PR history
 - Treat the GitHub repo description as managed release metadata even though it
   is not stored as app runtime code.
 - Keep emulator/device verification intentional and limited to the critical
@@ -191,7 +198,7 @@ Do not publish the first GitHub release until all of these are true:
 - the repository README explains developer build/run steps, user install steps,
   supported scope, and known limitations
 - repository description/tagline, root `CHANGELOG.md`, and release notes do not
-  overclaim maturity or support
+  overclaim maturity or support and follow the agreed release-entry format
 - the critical import -> review -> save -> history path passes the release
   candidate verification matrix
 - the app does not claim stable support for hero auto-extraction if manual hero
@@ -207,6 +214,8 @@ Do not publish the first GitHub release until all of these are true:
   debug flows do not hit
 - GitHub metadata, README copy, root `CHANGELOG.md`, and release notes can
   drift if they are not treated as one release contract
+- changelog quality can degrade into inconsistent ad-hoc notes unless release
+  entry format is kept explicit and stable from the first release onward
 - broad hardening can sprawl unless it stays limited to the critical release
   path
 - release automation can accidentally publish the wrong artifact or wrong
@@ -229,6 +238,8 @@ This plan is done when:
   release-facing GitHub metadata
 - GitHub has a published prerelease with root changelog coverage, release
   notes, and known limitations
+- root `CHANGELOG.md` uses a conventional dated release format that can scale
+  across future releases without restructuring
 - the supported import -> review -> save -> history flow has passed the defined
   release gate
 - the automated release workflow respects the alpha-only first-release policy

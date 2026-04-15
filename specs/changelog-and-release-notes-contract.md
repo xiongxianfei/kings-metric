@@ -18,7 +18,8 @@ Input:
 - The team is preparing `v0.1.0-alpha.1`.
 
 Expected behavior:
-- Root `CHANGELOG.md` contains an entry for that version.
+- Root `CHANGELOG.md` contains an entry for that version using a conventional
+  dated format.
 - The release notes summarize what the release includes and what limitations
   still apply.
 - Both stay aligned with the current alpha positioning and supported scope.
@@ -31,8 +32,8 @@ Input:
 - The release notes claim broader support or omit that limitation.
 
 Expected behavior:
-- The release-notes contract treats that mismatch as a release-blocking
-  documentation error.
+- The changelog / release-notes contract treats that mismatch as a
+  release-blocking documentation error.
 
 ### Example 3: Maintainer Wants To Know What Changed
 
@@ -51,6 +52,9 @@ Expected behavior:
   tracked changelog source.
 - Root `CHANGELOG.md` MUST contain release-specific entries rather than a vague
   rolling note with no release boundary.
+- Root `CHANGELOG.md` release entries MUST use a conventional dated format such
+  as `## [v0.1.0-alpha.1] - YYYY-MM-DD`.
+- Root `CHANGELOG.md` MUST list the newest release first.
 - Root `CHANGELOG.md` MUST be suitable for deriving the GitHub release notes
   for a specific release.
 
@@ -71,6 +75,16 @@ Expected behavior:
   - known limitations that materially affect the main user path
 - If hero still commonly requires manual review, both MUST say so.
 - Both MUST state that unsupported screenshots are rejected.
+
+### Changelog Structure
+
+- Root `CHANGELOG.md` SHOULD use stable section headings such as `Features`,
+  `Bug Fixes`, and `Internal` when those categories are relevant to the
+  release.
+- Root `CHANGELOG.md` MUST NOT bury release-facing changes only in prose that
+  makes the release hard to scan quickly.
+- Root `CHANGELOG.md` SHOULD keep release entries human-scannable with clear
+  separation between categories when multiple categories exist.
 
 ### Changelog Expectations
 
@@ -112,6 +126,8 @@ Expected behavior:
 ## Edge Cases
 
 - Root `CHANGELOG.md` exists, but there is no entry for the current release.
+- Root `CHANGELOG.md` has an entry for the current release, but it does not use
+  the agreed dated header format.
 - The release notes describe the correct version but do not say the release is
   alpha.
 - The release notes describe installation but not what changed or what is
@@ -131,6 +147,8 @@ Expected behavior:
 
 - The repository has root `CHANGELOG.md` with a tracked entry for the first
   release.
+- The root changelog entry uses the agreed dated release format and is ordered
+  newest first.
 - The release notes clearly describe release identity, supported scope, what is
   included, and key known limitations.
 - Root `CHANGELOG.md` makes release-to-release change summaries possible.

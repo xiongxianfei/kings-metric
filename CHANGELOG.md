@@ -2,16 +2,19 @@
 
 All notable changes to this project should be tracked here.
 
-## v0.1.0-alpha.1
+## [v0.1.0-alpha.1] - 2026-04-15
 
 Alpha prerelease for early testers.
 
-### What's Included
+### Features
+
+- local screenshot import, review, and local save on the supported path
+- history, detail, and dashboard browsing for saved records
+
+### Internal
 
 - first runnable GitHub alpha release path for the Android app
 - tracked release metadata for alpha positioning and supported scope
-- local screenshot import, review, and local save on the supported path
-- history, detail, and dashboard browsing for saved records
 
 ### Supported Scope
 

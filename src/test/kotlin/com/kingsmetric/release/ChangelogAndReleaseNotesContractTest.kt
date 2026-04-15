@@ -7,19 +7,24 @@ import org.junit.Test
 class ChangelogAndReleaseNotesContractTest {
 
     @Test
-    fun `T1-T10 root changelog and release notes contain release identity included changes supported scope and limitations`() {
+    fun `T1-T13 root changelog and release notes use dated release format and contain required content`() {
         val repositoryRoot = resolveRepositoryRoot()
         val metadata = FirstReleaseMetadata.load(repositoryRoot)
         val changelogPath = repositoryRoot.resolve("CHANGELOG.md")
         val changelog = Files.readString(changelogPath)
         val releaseNotesPath = repositoryRoot.resolve("docs/releases/${metadata.versionTag}.md")
         val releaseNotes = Files.readString(releaseNotesPath)
+        val expectedHeaderPattern = Regex("""## \[${Regex.escape(metadata.versionTag)}\] - \d{4}-\d{2}-\d{2}""")
 
         assertTrue(Files.exists(changelogPath))
         assertTrue(changelog.contains(metadata.versionTag))
         assertTrue(changelog.contains("alpha", ignoreCase = true))
-        assertTrue(changelog.contains("## ${metadata.versionTag}"))
-        assertTrue(changelog.contains("What's Included", ignoreCase = true))
+        assertTrue(expectedHeaderPattern.containsMatchIn(changelog))
+        val releaseHeaders = Regex("""## \[v[^\]]+\] - \d{4}-\d{2}-\d{2}""").findAll(changelog).toList()
+        assertTrue(releaseHeaders.isNotEmpty())
+        assertTrue(releaseHeaders.first().value.contains(metadata.versionTag))
+        assertTrue(changelog.contains("### Features"))
+        assertTrue(changelog.contains("### Internal"))
         assertTrue(Files.exists(releaseNotesPath))
         assertTrue(releaseNotesPath.fileName.toString().contains(metadata.versionTag))
         assertTrue(releaseNotes.contains(metadata.versionTag))
@@ -35,10 +40,8 @@ class ChangelogAndReleaseNotesContractTest {
             assertTrue(changelog.contains(limitation))
             assertTrue(releaseNotes.contains(limitation))
         }
-        assertTrue(changelog.contains("what changed", ignoreCase = true) || changelog.contains("what's included", ignoreCase = true))
+        assertTrue(changelog.contains("features", ignoreCase = true) || changelog.contains("what's included", ignoreCase = true))
         assertTrue(releaseNotes.contains("what changed", ignoreCase = true) || releaseNotes.contains("what's included", ignoreCase = true))
-        assertTrue(!changelog.contains("cloud sync", ignoreCase = true))
-        assertTrue(!changelog.contains("server OCR", ignoreCase = true))
         assertTrue(!releaseNotes.contains("cloud sync", ignoreCase = true))
         assertTrue(!releaseNotes.contains("server OCR", ignoreCase = true))
     }
