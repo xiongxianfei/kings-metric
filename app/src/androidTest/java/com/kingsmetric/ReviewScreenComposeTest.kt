@@ -220,6 +220,24 @@ class ReviewScreenComposeTest {
         composeRule.waitUntil(timeoutMillis = 5_000) { saveSucceeded }
         composeRule.onNodeWithText("Could not save this match locally. Try again.").assertDoesNotExist()
     }
+
+    @Test
+    fun reviewScreen_successfulSaveCallsRouteCallback() {
+        var saveSucceeded = false
+
+        composeRule.setContent {
+            ReviewScreenRoute(
+                viewModel = reviewViewModel(
+                    draft = ReviewScreenFixtures.supportedDraft()
+                ),
+                onSaveSucceeded = { saveSucceeded = true }
+            )
+        }
+
+        composeRule.onNodeWithTag("confirm-save").performClick()
+
+        composeRule.waitUntil(timeoutMillis = 5_000) { saveSucceeded }
+    }
 }
 
 private fun reviewViewModel(

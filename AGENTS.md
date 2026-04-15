@@ -129,6 +129,7 @@ If a required spec does not exist, do not invent a full feature contract in code
 - Use `sealed` hierarchies for closed UI or domain state models when variants carry different data.
 - Keep validation close to the domain or `ViewModel` layer, not buried in composables.
 - If an Android route depends on in-memory user progress, do not keep that state in plain `remember` alone. Use `rememberSaveable`, `SavedStateHandle`, or another explicit state owner that survives activity recreation.
+- If a route-scoped `ViewModel` edits a draft or form state that the shell also needs to recover after activity recreation, push those edits back into the shell-owned saveable state as they happen. Preserving only the initial draft snapshot is not enough.
 - If an Android flow depends on framework UI that is not deterministic in tests, add the narrowest possible test seam at the app-shell boundary. Do not bypass the business flow itself just to make instrumentation easier.
 - For feature-scoped GitHub Actions workflows, prefer `pull_request` plus `push` on `main` only. Do not also run the same expensive workflow on feature-branch `push` unless there is a specific reason.
 - Add workflow `concurrency` for expensive Android jobs so stale emulator runs are cancelled instead of stacking up across rapid branch updates.

@@ -86,7 +86,8 @@ fun HistoryDashboardRoot(
     navigationCoordinator: AppNavigationCoordinator = remember { AppNavigationCoordinator() },
     initialRoute: String? = null,
     initialReviewDraft: DraftRecord? = null,
-    testImportedDraft: DraftRecord? = null
+    testImportedDraft: DraftRecord? = null,
+    onReviewSaveSucceeded: (() -> Unit)? = null
 ) {
     val historyBinder = remember(repository) { HistoryScreenBinder(repository) }
     val dashboardBinder = remember(repository) { DashboardScreenBinder(repository) }
@@ -117,6 +118,7 @@ fun HistoryDashboardRoot(
     }
     var reviewDraft by rememberReviewDraftState(initialReviewDraft = initialReviewDraft)
     var rootMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var clearDraftAfterReviewExit by rememberSaveable { mutableStateOf(false) }
 
     DisposableEffect(historyBinder, dashboardBinder, scope) {
         val historyJob = historyBinder.bind(scope)
@@ -147,6 +149,13 @@ fun HistoryDashboardRoot(
 
     LaunchedEffect(launchState) {
         rootMessage = launchState?.userMessage
+    }
+
+    LaunchedEffect(currentRoute, clearDraftAfterReviewExit) {
+        if (clearDraftAfterReviewExit && currentRoute != AppRoute.Review) {
+            reviewDraft = null
+            clearDraftAfterReviewExit = false
+        }
     }
 
     Scaffold(
@@ -254,6 +263,9 @@ fun HistoryDashboardRoot(
                             ReviewScreenViewModel(
                                 draft = draft,
                                 workflow = reviewWorkflow,
+                                onDraftChanged = { updatedDraft ->
+                                    reviewDraft = updatedDraft
+                                },
                                 previewAvailableResolver = { path ->
                                     path?.let(::File)?.exists() == true
                                 }
@@ -262,7 +274,14 @@ fun HistoryDashboardRoot(
                         ReviewScreenRoute(
                             viewModel = reviewViewModel,
                             onSaveSucceeded = {
-                                navigatePrimary(navController, AppRoute.History)
+                                onReviewSaveSucceeded?.invoke()
+                                clearDraftAfterReviewExit = true
+                                navController.navigate(AppRoute.History.path()) {
+                                    popUpTo(AppRoute.Review.path()) {
+                                        inclusive = true
+                                    }
+                                    launchSingleTop = true
+                                }
                                 importRuntime.reset()
                                 rootMessage = null
                             }
