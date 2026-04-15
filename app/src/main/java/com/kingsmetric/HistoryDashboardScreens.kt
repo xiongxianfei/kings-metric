@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -415,22 +416,29 @@ fun HistoryScreen(
             is HistoryContentState.Error -> Text(content.message)
             is HistoryContentState.Loaded -> {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(content.records, key = { it.recordId }) { record ->
+                    items(state.rows, key = { it.recordId }) { row ->
                         Card(
                             modifier = Modifier
-                                .testTag("history-record-${record.recordId}")
+                                .testTag("history-record-${row.recordId}")
                                 .fillMaxWidth()
-                                .clickable { onRecordSelected(record.recordId) }
+                                .clickable(enabled = row.selectable) { onRecordSelected(row.recordId) }
                         ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
                                 Text(
-                                    SharedUxCopy.labeledValue(FieldKey.HERO, record.hero ?: "Not entered"),
+                                    row.primaryText,
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    SharedUxCopy.labeledValue(FieldKey.RESULT, record.result ?: "Not entered"),
+                                    row.resultText,
                                     style = MaterialTheme.typography.bodyMedium
                                 )
+                                Text(row.recencyText, style = MaterialTheme.typography.bodySmall)
+                                row.previewText?.let { previewText ->
+                                    Text(previewText, style = MaterialTheme.typography.bodySmall)
+                                }
                             }
                         }
                     }
@@ -451,13 +459,17 @@ fun DashboardScreen(state: DashboardScreenUiState) {
         is DashboardContentState.Error -> Text(content.message)
         is DashboardContentState.Loaded -> {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Win Rate: ${content.metrics.winRate?.percentage ?: 0.0}%")
-                Text("Average KDA: ${content.metrics.averageKda?.value ?: 0.0}")
-                Text(
-                    "Most Played Hero: ${
-                        content.metrics.heroUsage.firstOrNull()?.hero ?: "None"
-                    }"
-                )
+                state.contextText?.let { Text(it) }
+                state.primaryCards.forEach { card ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(card.label, style = MaterialTheme.typography.labelMedium)
+                            Text(card.valueText, style = MaterialTheme.typography.titleLarge)
+                        }
+                    }
+                }
+                state.sparseDataText?.let { Text(it) }
+                state.secondaryNotes.forEach { note -> Text(note) }
             }
         }
     }
@@ -465,17 +477,34 @@ fun DashboardScreen(state: DashboardScreenUiState) {
 
 @Composable
 fun RecordDetailScreen(state: DetailScreenUiState) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Record ${state.recordId}", style = MaterialTheme.typography.titleMedium)
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(state.summaryTitle, style = MaterialTheme.typography.headlineSmall)
+        Text(state.summaryResult, style = MaterialTheme.typography.titleMedium)
         Text(
             if (state.previewAvailability == PreviewAvailability.Available) {
-                state.screenshotPath ?: "Preview available"
+                state.screenshotPath ?: state.previewStatusText
             } else {
                 SharedUxCopy.message(SharedMessageKey.MISSING_SCREENSHOT_PREVIEW).text
             }
         )
-        state.fields.forEach { field ->
-            Text(SharedUxCopy.labeledValue(field.key, field.value))
+        state.sections.forEach { section ->
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(section.title, style = MaterialTheme.typography.titleMedium)
+                    section.fields.forEachIndexed { index, field ->
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(field.label, style = MaterialTheme.typography.labelMedium)
+                            Text(field.valueText, style = MaterialTheme.typography.bodyLarge)
+                        }
+                        if (index != section.fields.lastIndex) {
+                            HorizontalDivider()
+                        }
+                    }
+                }
+            }
         }
     }
 }

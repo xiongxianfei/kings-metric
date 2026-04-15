@@ -23,6 +23,7 @@ enum class ReviewScreenStatus {
 data class ReviewScreenUiState(
     val screenshotPath: String?,
     val previewAvailability: PreviewAvailability,
+    val layout: ReviewLayoutState,
     val fields: Map<FieldKey, DraftField>,
     val sections: List<ReviewSectionPresentation>,
     val highlightedFields: Set<FieldKey>,
@@ -79,13 +80,18 @@ class ReviewScreenViewModel(
     ): ReviewScreenUiState {
         val review = ReviewState.fromDraft(this)
         val grouping = groupingMapper.map(review)
+        val previewAvailability = if (previewAvailableResolver(screenshotPath) && review.screenshotAvailable) {
+            PreviewAvailability.Available
+        } else {
+            PreviewAvailability.Unavailable
+        }
         return ReviewScreenUiState(
             screenshotPath = screenshotPath,
-            previewAvailability = if (previewAvailableResolver(screenshotPath) && review.screenshotAvailable) {
-                PreviewAvailability.Available
-            } else {
-                PreviewAvailability.Unavailable
-            },
+            previewAvailability = previewAvailability,
+            layout = groupingMapper.layoutFor(
+                previewAvailability = previewAvailability,
+                hasBlockerSummary = grouping.blockerSummary != null
+            ),
             fields = fields,
             sections = grouping.sections,
             highlightedFields = review.highlightedFields,
@@ -102,6 +108,7 @@ class ReviewScreenViewModel(
 data class ReviewScreenModel(
     val screenshotPath: String?,
     val previewAvailability: PreviewAvailability,
+    val layout: ReviewLayoutState,
     val fields: Map<FieldKey, DraftField>,
     val sections: List<ReviewSectionPresentation>,
     val highlightedFields: Set<FieldKey>,
@@ -119,6 +126,7 @@ class ReviewScreen(
         return ReviewScreenModel(
             screenshotPath = state.screenshotPath,
             previewAvailability = state.previewAvailability,
+            layout = state.layout,
             fields = state.fields,
             sections = state.sections,
             highlightedFields = state.highlightedFields,

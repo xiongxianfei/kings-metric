@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
@@ -149,6 +150,55 @@ class ReviewScreenComposeTest {
 
         composeRule.onNodeWithTag("confirm-save").assertIsDisplayed()
         composeRule.onNodeWithTag("field-RESULT").assertIsDisplayed()
+        composeRule.onNodeWithText("Screenshot preview").assertIsDisplayed()
+    }
+
+    @Test
+    fun reviewScreen_stickySaveActionRemainsVisibleWithLongGroupedForm() {
+        composeRule.setContent {
+            ReviewScreenRoute(
+                viewModel = reviewViewModel(
+                    draft = ReviewScreenFixtures.requiredMissingDraft()
+                )
+            )
+        }
+
+        composeRule.onNodeWithTag("confirm-save").assertIsDisplayed()
+        composeRule.onNodeWithTag("field-DAMAGE_DEALT_TO_OPPONENTS").assertExists()
+        composeRule.onNodeWithText("Complete the required fields before saving.").assertIsDisplayed()
+    }
+
+    @Test
+    fun reviewScreen_ambiguousFieldsShowConciseInputHints() {
+        composeRule.setContent {
+            ReviewScreenRoute(
+                viewModel = reviewViewModel(
+                    draft = ReviewScreenFixtures.supportedDraft()
+                )
+            )
+        }
+
+        composeRule.onAllNodesWithText("Example: 34%").assertCountEquals(4)
+        composeRule.onAllNodesWithText("Whole number").assertCountEquals(7)
+        composeRule.onAllNodesWithText("Example: 00:14").assertCountEquals(1)
+    }
+
+    @Test
+    fun reviewScreen_editingKeepsFieldAndSaveActionReachable() {
+        composeRule.setContent {
+            ReviewScreenRoute(
+                viewModel = reviewViewModel(
+                    draft = ReviewScreenFixtures.requiredMissingDraft()
+                )
+            )
+        }
+
+        composeRule.onNodeWithTag("field-DAMAGE_DEALT").performClick()
+        composeRule.onNodeWithTag("field-DAMAGE_DEALT").performTextInput("12345")
+        composeRule.onNodeWithTag("field-DAMAGE_DEALT").performImeAction()
+
+        composeRule.onNodeWithTag("confirm-save").assertIsDisplayed()
+        composeRule.onNodeWithTag("field-DAMAGE_DEALT").assertIsDisplayed()
     }
 
     @Test
