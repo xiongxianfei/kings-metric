@@ -149,3 +149,7 @@ Expected behavior:
   stale, because repository metadata is an external GitHub setting. Keep a
   tracked source of truth and an explicit sync path instead of assuming the
   release page updates that metadata automatically.
+- 2026-04-15: A manual `workflow_dispatch` release path still needs explicit
+  release-gate confirmation inputs. Otherwise maintainers can bypass the
+  intended alpha release gate just by clicking the workflow without recording
+  that the real-device flow and release candidate were actually cleared.

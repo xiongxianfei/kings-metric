@@ -283,6 +283,10 @@ verified Android artifact and documented scope.
 - If emulator-backed verification or manual device confirmation is skipped,
   keep that skip visible and blocking in the release-gate result. Do not let a
   skipped release check disappear into a generic "not ready" bucket.
+- If GitHub publication is triggered manually, require explicit release-gate
+  confirmation inputs in the workflow before building or publishing. A manual
+  dispatch alone is not evidence that the real-device flow and release gate
+  were actually cleared for the candidate.
 
 ---
 

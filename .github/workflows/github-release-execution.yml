@@ -1,0 +1,75 @@
+name: GitHub Release Execution
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/github-release-execution.yml"
+      - ".github/workflows/release-alpha.yml"
+      - ".github/release-metadata.properties"
+      - ".github/release-artifact.properties"
+      - "CHANGELOG.md"
+      - "README.md"
+      - "docs/releases/**"
+      - "docs/workflows.md"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "core/build.gradle.kts"
+      - "src/main/kotlin/com/kingsmetric/release/**"
+      - "src/test/kotlin/com/kingsmetric/release/**"
+      - "specs/github-release-execution.md"
+      - "specs/github-release-execution.test.md"
+      - "specs/device-verification-and-release-gate.md"
+      - "specs/device-verification-and-release-gate.test.md"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/github-release-execution.yml"
+      - ".github/workflows/release-alpha.yml"
+      - ".github/release-metadata.properties"
+      - ".github/release-artifact.properties"
+      - "CHANGELOG.md"
+      - "README.md"
+      - "docs/releases/**"
+      - "docs/workflows.md"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "core/build.gradle.kts"
+      - "src/main/kotlin/com/kingsmetric/release/**"
+      - "src/test/kotlin/com/kingsmetric/release/**"
+      - "specs/github-release-execution.md"
+      - "specs/github-release-execution.test.md"
+      - "specs/device-verification-and-release-gate.md"
+      - "specs/device-verification-and-release-gate.test.md"
+
+jobs:
+  release-execution:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run GitHub release execution JVM checks
+        run: >
+          ./gradlew --no-daemon :core:test
+          --tests "com.kingsmetric.release.GitHubReleaseExecutionTest"
+          --tests "com.kingsmetric.release.GitHubReleaseExecutionIntegrationTest"
+          --tests "com.kingsmetric.release.DeviceVerificationAndReleaseGateTest"
+          --tests "com.kingsmetric.release.DeviceVerificationAndReleaseGateIntegrationTest"
+          --tests "com.kingsmetric.release.AutomatedGithubReleaseWorkflowTest"
+          --tests "com.kingsmetric.release.AutomatedGithubReleaseWorkflowIntegrationTest"

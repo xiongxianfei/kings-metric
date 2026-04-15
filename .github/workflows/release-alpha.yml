@@ -2,6 +2,15 @@ name: Release Alpha
 
 on:
   workflow_dispatch:
+    inputs:
+      confirm_release_gate_ready:
+        description: "Confirm the release gate is ready for this candidate"
+        required: true
+        type: boolean
+      confirm_manual_device_flow:
+        description: "Confirm the supported import -> review -> save -> history flow was validated on a real device"
+        required: true
+        type: boolean
 
 permissions:
   contents: write
@@ -36,6 +45,18 @@ jobs:
           echo "version_tag=$VERSION_TAG" >> "$GITHUB_OUTPUT"
           echo "repository_description=$REPOSITORY_DESCRIPTION" >> "$GITHUB_OUTPUT"
           echo "notes_path=docs/releases/${VERSION_TAG}.md" >> "$GITHUB_OUTPUT"
+
+      - name: Validate release gate confirmations
+        shell: bash
+        run: |
+          if [ "${{ inputs.confirm_release_gate_ready }}" != "true" ]; then
+            echo "Release gate confirmation is required before publication." >&2
+            exit 1
+          fi
+          if [ "${{ inputs.confirm_manual_device_flow }}" != "true" ]; then
+            echo "Manual device flow confirmation is required before publication." >&2
+            exit 1
+          fi
 
       - name: Sync repository description
         if: ${{ secrets.GH_REPO_ADMIN_TOKEN != '' }}
