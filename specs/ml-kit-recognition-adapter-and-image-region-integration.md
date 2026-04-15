@@ -85,10 +85,17 @@ Expected behavior:
   scans that can skip the intended value or steal a nearby one. Keep those
   extractions label-local, then use wider last-occurrence scans only for
   metrics whose values intentionally trail their labels in the OCR stream.
+- 2026-04-15: Real-device OCR for the supported screenshot can still produce
+  clean readable labels such as `对英雄輸出`, `输出占比`, `经济占比`, and `参团率`,
+  but some of those labels may be split from their numeric values across later
+  OCR lines. Keep canonical readable Chinese labels in the mapper, and use a
+  later bounded scan for trailing metrics such as `打野经济`, `补刀数`, `控制时长`,
+  and `对塔伤害` instead of assuming the value sits on the same line as the
+  label.
 - 2026-04-15: Real-device and share-sized supported screenshots can produce
   traditional-Chinese or truncated label variants such as `对英雄输出`,
-  truncated `对英雄出`, or abbreviated `团率` even though the template is still
-  the same supported screenshot. Keep alias handling narrow to the supported
-  template, but prefer reaching a reviewable draft with highlighted missing
-  fields over rejecting the whole screenshot when section-level evidence is
-  still present.
+  `对英雄輸出`, truncated `对英雄出`, or abbreviated `团率` even though the
+  template is still the same supported screenshot. Keep alias handling narrow
+  to the supported template, but prefer reaching a reviewable draft with
+  highlighted missing fields over rejecting the whole screenshot when
+  section-level evidence is still present.
