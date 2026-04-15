@@ -26,6 +26,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,13 +41,23 @@ fun ReviewScreenRoute(
 ) {
     val state by viewModel.state.collectAsState()
     val previewLoader = remember { AndroidPreviewBitmapLoader() }
-    val previewBitmap = remember(state.screenshotPath, state.previewAvailability) {
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val previewTargetWidthPx = with(density) { configuration.screenWidthDp.dp.roundToPx() }
+    val previewTargetHeightPx = with(density) { state.layout.previewMaxHeightDp.dp.roundToPx() }
+    val previewBitmap = remember(
+        state.screenshotPath,
+        state.previewAvailability,
+        previewTargetWidthPx,
+        previewTargetHeightPx
+    ) {
         if (state.previewAvailability == PreviewAvailability.Available) {
             state.screenshotPath?.let { path ->
                 runCatching {
                     previewLoader.load(
                         path = path,
-                        maxDimensionPx = 1080
+                        targetWidthPx = previewTargetWidthPx,
+                        targetHeightPx = previewTargetHeightPx
                     )
                 }.getOrNull()
             }
