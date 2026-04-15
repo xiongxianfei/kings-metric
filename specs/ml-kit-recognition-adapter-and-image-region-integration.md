@@ -75,3 +75,9 @@ Expected behavior:
   partially supported screenshot text can still trigger parser or mapper
   exceptions; those cases must surface as a retryable import failure instead of
   crashing the import flow.
+- 2026-04-15: Real supported screenshots can flatten ML Kit text in a
+  cross-column order that does not match the on-screen card layout. For
+  required first-value metrics such as damage dealt, avoid broad full-text
+  scans that can skip the intended value or steal a nearby one. Keep those
+  extractions label-local, then use wider last-occurrence scans only for
+  metrics whose values intentionally trail their labels in the OCR stream.
