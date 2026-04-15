@@ -14,7 +14,7 @@ class ReadmeAndInstallGuidanceTest {
     }
 
     @Test
-    fun `T2-T10 README covers app introduction install guidance supported scope local-first behavior and key limitations`() {
+    fun `T2-T13 README covers app introduction build-run guidance install guidance supported scope local-first behavior and key limitations`() {
         val readme = Files.readString(resolveRepositoryRoot().resolve("README.md"))
 
         assertTrue(readme.contains("Honor of Kings Match Tracker"))
@@ -22,6 +22,11 @@ class ReadmeAndInstallGuidanceTest {
         assertTrue(readme.contains("local-first", ignoreCase = true))
         assertTrue(readme.contains("on-device", ignoreCase = true))
         assertTrue(readme.contains("alpha", ignoreCase = true))
+        assertTrue(readme.contains("## Build", ignoreCase = true))
+        assertTrue(readme.contains("gradlew.bat --no-daemon :core:test"))
+        assertTrue(readme.contains("gradlew.bat --no-daemon :app:assembleDebug"))
+        assertTrue(readme.contains("## Run", ignoreCase = true))
+        assertTrue(readme.contains("Android Studio", ignoreCase = true))
         assertTrue(readme.contains("one supported Simplified Chinese post-match detailed-data screenshot"))
         assertTrue(readme.contains("unsupported screenshots are rejected", ignoreCase = true))
         assertTrue(readme.contains("Hero may still require manual entry during review", ignoreCase = true))
@@ -39,7 +44,7 @@ class ReadmeAndInstallGuidanceTest {
 class ReadmeAndInstallGuidanceIntegrationTest {
 
     @Test
-    fun `IT1-IT4 README stays consistent with release metadata and release notes`() {
+    fun `IT1-IT5 README stays consistent with repository build-run path release metadata and release notes`() {
         val repositoryRoot = resolveRepositoryRoot()
         val metadata = FirstReleaseMetadata.load(repositoryRoot)
         val readme = Files.readString(repositoryRoot.resolve("README.md"))
@@ -47,6 +52,8 @@ class ReadmeAndInstallGuidanceIntegrationTest {
             repositoryRoot.resolve("docs/releases/${metadata.versionTag}.md")
         )
 
+        assertTrue(readme.contains("settings.gradle.kts"))
+        assertTrue(readme.contains("app/"))
         metadata.supportedScopeStatements.forEach { statement ->
             assertTrue(readme.contains(statement))
             assertTrue(releaseNotes.contains(statement))

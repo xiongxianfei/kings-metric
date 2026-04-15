@@ -2,9 +2,9 @@
 
 ## Scope
 
-This test spec covers repository README presence, first-release user guidance,
-install instructions for the GitHub artifact, supported-scope statements, and
-known-limitations documentation.
+This test spec covers repository README presence, developer build/run guidance,
+first-release user guidance, install instructions for the GitHub artifact,
+supported-scope statements, and known-limitations documentation.
 
 ## Unit Tests
 
@@ -13,28 +13,34 @@ known-limitations documentation.
   Android app.
 - `T3` README states that processing is local-first and on-device.
 - `T4` README states that the first release is alpha quality.
-- `T5` README documents the current supported screenshot scope and required
+- `T5` README documents a basic local build path for developers.
+- `T6` README documents a basic local run path for developers.
+- `T7` README identifies the main verification commands or local validation
+  path a maintainer is expected to use before release preparation.
+- `T8` README documents the current supported screenshot scope and required
   review-before-save behavior.
-- `T6` README explicitly states that unsupported screenshots are rejected.
-- `T7` README includes the current hero manual-review limitation when that
+- `T9` README explicitly states that unsupported screenshots are rejected.
+- `T10` README includes the current hero manual-review limitation when that
   limitation still exists.
-- `T8` README install guidance identifies where users obtain the release
+- `T11` README install guidance identifies where users obtain the release
   artifact and how to install it at a basic level.
-- `T9` README excludes unsupported claims such as multi-template support,
+- `T12` README excludes unsupported claims such as multi-template support,
   non-Chinese screenshots, cloud sync, and server OCR.
-- `T10` README summarizes the high-level user flow: import screenshot, review
+- `T13` README summarizes the high-level user flow: import screenshot, review
   extracted data, save locally.
 
 ## Integration Tests
 
-- `IT1` README supported-scope and limitation wording stays consistent with the
+- `IT1` README build/run guidance stays consistent with the actual repository
+  build/run entry path instead of pointing to a stale or unrelated setup.
+- `IT2` README supported-scope and limitation wording stays consistent with the
   release metadata/positioning contract.
-- `IT2` README install guidance is specific to the intended GitHub release
+- `IT3` README install guidance is specific to the intended GitHub release
   artifact rather than generic Android build output.
-- `IT3` If README omits install guidance, alpha warning, or supported-scope
-  information, the release documentation check flags the repository as not
-  release-ready.
-- `IT4` If README and release notes diverge on supported scope or limitations,
+- `IT4` If README omits build guidance, run guidance, install guidance, alpha
+  warning, or supported-scope information, the release documentation check
+  flags the repository as not release-ready.
+- `IT5` If README and release notes diverge on supported scope or limitations,
   the release documentation check flags that mismatch as blocking.
 
 ## What Not To Test
@@ -48,12 +54,13 @@ known-limitations documentation.
 - README existence covered by `T1`
 - App introduction and Android identity covered by `T2`
 - Local-first/privacy behavior covered by `T3`
-- Alpha-quality warning covered by `T4`, `IT3`
-- Supported scope and unsupported rejection covered by `T5`, `T6`, `T9`, `IT1`,
-  `IT4`
-- Hero limitation disclosure covered by `T7`, `IT4`
-- Install guidance covered by `T8`, `IT2`, `IT3`
-- User flow summary covered by `T10`
+- Alpha-quality warning covered by `T4`, `IT4`
+- Developer build/run guidance covered by `T5`, `T6`, `T7`, `IT1`, `IT4`
+- Supported scope and unsupported rejection covered by `T8`, `T9`, `T12`,
+  `IT2`, `IT5`
+- Hero limitation disclosure covered by `T10`, `IT5`
+- Install guidance covered by `T11`, `IT3`, `IT4`
+- User flow summary covered by `T13`
 
 ## Not Directly Testable
 

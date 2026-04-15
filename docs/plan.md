@@ -53,10 +53,12 @@ Done:
 
 Current release blockers:
 
-- no release README or user-facing install guide exists yet
+- README does not yet promise both developer build/run instructions and
+  first-release user install guidance as one maintained contract
 - no explicit GitHub repo description/tagline source or update path exists yet
 - no release-signing path for the distributed Android artifact is defined yet
 - no automated GitHub release workflow exists yet
+- no explicit changelog/release-notes policy is defined for releases
 - hero extraction still commonly falls back to manual review on the supported
   screenshot
 - device verification is good enough for alpha planning, not yet for a stable
@@ -89,16 +91,26 @@ The first GitHub release should explicitly document:
 - Risk: low
 - Size: small
 
-### 2. README And Install Guidance
+### 2. README Build Run And Install Guidance
 
-- Scope: add a repository README that explains what the app does, who the alpha
-  release is for, how to install the release artifact, privacy/local-first
-  behavior, and current known limitations
+- Scope: maintain a repository README that explains what the app does, who the
+  alpha release is for, how to build and run the project locally, how to
+  install the release artifact, privacy/local-first behavior, and current known
+  limitations
 - Dependencies: 1
 - Risk: low
 - Size: small
 
-### 3. Release Signing And Artifact Path
+### 3. Changelog And Release Notes Contract
+
+- Scope: define a release changelog / release-notes source of truth so each
+  GitHub release has a tracked, user-facing change summary and known
+  limitations statement
+- Dependencies: 1
+- Risk: low
+- Size: small
+
+### 4. Release Signing And Artifact Path
 
 - Scope: define the signed release artifact path for GitHub distribution,
   including signing inputs, release-build verification, and the exact artifact
@@ -107,49 +119,51 @@ The first GitHub release should explicitly document:
 - Risk: medium
 - Size: medium
 
-### 4. Automated GitHub Release Workflow
+### 5. Automated GitHub Release Workflow
 
 - Scope: add a repeatable GitHub workflow that builds the intended release
   artifact, applies the release metadata, and publishes a prerelease only when
   the required inputs are present
-- Dependencies: 1, 3
+- Dependencies: 1, 3, 4
 - Risk: medium
 - Size: medium
 
-### 5. Alpha Hardening For Critical User Path
+### 6. Alpha Hardening For Critical User Path
 
 - Scope: fix the highest-risk release-facing issues on the supported
   import -> review -> save -> history flow without expanding product scope
-- Dependencies: 1, 3
+- Dependencies: 1, 4
 - Risk: medium
 - Size: medium
 
-### 6. Device Verification And Release Gate
+### 7. Device Verification And Release Gate
 
 - Scope: define and run a small release-candidate verification matrix, then
   codify the minimum pass criteria that the automated/manual release path must
   respect before publishing the alpha build
-- Dependencies: 2, 3, 5
+- Dependencies: 2, 3, 4, 6
 - Risk: medium
 - Size: small
 
-### 7. GitHub Release Execution
+### 8. GitHub Release Execution
 
 - Scope: publish the first prerelease with the signed user artifact, final
-  release notes, and matching repository metadata after the release gate passes
-- Dependencies: 2, 4, 6
+  changelog/release notes, and matching repository metadata after the release
+  gate passes
+- Dependencies: 2, 3, 5, 7
 - Risk: low
 - Size: small
 
 ## Build Order
 
 1. Release Metadata And Positioning
-2. README And Install Guidance
-3. Release Signing And Artifact Path
-4. Automated GitHub Release Workflow
-5. Alpha Hardening For Critical User Path
-6. Device Verification And Release Gate
-7. GitHub Release Execution
+2. README Build Run And Install Guidance
+3. Changelog And Release Notes Contract
+4. Release Signing And Artifact Path
+5. Automated GitHub Release Workflow
+6. Alpha Hardening For Critical User Path
+7. Device Verification And Release Gate
+8. GitHub Release Execution
 
 ## Architecture Decisions
 
@@ -159,8 +173,9 @@ The first GitHub release should explicitly document:
   it with new recognition systems or broad refactors.
 - Prefer explicit known-limitation documentation over weak or hidden fallback
   behavior.
-- Keep repository metadata, README messaging, and GitHub release notes aligned
-  to one supported scope statement so release surfaces do not drift.
+- Keep repository metadata, README messaging, changelog/release notes, and
+  GitHub release notes aligned to one supported scope statement so release
+  surfaces do not drift.
 - Treat the GitHub repo description as managed release metadata even though it
   is not stored as app runtime code.
 - Keep emulator/device verification intentional and limited to the critical
@@ -172,10 +187,10 @@ Do not publish the first GitHub release until all of these are true:
 
 - a signed release build can be produced repeatably from the repository
 - the artifact intended for users is verified before publishing
-- the repository README explains install steps, supported scope, and known
-  limitations
-- repository description/tagline and release notes do not overclaim maturity or
-  support
+- the repository README explains developer build/run steps, user install steps,
+  supported scope, and known limitations
+- repository description/tagline and changelog/release notes do not overclaim
+  maturity or support
 - the critical import -> review -> save -> history path passes the release
   candidate verification matrix
 - the app does not claim stable support for hero auto-extraction if manual hero
@@ -189,8 +204,8 @@ Do not publish the first GitHub release until all of these are true:
   confidence and hero extraction quality
 - release signing/build work can expose Android configuration gaps that normal
   debug flows do not hit
-- GitHub metadata, README copy, and release notes can drift if they are not
-  treated as one release contract
+- GitHub metadata, README copy, and changelog/release notes can drift if they
+  are not treated as one release contract
 - broad hardening can sprawl unless it stays limited to the critical release
   path
 - release automation can accidentally publish the wrong artifact or wrong
@@ -209,8 +224,10 @@ Do not publish the first GitHub release until all of these are true:
 This plan is done when:
 
 - the repo can produce a verified signed first-release Android artifact
-- the repository has a clear README and release-facing GitHub metadata
-- GitHub has a published prerelease with install steps and known limitations
+- the repository has a clear README with build/run/install guidance and
+  release-facing GitHub metadata
+- GitHub has a published prerelease with changelog/release notes and known
+  limitations
 - the supported import -> review -> save -> history flow has passed the defined
   release gate
 - the automated release workflow respects the alpha-only first-release policy

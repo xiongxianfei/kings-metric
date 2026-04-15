@@ -2,9 +2,11 @@
 
 ## Goal and Context
 
-Provide a repository README that helps an early user understand what the app
-does, how to install the first GitHub release artifact, and what limitations to
-expect before using it.
+Provide a repository README that helps both:
+
+- a developer understand how to build and run the project locally
+- an early user understand how to install the first GitHub release artifact and
+  what limitations to expect before using it
 
 This feature covers repository-level user guidance, not the GitHub release
 publication itself.
@@ -32,7 +34,18 @@ Expected behavior:
 - The guidance is specific enough that an early tester can understand how to
   use the release artifact.
 
-### Example 3: User Expects Broader Support Than Exists
+### Example 3: Developer Wants To Build The App Locally
+
+Input:
+- A developer lands on the repository and wants to run the app or verify the
+  build locally.
+
+Expected behavior:
+- The README explains the minimum local build/run path.
+- The README points to the relevant Gradle commands or Android project entry
+  path.
+
+### Example 4: User Expects Broader Support Than Exists
 
 Input:
 - A user assumes the app supports multiple templates or non-Chinese
@@ -53,6 +66,14 @@ Expected behavior:
   - that it is an Android app
   - that processing is local and on-device
   - that the first release is alpha quality
+
+### Developer Build And Run Guidance
+
+- The README MUST include a basic local build path for developers.
+- The README MUST include a basic local run path for developers, such as the
+  Android Studio project entry or the relevant Gradle/app entry path.
+- The README SHOULD identify the main verification commands a maintainer is
+  expected to run before preparing a release candidate.
 
 ### Supported Scope And Limitations
 
@@ -83,19 +104,24 @@ Expected behavior:
 
 - A first-time repository visitor should be able to understand:
   - whether the app is relevant to them
+  - how to build or run the project locally if they are evaluating the repo as
+    a developer
   - what Android release artifact to look for
   - what screenshot support exists today
   - what limitations to expect before installing
 
 ## Error-State Expectations
 
-- If the README is missing install guidance or supported-scope information, the
-  first GitHub release MUST NOT be treated as properly documented.
+- If the README is missing developer build/run guidance, install guidance, or
+  supported-scope information, the first GitHub release MUST NOT be treated as
+  properly documented.
 - If the README describes broader support than the product actually provides,
   that mismatch MUST be corrected before the release is considered ready.
 
 ## Edge Cases
 
+- The README explains the app but does not explain how to build or run it
+  locally.
 - The README explains the app but does not explain how to obtain or install the
   release artifact.
 - The README explains installation but omits the alpha-quality warning.
@@ -113,8 +139,8 @@ Expected behavior:
 ## Acceptance Criteria
 
 - The repository contains a README suitable for first-release users.
-- The README explains install steps, supported scope, privacy/local-first
-  behavior, and key limitations.
+- The README explains developer build/run steps, install steps, supported
+  scope, privacy/local-first behavior, and key limitations.
 - The README stays aligned with the alpha release positioning.
 - The README does not overclaim support beyond the current verified product.
 
