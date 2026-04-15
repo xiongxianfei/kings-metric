@@ -10,7 +10,7 @@ Alpha prerelease replacement for early testers.
 
 - **Supported screenshots are more tolerant of real-device OCR variants** -
   the ML Kit mapper now accepts narrow traditional or truncated label variants
-  such as `对英雄輸出`, `对英雄出`, and `团率`, so supported screenshots are
+  such as `对英雄输出`, truncated `对英雄出`, and abbreviated `团率`, so supported screenshots are
   more likely to continue into review instead of falling into a generic import
   failure.
 
@@ -121,7 +121,7 @@ Alpha prerelease replacement for early testers.
 
 ### Bug Fixes
 
-- **Screenshot import no longer crashes on large real-device screenshots** —
+- **Screenshot import no longer crashes on large real-device screenshots** -
   the app now uses bounds-only bitmap probes for OCR pre-validation and a
   bounded downsampled bitmap for the review preview instead of decoding the
   original screenshot at full resolution on the import path.
