@@ -1,5 +1,6 @@
 package com.kingsmetric.app
 
+import com.kingsmetric.diagnostics.DiagnosticsOutcome
 import com.kingsmetric.importflow.Anchor
 import com.kingsmetric.importflow.DraftParser
 import com.kingsmetric.importflow.DraftRecord
@@ -123,10 +124,12 @@ class ComposeReviewScreenAndViewModelIntegrationTest {
 
     @Test
     fun `IT4 save failure leaves the user on review with edits intact`() {
+        val diagnosticsRecorder = RecordingDiagnosticsRecorder()
         val workflow = ReviewScreenFixtures.workflow(recordStore = FakeRecordStore(shouldFail = true))
         val viewModel = ReviewScreenViewModel(
             draft = ReviewScreenFixtures.supportedDraft(),
-            workflow = workflow
+            workflow = workflow,
+            diagnosticsRecorder = diagnosticsRecorder
         )
 
         viewModel.updateField(FieldKey.LANE, "Farm Lane")
@@ -135,6 +138,23 @@ class ComposeReviewScreenAndViewModelIntegrationTest {
         assertTrue(result is SaveResult.StorageFailed)
         assertEquals("Farm Lane", viewModel.state.value.fields.getValue(FieldKey.LANE).value)
         assertEquals(ReviewScreenStatus.Reviewing, viewModel.state.value.status)
+        assertEquals(DiagnosticsOutcome.SAVE_FAILED, diagnosticsRecorder.events.single().outcome)
+    }
+
+    @Test
+    fun `IT5 successful save records a success diagnostics event without changing review success behavior`() {
+        val diagnosticsRecorder = RecordingDiagnosticsRecorder()
+        val viewModel = ReviewScreenViewModel(
+            draft = ReviewScreenFixtures.supportedDraft(),
+            workflow = ReviewScreenFixtures.workflow(),
+            diagnosticsRecorder = diagnosticsRecorder
+        )
+
+        val result = viewModel.confirmSave()
+
+        assertTrue(result is SaveResult.Saved)
+        assertEquals(ReviewScreenStatus.Saved, viewModel.state.value.status)
+        assertEquals(DiagnosticsOutcome.SAVE_SUCCEEDED, diagnosticsRecorder.events.single().outcome)
     }
 }
 

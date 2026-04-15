@@ -2,13 +2,13 @@
 
 ## Metadata
 
-- Status: active
+- Status: completed
 - Created: 2026-04-15
 - Updated: 2026-04-15
 - Owner: Codex
 - Related spec(s): none; internal refactor only
 - Supersedes / Superseded by: none
-- Branch / PR: `chore/restructure-repository-layout`
+- Branch / PR: `chore/restructure-repository-layout` / PR #45
 - Last verified commands:
   - `./gradlew.bat --no-daemon :core:test`
   - `./gradlew.bat --no-daemon :app:assembleDebug`

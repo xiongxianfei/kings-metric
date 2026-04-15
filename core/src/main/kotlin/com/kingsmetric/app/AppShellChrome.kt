@@ -17,7 +17,8 @@ object AppShellChrome {
     val primaryRoutes: List<AppRoute> = listOf(
         AppRoute.Import,
         AppRoute.History,
-        AppRoute.Dashboard
+        AppRoute.Dashboard,
+        AppRoute.Diagnostics
     )
 
     fun forRoute(route: AppRoute): AppShellDestinationChrome {
@@ -38,6 +39,12 @@ object AppShellChrome {
                 route = route,
                 title = "Dashboard",
                 navigationLabel = "Dashboard",
+                kind = AppShellDestinationKind.Primary
+            )
+            AppRoute.Diagnostics -> AppShellDestinationChrome(
+                route = route,
+                title = "Diagnostics",
+                navigationLabel = "Diagnostics",
                 kind = AppShellDestinationKind.Primary
             )
             AppRoute.Review -> AppShellDestinationChrome(
@@ -63,6 +70,7 @@ object AppShellChrome {
             path == AppRoute.Import.path() -> AppRoute.Import
             path == AppRoute.History.path() -> AppRoute.History
             path == AppRoute.Dashboard.path() -> AppRoute.Dashboard
+            path == AppRoute.Diagnostics.path() -> AppRoute.Diagnostics
             path == AppRoute.Review.path() -> AppRoute.Review
             path == AppRoute.RecordDetail.pattern -> AppRoute.RecordDetail
             path.startsWith("detail/") -> AppRoute.RecordDetail

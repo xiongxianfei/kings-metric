@@ -11,6 +11,10 @@ on:
         description: "Confirm the supported import -> review -> save -> history flow was validated on a real device"
         required: true
         type: boolean
+      confirm_diagnostics_support_ready:
+        description: "Confirm the diagnostics viewer and bounded export were verified for this candidate"
+        required: true
+        type: boolean
 
 permissions:
   contents: write
@@ -55,6 +59,10 @@ jobs:
           fi
           if [ "${{ inputs.confirm_manual_device_flow }}" != "true" ]; then
             echo "Manual device flow confirmation is required before publication." >&2
+            exit 1
+          fi
+          if [ "${{ inputs.confirm_diagnostics_support_ready }}" != "true" ]; then
+            echo "Diagnostics support confirmation is required before publication." >&2
             exit 1
           fi
 

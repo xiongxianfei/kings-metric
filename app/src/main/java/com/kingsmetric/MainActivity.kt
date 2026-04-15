@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import com.kingsmetric.app.MlKitRecognitionAdapter
 import com.kingsmetric.app.UriScreenshotStorage
 import com.kingsmetric.data.local.RoomObservedMatchRepository
+import com.kingsmetric.diagnostics.DiagnosticsRecorder
 import com.kingsmetric.importflow.MatchImportWorkflow
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -21,6 +22,7 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var uriStorage: UriScreenshotStorage
     @Inject lateinit var recognitionAdapter: MlKitRecognitionAdapter
     @Inject lateinit var reviewWorkflow: MatchImportWorkflow
+    @Inject lateinit var diagnosticsRecorder: DiagnosticsRecorder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,7 +31,8 @@ class MainActivity : ComponentActivity() {
                 repository = repository,
                 uriStorage = uriStorage,
                 recognizeStoredScreenshot = recognitionAdapter::recognize,
-                reviewWorkflow = reviewWorkflow
+                reviewWorkflow = reviewWorkflow,
+                diagnosticsRecorder = diagnosticsRecorder
             )
         }
     }
@@ -40,7 +43,8 @@ private fun KingsMetricApp(
     repository: RoomObservedMatchRepository,
     uriStorage: UriScreenshotStorage,
     recognizeStoredScreenshot: (String) -> com.kingsmetric.importflow.ImportResult,
-    reviewWorkflow: MatchImportWorkflow
+    reviewWorkflow: MatchImportWorkflow,
+    diagnosticsRecorder: DiagnosticsRecorder
 ) {
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
@@ -48,7 +52,8 @@ private fun KingsMetricApp(
                 repository = repository,
                 uriStorage = uriStorage,
                 recognizeStoredScreenshot = recognizeStoredScreenshot,
-                reviewWorkflow = reviewWorkflow
+                reviewWorkflow = reviewWorkflow,
+                diagnosticsRecorder = diagnosticsRecorder
             )
         }
     }

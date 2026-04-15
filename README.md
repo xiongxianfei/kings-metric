@@ -78,6 +78,27 @@ For the tracked release summary behind the GitHub release page, see
 This app is local-first and processes screenshots on-device. It does not depend
 on cloud sync or server OCR for the supported import path.
 
+## Diagnostics And Support
+
+If you hit a real-user problem on the supported path, open the in-app
+`Diagnostics` screen from the main navigation.
+
+Basic support flow:
+
+1. reproduce the problem if possible
+2. open `Diagnostics`
+3. review the recent entries
+4. tap `Copy Diagnostics`
+5. paste the copied text into your support message or issue report
+
+The diagnostics export is bounded and privacy-safe by default:
+
+- it does not include the original screenshot
+- it does not include raw OCR text dumps
+- it does not include the full saved match payload
+
+The diagnostics export is local-only. The app does not upload it automatically.
+
 ## Known Limitations
 
 - Hero may still require manual entry during review.
