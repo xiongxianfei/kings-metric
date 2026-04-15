@@ -73,3 +73,8 @@ Expected behavior:
   the review preview. Real imported screenshots can be large enough that a
   full-resolution preview decode crashes the review screen immediately after
   import. Use a bounded downsampled decode sized for the preview surface.
+- 2026-04-15: For tall portrait screenshots, do not choose the preview sample
+  size from a single generic max dimension alone. That can shrink the decoded
+  width far below the on-screen review surface and make the preview look blurry
+  even though the stored screenshot is clear. Size the preview decode against
+  the actual preview surface width and height.

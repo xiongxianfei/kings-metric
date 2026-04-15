@@ -30,7 +30,8 @@ class AndroidPreviewBitmapLoader(
 ) {
     fun load(
         path: String,
-        maxDimensionPx: Int
+        targetWidthPx: Int,
+        targetHeightPx: Int
     ): Bitmap {
         val bounds = boundsReader.read(path)
         if (bounds.width <= 0 || bounds.height <= 0) {
@@ -38,10 +39,11 @@ class AndroidPreviewBitmapLoader(
         }
 
         val options = BitmapFactory.Options().apply {
-            inSampleSize = sampleSizeFor(
+            inSampleSize = sampleSizeForPreview(
                 width = bounds.width,
                 height = bounds.height,
-                maxDimensionPx = maxDimensionPx
+                targetWidthPx = targetWidthPx,
+                targetHeightPx = targetHeightPx
             )
         }
 
@@ -49,19 +51,22 @@ class AndroidPreviewBitmapLoader(
     }
 }
 
-internal fun sampleSizeFor(
+internal fun sampleSizeForPreview(
     width: Int,
     height: Int,
-    maxDimensionPx: Int
+    targetWidthPx: Int,
+    targetHeightPx: Int
 ): Int {
-    var sampleSize = 1
-    var sampledWidth = width
-    var sampledHeight = height
+    if (targetWidthPx <= 0 || targetHeightPx <= 0) {
+        return 1
+    }
 
-    while (sampledWidth > maxDimensionPx || sampledHeight > maxDimensionPx) {
+    var sampleSize = 1
+
+    while ((width / (sampleSize * 2)) >= targetWidthPx &&
+        (height / (sampleSize * 2)) >= targetHeightPx
+    ) {
         sampleSize *= 2
-        sampledWidth = width / sampleSize
-        sampledHeight = height / sampleSize
     }
 
     return sampleSize.coerceAtLeast(1)

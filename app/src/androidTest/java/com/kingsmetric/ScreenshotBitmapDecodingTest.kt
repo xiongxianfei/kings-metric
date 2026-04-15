@@ -34,11 +34,14 @@ class ScreenshotBitmapDecodingTest {
 
         val bitmap = AndroidPreviewBitmapLoader().load(
             path = screenshot.absolutePath,
-            maxDimensionPx = 1080
+            targetWidthPx = 1080,
+            targetHeightPx = 660
         )
 
-        assertTrue(bitmap.width <= 1080)
-        assertTrue(bitmap.height <= 1080)
+        assertTrue(bitmap.width >= 1080)
+        assertTrue(bitmap.height >= 660)
+        assertTrue(bitmap.width < 4096)
+        assertTrue(bitmap.height < 8192)
         bitmap.recycle()
     }
 }
