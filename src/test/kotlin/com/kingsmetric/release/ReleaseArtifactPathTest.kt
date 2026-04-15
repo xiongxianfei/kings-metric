@@ -11,6 +11,7 @@ class ReleaseArtifactPathTest {
     fun `T1-T7 release artifact contract defines one signed release artifact and fails closed when signing inputs are missing`() {
         val contract = ReleaseArtifactContract.load(resolveRepositoryRoot())
 
+        assertEquals(2, contract.releaseVersionCode)
         assertEquals(":app:assembleRelease", contract.artifactTask)
         assertEquals("app/build/outputs/apk/release/app-release.apk", contract.artifactPath)
         assertTrue(contract.artifactTask.contains("Release"))
@@ -57,6 +58,7 @@ class ReleaseArtifactPathIntegrationTest {
         assertTrue(buildGradle.contains("ANDROID_KEYSTORE_PATH"))
         assertTrue(buildGradle.contains("assembleRelease"))
         assertTrue(buildGradle.contains(".github/release-artifact.properties"))
+        assertTrue(buildGradle.contains("releaseVersionCode"))
         assertTrue(buildGradle.contains("releaseVersionName"))
     }
 }

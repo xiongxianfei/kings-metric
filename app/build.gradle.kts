@@ -14,6 +14,7 @@ fun loadProperties(path: String): Properties {
 }
 
 val releaseArtifact = loadProperties(".github/release-artifact.properties")
+val releaseVersionCode = releaseArtifact.getProperty("releaseVersionCode").toInt()
 val firstReleaseVersionName = releaseArtifact.getProperty("releaseVersionName")
 val requiredReleaseSigningEnvVars = listOf(
     "ANDROID_KEYSTORE_PATH",
@@ -33,7 +34,7 @@ android {
         applicationId = "com.kingsmetric"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
+        versionCode = releaseVersionCode
         versionName = firstReleaseVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

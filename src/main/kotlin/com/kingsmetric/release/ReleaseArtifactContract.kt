@@ -16,6 +16,7 @@ data class ReleaseArtifactReadiness(
 )
 
 data class ReleaseArtifactContract(
+    val releaseVersionCode: Int,
     val releaseVersionName: String,
     val artifactTask: String,
     val artifactPath: String,
@@ -25,6 +26,9 @@ data class ReleaseArtifactContract(
 ) {
     fun validate(): List<String> {
         val issues = mutableListOf<String>()
+        if (releaseVersionCode <= 0) {
+            issues += "Release version code must be a positive integer."
+        }
         if (!artifactTask.contains("Release")) {
             issues += "Release artifact task must use a release build path."
         }
@@ -67,6 +71,7 @@ data class ReleaseArtifactContract(
                 properties.load(stream)
             }
             return ReleaseArtifactContract(
+                releaseVersionCode = properties.required("releaseVersionCode").toInt(),
                 releaseVersionName = properties.required("releaseVersionName"),
                 artifactTask = properties.required("artifactTask"),
                 artifactPath = properties.required("artifactPath"),
