@@ -116,3 +116,8 @@ Expected behavior:
   text. Lane extraction must prefer summary or badge-local context and treat
   degraded badge variants such as `鍙戞湁璺?as the canonical marksman lane
   instead of letting nearby metric labels win.
+- 2026-04-16: Real supported OCR can also merge the summary gold rating and the
+  KDA text into one token such as `13.111/1/5`. Summary-card parsing must still
+  recover the player name, the one-decimal gold rating, and the KDA-bearing
+  summary anchor from that merged line instead of rejecting the screenshot as
+  if the summary card were missing.

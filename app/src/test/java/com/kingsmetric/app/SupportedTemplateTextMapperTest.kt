@@ -233,4 +233,30 @@ class SupportedTemplateTextMapperTest {
             analysis.visibleSections
         )
     }
+
+    @Test
+    fun supported_generated_device_style_ocr_dump_keeps_summary_card_anchor() {
+        val analysis = SupportedTemplateTextMapper.map(
+            text = """
+                胜利
+                20 vs 10
+                总览数据复盘
+                不敗、菜鸟13.111/1/5
+                对英雄输出171.2k输出占比35.3%
+                承受英雄伤害 82.1k承伤占比 20.3%
+                经济 13.1k经济占比24%
+                打野经济1.4k补刀数 50
+                参团率80.0%控制时长 3s
+                对塔仿害10.9k
+            """.trimIndent(),
+            requestedFields = FieldKey.all
+        )
+
+        assertEquals("胜利", analysis.rawValues[FieldKey.RESULT])
+        assertEquals("20 vs 10", analysis.rawValues[FieldKey.SCORE])
+        assertEquals("11/1/5", analysis.rawValues[FieldKey.KDA])
+        assertEquals("不敗、菜鸟", analysis.rawValues[FieldKey.PLAYER_NAME])
+        assertEquals("13.1", analysis.rawValues[FieldKey.TOTAL_GOLD])
+        assertTrue(Anchor.SUMMARY_CARD in analysis.anchors)
+    }
 }

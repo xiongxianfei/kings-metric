@@ -107,6 +107,7 @@ internal object SupportedTemplateTextMapper {
     )
     private val ratingPattern = Regex("""\b\d+(?:\.\d+)\b""")
     private val kdaPattern = Regex("""(\d{1,4}/\d{1,2}/\d{1,2})""")
+    private val summaryGoldBeforeKdaPattern = Regex("""(\d+\.\d)\s*(?=\d{1,4}/\d{1,2}/\d{1,2})""")
 
     fun map(
         text: String,
@@ -226,6 +227,12 @@ internal object SupportedTemplateTextMapper {
     private fun containsAny(text: String, labels: List<String>): Boolean = labels.any(text::contains)
 
     private fun extractPlayerSummaryLine(lines: List<String>): String? {
+        lines.firstOrNull { line ->
+            kdaPattern.containsMatchIn(line) &&
+                line.any { Character.UnicodeScript.of(it.code) == Character.UnicodeScript.HAN } &&
+                !containsAny(line, playerSummaryExclusionLabels)
+        }?.let { return it }
+
         return lines.firstOrNull { line ->
             ratingPattern.containsMatchIn(line) &&
                 line.any { Character.UnicodeScript.of(it.code) == Character.UnicodeScript.HAN } &&
@@ -235,9 +242,11 @@ internal object SupportedTemplateTextMapper {
 
     private fun extractPlayerName(playerSummaryLine: String?): String? {
         val line = playerSummaryLine ?: return null
-        val prefix = ratingPattern.find(line)?.let { rating ->
-            line.substring(0, rating.range.first)
-        } ?: line.substringBeforeLast('/')
+        val prefixEndIndex = summaryGoldBeforeKdaPattern.find(line)?.range?.first
+            ?: ratingPattern.find(line)?.range?.first
+            ?: kdaPattern.find(line)?.range?.first
+            ?: return null
+        val prefix = line.substring(0, prefixEndIndex)
         val cleaned = allLaneLabels.fold(prefix) { current, lane -> current.replace(lane, " ") }
 
         return cleaned
@@ -249,7 +258,8 @@ internal object SupportedTemplateTextMapper {
 
     private fun extractTotalGold(playerSummaryLine: String?, lines: List<String>): String? {
         val summaryGold = playerSummaryLine?.let { line ->
-            ratingPattern.find(line)?.value
+            summaryGoldBeforeKdaPattern.find(line)?.groupValues?.getOrNull(1)
+                ?: ratingPattern.find(line)?.value
         }
         if (summaryGold != null) {
             return summaryGold
