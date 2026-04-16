@@ -5,6 +5,7 @@ import com.kingsmetric.history.SavedMatchHistoryRecord
 import com.kingsmetric.importflow.FieldKey
 
 private const val MARKSMAN_LANE = "\u53d1\u80b2\u8def"
+private const val LEGACY_MARKSMAN_LANE_ALIAS = "Farm Lane"
 
 internal data class MarksmanLaneMetricGroupDefinition(
     val group: MarksmanLaneMetricGroup,
@@ -157,19 +158,20 @@ class MarksmanLaneAnalysisInputFactory {
     }
 
     private fun fromFieldAccess(valueFor: (FieldKey) -> String?): MarksmanLaneAnalysisState {
-        val lane = valueFor(FieldKey.LANE)?.trim().orEmpty()
-        if (lane.isEmpty()) {
+        val rawLane = valueFor(FieldKey.LANE)?.trim().orEmpty()
+        val normalizedLane = normalizeLane(rawLane)
+        if (normalizedLane.isEmpty()) {
             return MarksmanLaneAnalysisState.InsufficientSavedData(
                 reason = MarksmanLaneInsufficiencyReason.MissingLane
             )
         }
-        if (lane != MARKSMAN_LANE) {
-            return MarksmanLaneAnalysisState.UnavailableForThisLane(lane = lane)
+        if (normalizedLane != MARKSMAN_LANE) {
+            return MarksmanLaneAnalysisState.UnavailableForThisLane(lane = rawLane)
         }
 
         val input = MarksmanLaneAnalysisInput(
             result = valueFor(FieldKey.RESULT),
-            lane = lane,
+            lane = normalizedLane,
             score = valueFor(FieldKey.SCORE),
             kda = valueFor(FieldKey.KDA),
             totalGold = valueFor(FieldKey.TOTAL_GOLD),
@@ -199,4 +201,10 @@ class MarksmanLaneAnalysisInputFactory {
         )
     }
 
+    private fun normalizeLane(rawLane: String): String {
+        return when (rawLane) {
+            LEGACY_MARKSMAN_LANE_ALIAS -> MARKSMAN_LANE
+            else -> rawLane
+        }
+    }
 }

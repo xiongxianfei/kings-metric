@@ -486,9 +486,11 @@ Expected observable result:
 - The user’s phrasing points to per-match usefulness first, which makes the
   record-detail flow the correct first surface before any aggregate dashboard
   expansion.
-- The milestone-2 analysis contract is stricter than some older test fixtures:
-  first-release marksman eligibility needs the saved lane to be the actual
-  `发育路` value, not historical English fixture aliases like `Farm Lane`.
+- The milestone-2 analysis boundary must stay compatible with older saved
+  records: first-release marksman eligibility uses the canonical `发育路` lane,
+  but it also needs to normalize the historical saved alias `Farm Lane` at the
+  analysis boundary instead of silently degrading those records to
+  unavailable-for-this-lane.
 - The first useful metric layer did not need a composite “marksman score.”
   Field-backed grouped metrics were enough to satisfy the bounded contract
   while staying explainable for later suggestions.

@@ -36,10 +36,13 @@ or replay-style map/timing analysis.
 - `F7` Older saved match with partial fields but enough data to open detail
 - `F8` Internal analysis failure injected at the analysis boundary while saved
   raw detail is still available
+- `F9` Older saved match that still stores the legacy lane alias `Farm Lane`
+  instead of the canonical marksman lane label
 
 ## Unit Tests
 
-- `T1` `发育路` saved lane is treated as marksman-lane eligible.
+- `T1` Canonical `发育路` and the legacy saved alias `Farm Lane` are both
+  treated as marksman-lane eligible.
 - `T2` Non-`发育路` saved lane is treated as `Unavailable For This Lane`.
 - `T3` Missing or unresolved lane is treated as `Insufficient Saved Data`.
 - `T4` Eligible analysis uses only the approved first-release field set from
@@ -88,7 +91,10 @@ or replay-style map/timing analysis.
   does not block access to the saved raw record detail.
 - `IT8` Older partial saved match `F7` remains compatible and produces either
   partial analysis or explicit insufficiency, not a crash.
-- `IT9` Aggregate dashboard behavior remains on its existing contract in this
+- `IT9` Older saved match `F9` with the legacy lane alias `Farm Lane` still
+  opens with eligible marksman analysis instead of degrading to unavailable for
+  this lane.
+- `IT10` Aggregate dashboard behavior remains on its existing contract in this
   first release and does not silently gain marksman coaching output.
 
 ## Compose / End-To-End Tests
@@ -139,8 +145,8 @@ or replay-style map/timing analysis.
 - No high-priority suggestion triggers covered by `T10`, `IT5`, `CT5`
 - More than 3 suggestion triggers covered by `T9`, `IT6`, `CT6`
 - Internal analysis failure covered by `IT7`
-- Older saved records covered by `IT8`
-- Dashboard unchanged in first release covered by `IT9`
+- Older saved records covered by `IT8`, `IT9`
+- Dashboard unchanged in first release covered by `IT10`
 
 ## What Not To Test
 
@@ -155,11 +161,11 @@ or replay-style map/timing analysis.
 ## Coverage Map
 
 - `R1` covered by `IT1`, `CT1`
-- `R2` covered by `T1`
+- `R2` covered by `T1`, `IT9`
 - `R3` covered by `T2`, `IT3`, `CT2`
 - `R4` covered by `T3`, `IT4`, `CT3`
 - `R5` covered by `T4`, `T12`
-- `R6` covered by `IT9`
+- `R6` covered by `IT10`
 - `R7` covered by `IT1`, `CT1`
 - `R8` covered by `T4`
 - `R9` covered by `T5`, `IT2`, `CT4`

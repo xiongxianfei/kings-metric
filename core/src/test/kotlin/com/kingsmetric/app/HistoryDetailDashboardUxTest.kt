@@ -132,7 +132,9 @@ class HistoryDetailDashboardUxTest {
                 field.label == "Last Hits" && field.valueText == "Not entered"
             }
         )
-        assertTrue(state.marksmanInsights is MarksmanInsightsUiState.Unavailable)
+        assertTrue(state.marksmanInsights is MarksmanInsightsUiState.Eligible)
+        state.marksmanInsights as MarksmanInsightsUiState.Eligible
+        assertTrue(state.marksmanInsights.metricGroups.any { it.title == "Economy And Farming" })
     }
 
     @Test
