@@ -2,6 +2,44 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.15] - 2026-04-16
+
+Alpha prerelease replacement for early testers.
+
+### Bug Fixes
+
+- **Dashboard graph panels now stay reachable on phone-sized screens** - the
+  loaded dashboard now scrolls vertically, so lower graph panels such as
+  `Hero Usage` no longer clip below the fold when the dashboard grows taller
+  than one portrait viewport.
+
+### Internal
+
+- added a constrained-height Compose regression that pins full `Hero Usage`
+  reachability through normal dashboard scrolling
+- tightened the dashboard graph contract and test contract around tall
+  phone-sized viewport reachability
+- captured the reusable Compose-screen reachability rule in `AGENTS.md`
+- aligned the release metadata, artifact contract, changelog, and release
+  notes to the `v0.1.0-alpha.15` cut
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.14`
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.14] - 2026-04-16
 
 Alpha prerelease replacement for early testers.
