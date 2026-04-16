@@ -21,6 +21,8 @@ data class DiagnosticsEntryPresentation(
     val stageText: String,
     val summary: String,
     val timestampText: String,
+    val detailText: String?,
+    val surfaceText: String?,
     val ocrText: String?
 )
 
@@ -150,11 +152,14 @@ class DiagnosticsScreenViewModel(
 
     private fun DiagnosticsEvent.toPresentation(): DiagnosticsEntryPresentation {
         val detail = metadata["detail"]?.takeIf { it.isNotBlank() }
+        val surface = metadata["surface"]?.takeIf { it.isNotBlank() }
         return DiagnosticsEntryPresentation(
             title = outcomeLabel(outcome),
             stageText = stageLabel(stage),
-            summary = if (detail == null) summary else "$summary\nReason: $detail",
+            summary = summary,
             timestampText = "Time: ${timeFormatter.format(timestampMillis)}",
+            detailText = detail?.let { "Reason: $it" },
+            surfaceText = surface?.let { "Surface: $it" },
             ocrText = metadata["ocrText"]?.takeIf { it.isNotBlank() }
         )
     }

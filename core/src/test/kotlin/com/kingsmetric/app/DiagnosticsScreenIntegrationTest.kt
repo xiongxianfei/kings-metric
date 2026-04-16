@@ -158,7 +158,11 @@ class DiagnosticsScreenIntegrationTest {
 
         val state = viewModel.state.value
 
-        assertTrue(state.entries.single().summary.contains("Reason: Missing damage section values after OCR mapping."))
+        assertEquals("Could not read match data.", state.entries.single().summary)
+        assertEquals(
+            "Reason: Missing damage section values after OCR mapping.",
+            state.entries.single().detailText
+        )
     }
 
     @Test
@@ -184,6 +188,33 @@ class DiagnosticsScreenIntegrationTest {
         val state = viewModel.state.value
 
         assertEquals("胜利\n数据 复盘\n对英雄出: 171.2k", state.entries.single().ocrText)
+    }
+
+    @Test
+    fun `T3d diagnostics viewer keeps reason and surface separate from summary`() {
+        val recorder = TestDiagnosticsRecorder().apply {
+            record(
+                stage = DiagnosticsStage.RECOGNITION,
+                outcome = DiagnosticsOutcome.RECOGNITION_FAILED,
+                summary = "Could not read match data.",
+                metadata = mapOf(
+                    "detail" to "Missing damage section values after OCR mapping.",
+                    "surface" to "import"
+                )
+            )
+        }
+        val viewModel = DiagnosticsScreenViewModel(
+            recorder = recorder,
+            appVersionProvider = { "0.1.0-alpha.8" },
+            formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+            timeFormatter = utcTimeFormatter
+        )
+
+        val entry = viewModel.state.value.entries.single()
+
+        assertEquals("Could not read match data.", entry.summary)
+        assertEquals("Reason: Missing damage section values after OCR mapping.", entry.detailText)
+        assertEquals("Surface: import", entry.surfaceText)
     }
 
     @Test

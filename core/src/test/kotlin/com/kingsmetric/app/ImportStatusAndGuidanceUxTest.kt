@@ -16,7 +16,9 @@ class ImportStatusAndGuidanceUxTest {
         val model = mapper.map(ImportRuntimeStatus.Idle)
 
         assertEquals("Import Screenshot", model.primaryActionLabel)
+        assertTrue(model.showImportAction)
         assertTrue(model.supportedScreenshotHint.contains("Supported"))
+        assertEquals("Next: choose one supported screenshot to start review.", model.nextStepText)
         assertFalse(model.showContinueReview)
     }
 
@@ -47,14 +49,25 @@ class ImportStatusAndGuidanceUxTest {
         assertEquals("Import Screenshot", unsupported.primaryActionLabel)
         assertEquals("Import Screenshot", source.primaryActionLabel)
         assertEquals("Import Screenshot", storage.primaryActionLabel)
+        assertEquals(
+            "Next: try another supported post-match personal stats screenshot.",
+            unsupported.nextStepText
+        )
+        assertEquals("Next: try another image from your device.", source.nextStepText)
+        assertEquals("Next: try the import again.", storage.nextStepText)
     }
 
     @Test
     fun `T4 review ready state exposes explicit continue to review action`() {
         val model = mapper.map(ImportRuntimeStatus.ReviewReady(ImportUxFixtures.supportedDraft()))
 
+        assertFalse(model.showImportAction)
         assertTrue(model.showContinueReview)
         assertEquals("Continue Review", model.continueReviewLabel)
+        assertEquals(
+            "Next: continue into review to verify and save the match.",
+            model.nextStepText
+        )
     }
 
     @Test

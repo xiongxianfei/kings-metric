@@ -11,10 +11,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.kingsmetric.app.DiagnosticsExportFormatter
 import com.kingsmetric.app.DiagnosticsScreenRoute
-import com.kingsmetric.app.DiagnosticsTimeFormatter
 import com.kingsmetric.app.DiagnosticsScreenViewModel
+import com.kingsmetric.app.DiagnosticsTimeFormatter
 import com.kingsmetric.diagnostics.DiagnosticsEvent
 import com.kingsmetric.diagnostics.DiagnosticsExport
+import com.kingsmetric.diagnostics.DiagnosticsExportEntry
 import com.kingsmetric.diagnostics.DiagnosticsOutcome
 import com.kingsmetric.diagnostics.DiagnosticsRecorder
 import com.kingsmetric.diagnostics.DiagnosticsStage
@@ -42,6 +43,8 @@ class DiagnosticsScreenComposeTest {
             )
         }
 
+        composeRule.onNodeWithTag("diagnostics-support-card").assertIsDisplayed()
+        composeRule.onNodeWithTag("diagnostics-export-card").assertIsDisplayed()
         composeRule.onNodeWithText("Current Version").assertIsDisplayed()
         composeRule.onNodeWithText("0.1.0-alpha.8").assertIsDisplayed()
         composeRule.onNodeWithTag("diagnostics-empty-state").assertIsDisplayed()
@@ -75,6 +78,8 @@ class DiagnosticsScreenComposeTest {
         }
 
         composeRule.onAllNodesWithTag("diagnostics-entry-0").assertCountEquals(1)
+        composeRule.onNodeWithTag("diagnostics-support-card").assertIsDisplayed()
+        composeRule.onNodeWithTag("diagnostics-export-card").assertIsDisplayed()
         composeRule.onNodeWithText("Current Version").assertIsDisplayed()
         composeRule.onNodeWithText("0.1.0-alpha.8").assertIsDisplayed()
         composeRule.onNodeWithText("Save Failed").assertIsDisplayed()
@@ -95,7 +100,7 @@ class DiagnosticsScreenComposeTest {
                 summary = "Could not read match data.",
                 metadata = mapOf(
                     "detail" to "Missing damage section values after OCR mapping.",
-                    "ocrText" to "胜利\n数据 复盘\n对英雄出: 171.2k"
+                    "ocrText" to "victory\ndata review\nhero damage: 171.2k"
                 )
             )
         }
@@ -111,12 +116,44 @@ class DiagnosticsScreenComposeTest {
             )
         }
 
-        composeRule.onNodeWithText("OCR Text:\n胜利\n数据 复盘\n对英雄出: 171.2k").assertIsDisplayed()
+        composeRule.onNodeWithText("OCR Text").assertIsDisplayed()
+        composeRule.onNodeWithTag("diagnostics-entry-ocr-0").assertIsDisplayed()
+    }
+
+    @Test
+    fun diagnostics_screen_shows_reason_and_surface_as_readable_metadata() {
+        val recorder = DiagnosticsTestRecorder().apply {
+            record(
+                stage = DiagnosticsStage.RECOGNITION,
+                outcome = DiagnosticsOutcome.RECOGNITION_FAILED,
+                summary = "Could not read match data.",
+                metadata = mapOf(
+                    "detail" to "Missing damage section values after OCR mapping.",
+                    "surface" to "import"
+                )
+            )
+        }
+
+        composeRule.setContent {
+            DiagnosticsScreenRoute(
+                viewModel = DiagnosticsScreenViewModel(
+                    recorder = recorder,
+                    appVersionProvider = { "0.1.0-alpha.8" },
+                    formatter = DiagnosticsExportFormatter(utcTimeFormatter),
+                    timeFormatter = utcTimeFormatter
+                )
+            )
+        }
+
+        composeRule.onNodeWithTag("diagnostics-entry-detail-0").assertIsDisplayed()
+        composeRule.onNodeWithTag("diagnostics-entry-surface-0").assertIsDisplayed()
+        composeRule.onNodeWithText("Reason: Missing damage section values after OCR mapping.").assertIsDisplayed()
+        composeRule.onNodeWithText("Surface: import").assertIsDisplayed()
     }
 }
 
 private class DiagnosticsTestRecorder : DiagnosticsRecorder {
-    private val now = mutableListOf<DiagnosticsEvent>()
+    private val events = mutableListOf<DiagnosticsEvent>()
 
     override val requiresAccount: Boolean = false
     override val uploadsAutomatically: Boolean = false
@@ -127,8 +164,8 @@ private class DiagnosticsTestRecorder : DiagnosticsRecorder {
         summary: String,
         metadata: Map<String, String>
     ) {
-        now += DiagnosticsEvent(
-            timestampMillis = now.size.toLong(),
+        events += DiagnosticsEvent(
+            timestampMillis = events.size.toLong(),
             stage = stage,
             outcome = outcome,
             summary = summary,
@@ -136,14 +173,14 @@ private class DiagnosticsTestRecorder : DiagnosticsRecorder {
         )
     }
 
-    override fun snapshot(): List<DiagnosticsEvent> = now.toList()
+    override fun snapshot(): List<DiagnosticsEvent> = events.toList()
 
     override fun export(): DiagnosticsExport {
         return DiagnosticsExport(
             exportedAtMillis = 0L,
             notice = "This export does not include the original screenshot or full saved match data. It may include OCR text captured during a failed recognition attempt.",
-            entries = now.map {
-                com.kingsmetric.diagnostics.DiagnosticsExportEntry(
+            entries = events.map {
+                DiagnosticsExportEntry(
                     timestampMillis = it.timestampMillis,
                     stage = it.stage,
                     outcome = it.outcome,

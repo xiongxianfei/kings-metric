@@ -1,10 +1,10 @@
 package com.kingsmetric
 
-import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -26,7 +26,7 @@ import org.junit.runner.RunWith
 class ImportScreenComposeTest {
 
     @get:Rule
-    val composeRule = createAndroidComposeRule<ComponentActivity>()
+    val composeRule = createComposeRule()
 
     @Test
     fun firstOpen_explains_supported_screenshot_type_and_import_action() {
@@ -40,6 +40,9 @@ class ImportScreenComposeTest {
         composeRule.onNodeWithText(
             "Supported screenshot: one Chinese post-match personal stats detailed-data screen."
         ).assertIsDisplayed()
+        composeRule.onNodeWithTag("import-supported-card").assertIsDisplayed()
+        composeRule.onNodeWithTag("import-status-block").assertIsDisplayed()
+        composeRule.onNodeWithText("Next: choose one supported screenshot to start review.").assertIsDisplayed()
         composeRule.onNodeWithTag("import-primary-action").assertIsDisplayed()
     }
 
@@ -54,6 +57,7 @@ class ImportScreenComposeTest {
 
         composeRule.onNodeWithText("Unsupported Screenshot").assertIsDisplayed()
         composeRule.onNodeWithText("This screenshot isn't supported. Try another post-match personal stats screenshot.").assertIsDisplayed()
+        composeRule.onNodeWithText("Next: try another supported post-match personal stats screenshot.").assertIsDisplayed()
         composeRule.onNodeWithTag("import-primary-action").assertIsDisplayed()
     }
 
@@ -68,6 +72,7 @@ class ImportScreenComposeTest {
 
         composeRule.onNodeWithText("Can't Read Selected Screenshot").assertIsDisplayed()
         composeRule.onNodeWithText("The selected screenshot could not be imported. Try another image.").assertIsDisplayed()
+        composeRule.onNodeWithText("Next: try another image from your device.").assertIsDisplayed()
     }
 
     @Test
@@ -81,6 +86,7 @@ class ImportScreenComposeTest {
 
         composeRule.onNodeWithText("Couldn't Save Screenshot").assertIsDisplayed()
         composeRule.onNodeWithText("The screenshot could not be saved locally. Try again.").assertIsDisplayed()
+        composeRule.onNodeWithText("Next: try the import again.").assertIsDisplayed()
     }
 
     @Test
@@ -95,6 +101,8 @@ class ImportScreenComposeTest {
             )
         }
 
+        composeRule.onNodeWithText("Next: continue into review to verify and save the match.").assertIsDisplayed()
+        composeRule.onAllNodesWithTag("import-primary-action").assertCountEquals(0)
         composeRule.onNodeWithText("Continue Review").assertIsDisplayed()
         composeRule.onNodeWithText("Continue Review").performClick()
         composeRule.runOnIdle {

@@ -1,10 +1,10 @@
 package com.kingsmetric
 
 import android.content.Context
-import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -36,7 +36,7 @@ import org.junit.runner.RunWith
 class UxRegressionGapFillComposeTest {
 
     @get:Rule
-    val composeRule = createAndroidComposeRule<ComponentActivity>()
+    val composeRule = createComposeRule()
 
     @Test
     fun blockedReviewWithSeveralRequiredFieldsKeepsBlockersVisible() {
@@ -76,10 +76,9 @@ class UxRegressionGapFillComposeTest {
 
         composeRule.onNodeWithText("Preview unavailable").assertIsDisplayed()
         composeRule.onNodeWithTag("history-record-record-1").performClick()
-        composeRule.onNodeWithText("Match Detail").assertIsDisplayed()
-        composeRule.onNodeWithText(
-            "Screenshot preview unavailable. Match data is still available below."
-        ).assertIsDisplayed()
+        composeRule.onNodeWithTag("shell-title").assertTextEquals("Match Detail")
+        composeRule.onNodeWithTag("detail-preview-card").assertIsDisplayed()
+        composeRule.onNodeWithText("Screenshot preview unavailable").assertIsDisplayed()
         composeRule.onNodeWithText("Match Summary").assertIsDisplayed()
         composeRule.onNodeWithText("Back").assertIsDisplayed()
     }

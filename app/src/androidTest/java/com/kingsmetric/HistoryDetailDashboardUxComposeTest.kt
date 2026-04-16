@@ -34,6 +34,7 @@ class HistoryDetailDashboardUxComposeTest {
                     rows = listOf(
                         HistoryRowUiState(
                             recordId = "record-1",
+                            categoryLabel = "Saved match",
                             primaryText = "Sun Shangxiang",
                             resultText = "Victory",
                             recencyText = "Saved Apr 15, 2026",
@@ -46,6 +47,7 @@ class HistoryDetailDashboardUxComposeTest {
             )
         }
 
+        composeRule.onNodeWithText("Saved match").assertIsDisplayed()
         composeRule.onNodeWithText("Sun Shangxiang").assertIsDisplayed()
         composeRule.onNodeWithText("Victory").assertIsDisplayed()
         composeRule.onNodeWithText("Saved Apr 15, 2026").assertIsDisplayed()
@@ -61,6 +63,7 @@ class HistoryDetailDashboardUxComposeTest {
                     rows = listOf(
                         HistoryRowUiState(
                             recordId = "record-2",
+                            categoryLabel = "Saved match",
                             primaryText = "Hero not entered",
                             resultText = "Defeat",
                             recencyText = "Saved Apr 14, 2026",
@@ -88,8 +91,10 @@ class HistoryDetailDashboardUxComposeTest {
                     previewAvailability = PreviewAvailability.Available,
                     summaryTitle = "Sun Shangxiang",
                     summaryResult = "Victory",
+                    summaryMetaText = "Saved Apr 15, 2026",
                     backLabel = "History",
-                    previewStatusText = "Preview available",
+                    previewStatusLabel = "Screenshot",
+                    previewStatusText = "Screenshot available",
                     sections = listOf(
                         DetailSectionUiState(
                             title = "Match Summary",
@@ -105,6 +110,10 @@ class HistoryDetailDashboardUxComposeTest {
 
         composeRule.onNodeWithText("Sun Shangxiang").assertIsDisplayed()
         composeRule.onNodeWithText("Victory").assertIsDisplayed()
+        composeRule.onNodeWithText("Saved Apr 15, 2026").assertIsDisplayed()
+        composeRule.onNodeWithTag("detail-summary-card").assertIsDisplayed()
+        composeRule.onNodeWithTag("detail-preview-card").assertIsDisplayed()
+        composeRule.onNodeWithText("Screenshot available").assertIsDisplayed()
         composeRule.onNodeWithText("Match Summary").assertIsDisplayed()
         composeRule.onNodeWithText("Player").assertIsDisplayed()
         composeRule.onNodeWithText("Summoner One").assertIsDisplayed()
@@ -121,8 +130,10 @@ class HistoryDetailDashboardUxComposeTest {
                     previewAvailability = PreviewAvailability.Unavailable,
                     summaryTitle = "Sun Shangxiang",
                     summaryResult = "Victory",
+                    summaryMetaText = "Saved Apr 15, 2026",
                     backLabel = "History",
-                    previewStatusText = "Preview unavailable",
+                    previewStatusLabel = "Screenshot",
+                    previewStatusText = "Screenshot preview unavailable",
                     sections = listOf(
                         DetailSectionUiState(
                             title = "Economy",
@@ -135,9 +146,8 @@ class HistoryDetailDashboardUxComposeTest {
             )
         }
 
-        composeRule.onNodeWithText(
-            "Screenshot preview unavailable. Match data is still available below."
-        ).assertIsDisplayed()
+        composeRule.onNodeWithTag("detail-preview-card").assertIsDisplayed()
+        composeRule.onNodeWithText("Screenshot preview unavailable").assertIsDisplayed()
         composeRule.onNodeWithText("Last Hits").assertIsDisplayed()
         composeRule.onNodeWithText("Not entered").assertIsDisplayed()
     }
@@ -162,10 +172,42 @@ class HistoryDetailDashboardUxComposeTest {
             )
         }
 
+        composeRule.onNodeWithTag("dashboard-primary-section").assertIsDisplayed()
+        composeRule.onNodeWithTag("dashboard-context-card").assertIsDisplayed()
+        composeRule.onNodeWithTag("dashboard-sparse-card").assertIsDisplayed()
         composeRule.onNodeWithText("Win Rate").assertIsDisplayed()
         composeRule.onNodeWithText("66.7%").assertIsDisplayed()
+        composeRule.onNodeWithText("Current metrics").assertIsDisplayed()
         composeRule.onNodeWithText("Based on 2 saved matches").assertIsDisplayed()
         composeRule.onNodeWithText("Based on limited match history.").assertIsDisplayed()
         composeRule.onNodeWithText("Some metrics need more saved data.").assertIsDisplayed()
+    }
+
+    @Test
+    fun dashboardScreen_emptyState_staysClear() {
+        composeRule.setContent {
+            DashboardScreen(
+                state = DashboardScreenUiState(
+                    content = DashboardContentState.Empty
+                )
+            )
+        }
+
+        composeRule.onNodeWithTag("dashboard-empty-state").assertIsDisplayed()
+        composeRule.onNodeWithText("No saved metrics yet. Save a reviewed match to see them here.").assertIsDisplayed()
+    }
+
+    @Test
+    fun dashboardScreen_failureState_staysVisible() {
+        composeRule.setContent {
+            DashboardScreen(
+                state = DashboardScreenUiState(
+                    content = DashboardContentState.Error("Could not load dashboard metrics.")
+                )
+            )
+        }
+
+        composeRule.onNodeWithTag("dashboard-error-state").assertIsDisplayed()
+        composeRule.onNodeWithText("Could not load dashboard metrics.").assertIsDisplayed()
     }
 }

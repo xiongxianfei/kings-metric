@@ -57,6 +57,8 @@ class ReviewScreenComposeTest {
             )
         }
 
+        composeRule.onNodeWithTag("review-preview-card").assertIsDisplayed()
+        composeRule.onNodeWithTag("review-blocker-card").assertIsDisplayed()
         composeRule.onNodeWithText("Complete the required fields before saving.").assertIsDisplayed()
         composeRule.onNodeWithText("Match Summary").assertIsDisplayed()
         composeRule.onNodeWithText("Review next: Match Summary").assertIsDisplayed()
@@ -72,6 +74,7 @@ class ReviewScreenComposeTest {
             )
         }
 
+        composeRule.onNodeWithTag("review-attention-card").assertIsDisplayed()
         composeRule.onNodeWithText("Check highlighted fields before saving.").assertIsDisplayed()
         composeRule.onNodeWithTag("field-LAST_HITS").assertExists()
         composeRule.onNodeWithText("Economy").assertExists()
@@ -93,7 +96,7 @@ class ReviewScreenComposeTest {
         composeRule.onNodeWithText("Team Play").assertExists()
         composeRule.onAllNodesWithText("Required field").assertCountEquals(13)
         composeRule.onAllNodesWithText("Optional field").assertCountEquals(5)
-        composeRule.onAllNodesWithTag("review-section").assertCountEquals(5)
+        composeRule.onAllNodesWithTag("review-section-card").assertCountEquals(5)
     }
 
     @Test
@@ -110,6 +113,7 @@ class ReviewScreenComposeTest {
         composeRule.onNodeWithText(
             "Screenshot preview unavailable. Match data is still available below."
         ).assertIsDisplayed()
+        composeRule.onNodeWithTag("review-preview-missing").assertIsDisplayed()
         composeRule.onNodeWithText("Match Summary").assertIsDisplayed()
         composeRule.onNodeWithTag("field-RESULT").assertIsDisplayed()
     }

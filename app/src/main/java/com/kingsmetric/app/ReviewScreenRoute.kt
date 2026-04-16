@@ -8,12 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -33,6 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import com.kingsmetric.ui.components.ShellPrimaryActionButton
+import com.kingsmetric.ui.components.ShellStateBlock
+import com.kingsmetric.ui.components.ShellSurfaceCard
 
 @Composable
 fun ReviewScreenRoute(
@@ -86,15 +87,12 @@ fun ReviewScreenRoute(
                     .imePadding()
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                Button(
+                ShellPrimaryActionButton(
+                    label = "Confirm Save",
                     onClick = { viewModel.confirmSave() },
                     enabled = state.canConfirm,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("confirm-save")
-                ) {
-                    Text("Confirm Save")
-                }
+                    buttonTag = "confirm-save"
+                )
             }
         }
     ) { paddingValues ->
@@ -107,35 +105,40 @@ fun ReviewScreenRoute(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 if (state.previewAvailability == PreviewAvailability.Available) {
-                    Text("Screenshot preview")
-                    previewBitmap?.let { bitmap ->
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Screenshot preview",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = state.layout.previewMaxHeightDp.dp),
-                            contentScale = ContentScale.FillWidth
-                        )
-                    }
-                    state.screenshotPath?.let { path ->
-                        Text(path)
+                    ShellSurfaceCard(testTag = "review-preview-card") {
+                        Text("Screenshot preview", style = MaterialTheme.typography.titleMedium)
+                        previewBitmap?.let { bitmap ->
+                            Image(
+                                bitmap = bitmap.asImageBitmap(),
+                                contentDescription = "Screenshot preview",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = state.layout.previewMaxHeightDp.dp),
+                                contentScale = ContentScale.FillWidth
+                            )
+                        }
+                        state.screenshotPath?.let { path ->
+                            Text(path, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 } else {
-                    Text(SharedUxCopy.message(SharedMessageKey.MISSING_SCREENSHOT_PREVIEW).text)
+                    ShellStateBlock(
+                        message = SharedUxCopy.message(SharedMessageKey.MISSING_SCREENSHOT_PREVIEW).text,
+                        testTag = "review-preview-missing"
+                    )
                 }
 
                 state.userMessage?.let { message ->
-                    Text(message)
+                    ShellStateBlock(message = message)
                 }
 
                 state.blockerSummary?.let { summary ->
-                    Card(shape = RoundedCornerShape(16.dp)) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(summary.message)
+                    ShellStateBlock(
+                        title = "Review required",
+                        message = summary.message,
+                        testTag = "review-blocker-card"
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text("Review next: ${summary.sectionsToVisit.joinToString()}")
                             Text("Required fields: ${summary.fieldLabels.joinToString()}")
                         }
@@ -143,46 +146,72 @@ fun ReviewScreenRoute(
                 }
 
                 state.attentionSummary?.let { summary ->
-                    Text(summary)
+                    ShellStateBlock(
+                        title = "Needs review",
+                        message = summary,
+                        testTag = "review-attention-card"
+                    )
                 }
 
                 state.sections.forEach { section ->
-                    Column(
-                        modifier = Modifier.testTag("review-section"),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ShellSurfaceCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        testTag = "review-section-card"
                     ) {
-                        Text(section.title)
-                        when {
-                            section.hasBlockingFields -> Text("Contains required updates")
-                            section.hasHighlightedFields -> Text("Contains fields to check")
-                        }
-                        section.fields.forEach { field ->
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                OutlinedTextField(
-                                    value = field.value.orEmpty(),
-                                    onValueChange = { newValue ->
-                                        viewModel.updateField(field.key, newValue)
-                                    },
-                                    label = { Text(field.label) },
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = field.inputAffordance.toKeyboardType(),
-                                        imeAction = ImeAction.Done
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .testTag("field-${field.key.name}")
+                        Column(
+                            modifier = Modifier.testTag("review-section"),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(section.title, style = MaterialTheme.typography.titleMedium)
+                            when {
+                                section.hasBlockingFields -> Text(
+                                    "Contains required updates",
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
-                                Text(if (field.required) "Required field" else "Optional field")
-                                field.hint?.let { hint ->
-                                    Text(hint)
+                                section.hasHighlightedFields -> Text(
+                                    "Contains fields to check",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            section.fields.forEachIndexed { index, field ->
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    OutlinedTextField(
+                                        value = field.value.orEmpty(),
+                                        onValueChange = { newValue ->
+                                            viewModel.updateField(field.key, newValue)
+                                        },
+                                        label = { Text(field.label) },
+                                        keyboardOptions = KeyboardOptions(
+                                            keyboardType = field.inputAffordance.toKeyboardType(),
+                                            imeAction = ImeAction.Done
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .testTag("field-${field.key.name}")
+                                    )
+                                    Text(
+                                        if (field.required) "Required field" else "Optional field",
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                    field.hint?.let { hint ->
+                                        Text(hint, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    when {
+                                        field.blocking -> Text(
+                                            "Required before saving",
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                        field.highlighted -> Text(
+                                            "Needs review",
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
                                 }
-                                when {
-                                    field.blocking -> Text("Required before saving")
-                                    field.highlighted -> Text("Needs review")
+                                if (index != section.fields.lastIndex) {
+                                    Divider()
                                 }
                             }
                         }
-                        Divider()
                     }
                 }
             }
