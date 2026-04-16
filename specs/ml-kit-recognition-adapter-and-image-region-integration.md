@@ -111,10 +111,10 @@ Expected behavior:
   draft with unresolved fields instead of collapsing into a generic
   recognition failure.
 - 2026-04-16: Do not infer the player lane from any whole-text substring hit.
-  Real OCR dumps can contain metric labels such as `鎵撻噹缁忔祹`, which would
+  Real OCR dumps can contain metric labels such as `打野经济`, which would
   falsely classify the match as jungle if the lane detector scans the whole OCR
   text. Lane extraction must prefer summary or badge-local context and treat
-  degraded badge variants such as `鍙戞湁璺?as the canonical marksman lane
+  degraded badge variants such as `发有路` as the canonical marksman lane
   instead of letting nearby metric labels win.
 - 2026-04-16: Real supported OCR can also merge the summary gold rating and the
   KDA text into one token such as `13.111/1/5`. Summary-card parsing must still
