@@ -1,6 +1,7 @@
 package com.kingsmetric.app
 
 import com.kingsmetric.dashboard.DashboardContentState
+import com.kingsmetric.dashboard.DashboardMatchResult
 import com.kingsmetric.dashboard.DashboardMetricsCalculator
 import com.kingsmetric.history.HistoryContentState
 import com.kingsmetric.history.MatchHistoryListItem
@@ -279,6 +280,70 @@ class HistoryDetailDashboardUxTest {
         assertEquals(DashboardContentState.Empty, empty.content)
         assertTrue(error.content is DashboardContentState.Error)
         assertTrue(error.primaryCards.isEmpty())
+        assertNull(empty.graphSection)
+        assertNull(error.graphSection)
+    }
+
+    @Test
+    fun dashboardMapper_addsGraphPanels_withoutReplacingPrimaryCards() {
+        val metrics = DashboardMetricsCalculator().calculate(
+            listOf(
+                dashboardRecord("record-1", "victory").copy(savedAt = 100L),
+                dashboardRecord("record-2", "defeat").copy(savedAt = 200L),
+                dashboardRecord(
+                    "record-3",
+                    result = "victory",
+                    hero = "Arli",
+                    fields = detailFields() + (FieldKey.HERO to "Arli")
+                ).copy(savedAt = 300L)
+            )
+        )
+
+        val state = DashboardContentState.Loaded(metrics).toDashboardScreenUiState()
+
+        assertEquals(listOf("Win Rate", "Average KDA", "Most Played Hero"), state.primaryCards.map { it.label })
+        assertEquals(
+            listOf(DashboardGraphKind.RecentResults, DashboardGraphKind.HeroUsage),
+            state.graphSection!!.panels.map { it.kind }
+        )
+        val recentResults = state.graphSection!!.panels[0] as DashboardGraphPanelUiState.RecentResults
+        assertEquals("Recent Results", recentResults.title)
+        assertEquals(
+            listOf(DashboardMatchResult.Victory, DashboardMatchResult.Defeat, DashboardMatchResult.Victory),
+            recentResults.points.map { if (it.isVictory) DashboardMatchResult.Victory else DashboardMatchResult.Defeat }
+        )
+        val heroUsage = state.graphSection!!.panels[1] as DashboardGraphPanelUiState.HeroUsage
+        assertEquals("Hero Usage", heroUsage.title)
+        assertEquals(listOf("Sun Shangxiang", "Arli"), heroUsage.bars.map { it.hero })
+    }
+
+    @Test
+    fun dashboardMapper_graphs_degrade_independently_with_user_facing_messages() {
+        val metrics = DashboardMetricsCalculator().calculate(
+            listOf(
+                dashboardRecord(
+                    "record-1",
+                    result = "victory",
+                    hero = null,
+                    fields = detailFields() + (FieldKey.HERO to null)
+                ).copy(savedAt = 100L),
+                dashboardRecord(
+                    "record-2",
+                    result = null,
+                    hero = null,
+                    fields = detailFields() + (FieldKey.HERO to null) + (FieldKey.RESULT to null)
+                ).copy(savedAt = 200L)
+            )
+        )
+
+        val state = DashboardContentState.Loaded(metrics).toDashboardScreenUiState()
+
+        val recentResults = state.graphSection!!.panels[0] as DashboardGraphPanelUiState.RecentResults
+        assertEquals(listOf("Victory"), recentResults.points.map { it.resultLabel })
+        val heroUsage = state.graphSection!!.panels[1] as DashboardGraphPanelUiState.Unavailable
+        assertEquals(DashboardGraphKind.HeroUsage, heroUsage.kind)
+        assertEquals("Hero Usage", heroUsage.title)
+        assertEquals("Hero usage graph is unavailable for the current saved matches.", heroUsage.message)
     }
 }
 
@@ -296,13 +361,14 @@ private fun detailRecord(
 
 private fun dashboardRecord(
     recordId: String,
-    result: String,
+    result: String?,
+    hero: String? = "Sun Shangxiang",
     fields: Map<FieldKey, String?> = detailFields()
 ): SavedMatchHistoryRecord {
     return detailRecord(
         fields = fields +
             (FieldKey.RESULT to result) +
-            (FieldKey.HERO to "Sun Shangxiang") +
+            (FieldKey.HERO to hero) +
             (FieldKey.KDA to "11/1/5")
     ).copy(recordId = recordId)
 }

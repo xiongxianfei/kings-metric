@@ -20,6 +20,21 @@ data class HeroUsageMetric(
     val matches: Int
 )
 
+enum class DashboardMatchResult {
+    Victory,
+    Defeat
+}
+
+data class RecentResultGraphEntry(
+    val recordId: String,
+    val result: DashboardMatchResult
+)
+
+data class DashboardGraphs(
+    val recentResults: List<RecentResultGraphEntry>,
+    val heroUsage: List<HeroUsageMetric>
+)
+
 data class RecentPerformanceMetric(
     val recentMatchCount: Int,
     val winRatePercentage: Double,
@@ -30,7 +45,8 @@ data class DashboardMetrics(
     val winRate: WinRateMetric?,
     val averageKda: AverageKdaMetric?,
     val heroUsage: List<HeroUsageMetric>,
-    val recentPerformance: RecentPerformanceMetric?
+    val recentPerformance: RecentPerformanceMetric?,
+    val graphs: DashboardGraphs
 )
 
 sealed interface DashboardContentState {
@@ -50,11 +66,16 @@ interface DashboardRepository {
 class DashboardMetricsCalculator {
 
     fun calculate(records: List<SavedMatchHistoryRecord>): DashboardMetrics {
+        val heroUsage = calculateHeroUsage(records)
         return DashboardMetrics(
             winRate = calculateWinRate(records),
             averageKda = calculateAverageKda(records),
-            heroUsage = calculateHeroUsage(records),
-            recentPerformance = calculateRecentPerformance(records)
+            heroUsage = heroUsage,
+            recentPerformance = calculateRecentPerformance(records),
+            graphs = DashboardGraphs(
+                recentResults = calculateRecentResultsGraph(records),
+                heroUsage = heroUsage.take(3)
+            )
         )
     }
 
@@ -85,12 +106,40 @@ class DashboardMetricsCalculator {
 
     private fun calculateHeroUsage(records: List<SavedMatchHistoryRecord>): List<HeroUsageMetric> {
         return records
-            .mapNotNull { it.fields[FieldKey.HERO] }
+            .mapNotNull { record ->
+                record.fields[FieldKey.HERO]
+                    ?.trim()
+                    ?.takeIf(String::isNotEmpty)
+            }
             .groupingBy { it }
             .eachCount()
             .entries
             .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
             .map { HeroUsageMetric(hero = it.key, matches = it.value) }
+    }
+
+    private fun calculateRecentResultsGraph(records: List<SavedMatchHistoryRecord>): List<RecentResultGraphEntry> {
+        return records
+            .mapNotNull { record ->
+                parseDashboardMatchResult(record.fields[FieldKey.RESULT])?.let { result ->
+                    RecentResultGraphEntry(
+                        recordId = record.recordId,
+                        result = result
+                    )
+                }?.let { entry ->
+                    record.savedAt to entry
+                }
+            }
+            .sortedWith(
+                compareByDescending<Pair<Long, RecentResultGraphEntry>> { it.first }
+                    .thenByDescending { it.second.recordId }
+            )
+            .take(5)
+            .sortedWith(
+                compareBy<Pair<Long, RecentResultGraphEntry>> { it.first }
+                    .thenBy { it.second.recordId }
+            )
+            .map { it.second }
     }
 
     private fun calculateRecentPerformance(records: List<SavedMatchHistoryRecord>): RecentPerformanceMetric? {
@@ -129,6 +178,14 @@ class DashboardMetricsCalculator {
 
     private fun percentage(part: Int, total: Int): Double {
         return roundToTwoDecimals(part.toDouble() * 100 / total.toDouble())
+    }
+
+    private fun parseDashboardMatchResult(value: String?): DashboardMatchResult? {
+        return when (value) {
+            "victory" -> DashboardMatchResult.Victory
+            "defeat" -> DashboardMatchResult.Defeat
+            else -> null
+        }
     }
 
     private fun roundToTwoDecimals(value: Double): Double {

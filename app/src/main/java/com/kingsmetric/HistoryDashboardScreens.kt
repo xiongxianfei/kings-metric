@@ -82,6 +82,7 @@ import com.kingsmetric.importflow.FieldKey
 import com.kingsmetric.importflow.ImportResult
 import com.kingsmetric.importflow.MatchImportWorkflow
 import com.kingsmetric.ui.components.ShellPrimaryActionButton
+import com.kingsmetric.ui.components.DashboardGraphSection
 import com.kingsmetric.ui.components.ShellStateBlock
 import com.kingsmetric.ui.components.ShellSurfaceCard
 import com.kingsmetric.ui.theme.AppShellVisualFoundation
@@ -594,6 +595,12 @@ fun DashboardScreen(state: DashboardScreenUiState) {
                             }
                         }
                     }
+                }
+                state.graphSection?.let { graphSection ->
+                    DashboardGraphSection(
+                        section = graphSection,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
                 state.sparseDataText?.let {
                     ShellStateBlock(

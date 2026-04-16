@@ -10,6 +10,13 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kingsmetric.app.AndroidPhotoPickerImportAdapter
 import com.kingsmetric.app.AndroidPhotoPickerRuntime
+import com.kingsmetric.app.DashboardCardUiState
+import com.kingsmetric.app.DashboardGraphKind
+import com.kingsmetric.app.DashboardGraphPanelUiState
+import com.kingsmetric.app.DashboardGraphSectionUiState
+import com.kingsmetric.app.DashboardHeroUsageBarUiState
+import com.kingsmetric.app.DashboardRecentResultPointUiState
+import com.kingsmetric.app.DashboardScreenUiState
 import com.kingsmetric.app.DetailFieldDisplayUiState
 import com.kingsmetric.app.DetailSectionUiState
 import com.kingsmetric.app.DetailScreenUiState
@@ -98,6 +105,8 @@ class SharedUxLabelsAndStateMessagingComposeTest {
                     previewAvailability = PreviewAvailability.Unavailable,
                     summaryTitle = "Sun Shangxiang",
                     summaryResult = "Victory",
+                    previewStatusLabel = "Screenshot",
+                    previewStatusText = "Screenshot preview unavailable",
                     sections = listOf(
                         DetailSectionUiState(
                             title = "Match Summary",
@@ -112,11 +121,53 @@ class SharedUxLabelsAndStateMessagingComposeTest {
         }
 
         composeRule.onNodeWithText(
-            "Screenshot preview unavailable. Match data is still available below."
+            "Screenshot preview unavailable"
         ).assertIsDisplayed()
         composeRule.onNodeWithText("Hero").assertIsDisplayed()
         composeRule.onAllNodesWithText("Sun Shangxiang").assertCountEquals(2)
         composeRule.onAllNodesWithText("HERO").assertCountEquals(0)
+    }
+
+    @Test
+    fun dashboardGraphStatesUseSharedUserFacingWording() {
+        composeRule.setContent {
+            DashboardScreen(
+                state = DashboardScreenUiState(
+                    content = DashboardContentState.Loaded(
+                        metrics = com.kingsmetric.dashboard.DashboardMetricsCalculator().calculate(emptyList())
+                    ),
+                    primaryCards = listOf(
+                        DashboardCardUiState("Win Rate", "100.0%"),
+                        DashboardCardUiState("Average KDA", "13.0"),
+                        DashboardCardUiState("Most Played Hero", "Sun Shangxiang")
+                    ),
+                    graphSection = DashboardGraphSectionUiState(
+                        panels = listOf(
+                            DashboardGraphPanelUiState.RecentResults(
+                                title = "Recent Results",
+                                points = listOf(
+                                    DashboardRecentResultPointUiState(
+                                        recordId = "record-1",
+                                        isVictory = true,
+                                        resultLabel = "Victory"
+                                    )
+                                )
+                            ),
+                            DashboardGraphPanelUiState.Unavailable(
+                                kind = DashboardGraphKind.HeroUsage,
+                                title = "Hero Usage",
+                                message = "Hero usage graph is unavailable for the current saved matches."
+                            )
+                        )
+                    )
+                )
+            )
+        }
+
+        composeRule.onNodeWithText("Recent Results").assertIsDisplayed()
+        composeRule.onNodeWithText("Hero Usage").assertIsDisplayed()
+        composeRule.onNodeWithText("Hero usage graph is unavailable for the current saved matches.").assertIsDisplayed()
+        composeRule.onAllNodesWithText("dashboard_graph_unavailable").assertCountEquals(0)
     }
 }
 
