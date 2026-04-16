@@ -62,6 +62,19 @@ class ReviewAndManualCorrectionFlowTest {
     }
 
     @Test
+    fun `T6a numeric-only hero edit remains invalid and blocking`() {
+        val workflow = ReviewFixtures.workflow()
+        val draft = ReviewFixtures.heroMissingDraft()
+
+        val updatedDraft = workflow.updateField(draft, FieldKey.HERO, "1")
+        val reviewState = ReviewState.fromDraft(updatedDraft)
+
+        assertTrue(reviewState.highlightedFields.contains(FieldKey.HERO))
+        assertTrue(reviewState.blockingFields.contains(FieldKey.HERO))
+        assertFalse(reviewState.canConfirm)
+    }
+
+    @Test
     fun `IT3 missing required field blocks final confirmation`() {
         val reviewState = ReviewState.fromDraft(ReviewFixtures.requiredMissingDraft())
 
@@ -130,6 +143,13 @@ private object ReviewFixtures {
     fun requiredMissingDraft(): DraftRecord =
         parser.createDraft(
             analysis = supportedAnalysis(visibleFields = FieldKey.all - FieldKey.KDA),
+            screenshotId = "shot-1",
+            screenshotPath = "stored/1-fixture.png"
+        )
+
+    fun heroMissingDraft(): DraftRecord =
+        parser.createDraft(
+            analysis = supportedAnalysis(visibleFields = FieldKey.all - FieldKey.HERO),
             screenshotId = "shot-1",
             screenshotPath = "stored/1-fixture.png"
         )

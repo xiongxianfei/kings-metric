@@ -80,6 +80,7 @@ The system MUST reject screenshots that do not satisfy the supported screenshot 
 - `hero`
   Source: hero summary card
   Type: string
+  Validity: MUST be a readable hero label, not a numeric-only placeholder token
 - `player_name`
   Source: hero/player summary card
   Type: string
@@ -155,6 +156,8 @@ The system MUST reject screenshots that do not satisfy the supported screenshot 
 - The system MUST distinguish required fields from optional fields.
 - The system MUST mark fields as missing or ambiguous when extraction is incomplete or unreliable.
 - The system MUST NOT invent or derive values that are not explicitly visible on the screenshot, except for normalization of format.
+- The system MUST treat unreadable placeholder values for required fields, such
+  as a numeric-only `hero` token, as unresolved rather than saveable values.
 
 ### Review and Editing
 
@@ -169,6 +172,8 @@ The system MUST reject screenshots that do not satisfy the supported screenshot 
 - The system MUST save the original screenshot locally alongside the record.
 - The system MUST allow saving a reviewed partial record when all required fields are valid and one or more optional fields remain empty.
 - The system MUST NOT save a final record when one or more required fields are missing and unresolved.
+- The system MUST NOT save a final record when a required field contains an
+  unreadable placeholder value, such as a numeric-only `hero`.
 
 ### Reprocessing
 
@@ -189,6 +194,8 @@ The system MUST reject screenshots that do not satisfy the supported screenshot 
 - The screenshot contains the required anchors but one optional field is hidden by compression artifacts or blur.
 - The screenshot shows the correct layout but uses a different unsupported language or regional variant.
 - The screenshot is supported and valid, but the user changes extracted values during review before saving.
+- The screenshot or user edit produces a numeric-only placeholder in the
+  required `hero` field.
 
 ## Non-Goals
 
@@ -203,6 +210,8 @@ The system MUST reject screenshots that do not satisfy the supported screenshot 
 - An unsupported screenshot is rejected with a clear explanation and no final record is created.
 - A supported screenshot with one unreadable optional field can still be saved after review.
 - A supported screenshot with a missing required field cannot be saved until the user resolves it.
+- A numeric-only placeholder in the required `hero` field is treated as
+  unresolved and blocks save until corrected.
 - Review always shows the original screenshot and the extracted fields together.
 
 ## Gotchas

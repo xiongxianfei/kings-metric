@@ -38,6 +38,9 @@ Expected behavior:
 - The system MUST compute dashboard metrics from locally saved records only.
 - The dashboard MUST show an explicit empty state when there is not enough saved data to compute meaningful metrics.
 - The dashboard MUST NOT invent missing metric inputs from unresolved optional fields.
+- Hero-based dashboard metrics MUST ignore unreadable placeholder hero values,
+  such as numeric-only tokens, instead of presenting them as readable hero
+  labels.
 - The dashboard SHOULD support at least win rate, average KDA, hero usage, and recent performance summary because those are called out in `docs/plan.md`.
 - Metrics calculations MUST remain outside Compose UI code.
 - The dashboard MUST update when the underlying saved record set changes.
@@ -52,6 +55,8 @@ Expected behavior:
 - No saved records exist.
 - Only one saved record exists.
 - Optional fields needed for one metric are missing in some records.
+- Saved records contain unreadable placeholder hero values such as numeric-only
+  tokens.
 - Saved records change while the dashboard is visible.
 
 ## Non-Goals
@@ -65,6 +70,7 @@ Expected behavior:
 - Dashboard metrics are derived from local saved records.
 - Empty history produces an explicit empty state.
 - Missing optional fields do not cause invented metrics.
+- Unreadable placeholder hero values do not render as user-facing hero metrics.
 - Metric logic remains outside UI code.
 
 ## Gotchas

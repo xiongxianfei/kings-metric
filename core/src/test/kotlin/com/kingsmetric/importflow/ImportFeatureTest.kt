@@ -93,6 +93,18 @@ class ParsingAndDraftTest {
     }
 
     @Test
+    fun `T12a mark numeric-only hero placeholder invalid`() {
+        val draft = parser.createDraft(
+            Fixtures.supportedFullAnalysis().copy(
+                rawValues = Fixtures.supportedFullAnalysis().rawValues + (FieldKey.HERO to "1")
+            )
+        )
+
+        assertNull(draft.require(FieldKey.HERO).value)
+        assertTrue(draft.require(FieldKey.HERO).flags.contains(ReviewFlag.INVALID))
+    }
+
+    @Test
     fun `T13 do not derive values not explicitly visible on the screenshot`() {
         val analysis = Fixtures.supportedFullAnalysis(visibleFields = FieldKey.required - FieldKey.DAMAGE_DEALT_TO_OPPONENTS)
         val draft = parser.createDraft(analysis)
@@ -150,6 +162,20 @@ class SaveValidationTest {
     @Test
     fun `T21 reject final save when any required field remains missing or invalid`() {
         val validation = workflow.validateForSave(parser.createDraft(Fixtures.supportedRequiredMissingAnalysis()))
+        assertTrue(validation is SaveValidationResult.Rejected)
+        assertTrue((validation as SaveValidationResult.Rejected).reason.contains("required"))
+    }
+
+    @Test
+    fun `T21a reject final save when required hero is a numeric-only placeholder`() {
+        val editedDraft = workflow.updateField(
+            draft = parser.createDraft(Fixtures.supportedFullAnalysis()),
+            fieldKey = FieldKey.HERO,
+            value = "2"
+        )
+
+        val validation = workflow.validateForSave(editedDraft)
+
         assertTrue(validation is SaveValidationResult.Rejected)
         assertTrue((validation as SaveValidationResult.Rejected).reason.contains("required"))
     }

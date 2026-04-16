@@ -167,6 +167,7 @@ class DraftParser {
     private fun normalize(fieldKey: FieldKey, rawValue: String?): String? {
         val value = rawValue?.trim()?.takeIf { it.isNotEmpty() } ?: return null
         return when (fieldKey) {
+            FieldKey.HERO -> value.takeIf(::isUsableHeroLabel)
             FieldKey.RESULT -> when (value) {
                 "胜利", "victory" -> "victory"
                 "失败", "defeat" -> "defeat"
@@ -177,8 +178,12 @@ class DraftParser {
         }
     }
 
-    private companion object {
+    companion object {
         val kdaPattern = Regex("""\d+/\d+/\d+""")
+
+        internal fun isUsableHeroLabel(value: String): Boolean {
+            return value.any(Char::isLetter)
+        }
     }
 }
 
@@ -355,16 +360,30 @@ class MatchImportWorkflow(
     }
 
     fun updateField(draft: DraftRecord, fieldKey: FieldKey, value: String): DraftRecord {
-        val updatedField = draft.require(fieldKey).copy(
-            value = value.trim().ifEmpty { null },
-            flags = emptySet()
-        )
+        val trimmedValue = value.trim()
+        val updatedField = when {
+            trimmedValue.isEmpty() -> draft.require(fieldKey).copy(
+                value = null,
+                flags = setOf(ReviewFlag.MISSING)
+            )
+            fieldKey == FieldKey.HERO && !DraftParser.isUsableHeroLabel(trimmedValue) -> draft.require(fieldKey).copy(
+                value = trimmedValue,
+                flags = setOf(ReviewFlag.INVALID)
+            )
+            else -> draft.require(fieldKey).copy(
+                value = trimmedValue,
+                flags = emptySet()
+            )
+        }
         return draft.copy(fields = draft.fields + (fieldKey to updatedField))
     }
 
     fun validateForSave(draft: DraftRecord): SaveValidationResult {
         val unresolvedRequiredFields = draft.requiredFields().filter { field ->
-            field.value == null || ReviewFlag.MISSING in field.flags || ReviewFlag.INVALID in field.flags
+            field.value == null ||
+                ReviewFlag.MISSING in field.flags ||
+                ReviewFlag.INVALID in field.flags ||
+                (field.key == FieldKey.HERO && !DraftParser.isUsableHeroLabel(field.value))
         }
         if (unresolvedRequiredFields.isNotEmpty()) {
             return SaveValidationResult.Rejected("One or more required fields remain unresolved.")

@@ -345,6 +345,22 @@ class HistoryDetailDashboardUxTest {
         assertEquals("Hero Usage", heroUsage.title)
         assertEquals("Hero usage graph is unavailable for the current saved matches.", heroUsage.message)
     }
+
+    @Test
+    fun dashboardMapper_hides_numericOnlyHeroPlaceholdersFromHeroBasedUi() {
+        val metrics = DashboardMetricsCalculator().calculate(
+            listOf(
+                dashboardRecord("record-1", result = "victory", hero = "1").copy(savedAt = 100L),
+                dashboardRecord("record-2", result = "defeat", hero = "2").copy(savedAt = 200L)
+            )
+        )
+
+        val state = DashboardContentState.Loaded(metrics).toDashboardScreenUiState()
+
+        assertEquals("Not enough data", state.primaryCards.last().valueText)
+        val heroUsage = state.graphSection!!.panels[1] as DashboardGraphPanelUiState.Unavailable
+        assertEquals("Hero usage graph is unavailable for the current saved matches.", heroUsage.message)
+    }
 }
 
 private fun detailRecord(

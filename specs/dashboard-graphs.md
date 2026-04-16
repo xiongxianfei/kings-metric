@@ -136,6 +136,9 @@ The dashboard may render:
   section silently.
 - `R15` The graph feature MUST NOT invent missing `hero` or `result` values to
   make a graph look more complete.
+- `R15a` The `Hero Usage` graph MUST ignore unreadable placeholder hero values,
+  such as numeric-only tokens, rather than rendering them as user-facing hero
+  labels.
 - `R16` The first graph release MUST NOT introduce new aggregate formulas that
   materially change the meaning of the existing dashboard cards. It may shape
   graph-ready series from existing saved-record data, but it must not silently
@@ -161,6 +164,8 @@ The dashboard may render:
   graph MUST degrade with a clear user-facing unavailable message.
 - If all saved matches lack usable `hero` values, the `Hero Usage` graph MUST
   degrade with a clear user-facing unavailable message.
+- Saved hero values that are present but unreadable, such as numeric-only
+  placeholders, MUST be treated as unusable `hero` inputs for graph shaping.
 - If only one graph can be built from the currently saved data, the dashboard
   MUST still show that graph instead of collapsing the entire graph feature.
 
@@ -191,6 +196,7 @@ The dashboard may render:
 - all recent matches are defeats
 - multiple heroes tied for the same usage count
 - some records missing `hero`
+- some records contain unreadable placeholder `hero` values
 - some records missing `result`
 - all records missing `hero`
 - all records missing `result`
