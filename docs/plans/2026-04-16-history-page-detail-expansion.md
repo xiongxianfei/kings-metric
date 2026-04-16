@@ -6,7 +6,7 @@
 - Owner: Codex
 - Related spec(s): `specs/history-list-readability-upgrade.md`, `specs/record-detail-usability-upgrade.md`, `specs/history-page-detail-expansion.md`
 - Supersedes / Superseded by: none
-- Branch / PR: `feature/history-page-detail-expansion` / draft PR pending
+- Branch / PR: `feature/history-page-detail-expansion` / `#55` (draft)
 - Last verified commands:
   - `./gradlew.bat --no-daemon :core:test --tests "com.kingsmetric.history.MatchHistoryUiTest" --tests "com.kingsmetric.data.local.RoomRepositoriesObservedIntegrationTest" --tests "com.kingsmetric.app.HistoryDashboardScreenBindingTest" --tests "com.kingsmetric.app.HistoryDetailDashboardUxTest"`
   - `./gradlew.bat --no-daemon :app:connectedDebugAndroidTest "-Pandroid.testInstrumentationRunnerArguments.class=com.kingsmetric.HistoryDetailDashboardUxComposeTest"`
