@@ -2,6 +2,44 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.13] - 2026-04-16
+
+Alpha prerelease replacement for early testers.
+
+### Bug Fixes
+
+- **Marksman lane insights now appear for imported marksman screenshots** - the
+  OCR lane detector no longer misclassifies supported marksman screenshots as
+  jungle because of metric labels such as `打野经济`, and the marksman insight
+  layer now also recognizes older saved records that still use the legacy
+  `Farm Lane` lane value.
+
+### Internal
+
+- added OCR regressions for supported readable-Chinese lane extraction and
+  merged summary-card parsing
+- added marksman-lane compatibility regressions for legacy saved `Farm Lane`
+  records
+- aligned the release metadata, artifact contract, changelog, and release
+  notes to the `v0.1.0-alpha.13` cut
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.12`
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.12] - 2026-04-16
 
 Alpha prerelease replacement for early testers.
