@@ -30,6 +30,7 @@ data class DetailFieldUiState(
 
 data class HistoryRowUiState(
     val recordId: String,
+    val categoryLabel: String,
     val primaryText: String,
     val resultText: String,
     val recencyText: String,
@@ -54,7 +55,9 @@ data class DetailScreenUiState(
     val fields: List<DetailFieldUiState> = emptyList(),
     val summaryTitle: String = "",
     val summaryResult: String = "",
+    val summaryMetaText: String = "",
     val backLabel: String = "History",
+    val previewStatusLabel: String = "Screenshot",
     val previewStatusText: String = "",
     val sections: List<DetailSectionUiState> = emptyList()
 )
@@ -126,11 +129,13 @@ fun MatchDetailState.toDetailScreenUiState(): DetailScreenUiState {
         },
         summaryTitle = record.fields[FieldKey.HERO] ?: "Hero not entered",
         summaryResult = formatResult(record.fields[FieldKey.RESULT]),
+        summaryMetaText = formatSavedAt(record.savedAt),
         backLabel = "History",
+        previewStatusLabel = "Screenshot",
         previewStatusText = if (previewAvailability == PreviewAvailability.Available) {
-            "Preview available"
+            "Screenshot available"
         } else {
-            "Preview unavailable"
+            "Screenshot preview unavailable"
         },
         sections = detailSectionsFor(record)
     )
@@ -139,6 +144,7 @@ fun MatchDetailState.toDetailScreenUiState(): DetailScreenUiState {
 private fun MatchHistoryListItem.toHistoryRowUiState(): HistoryRowUiState {
     return HistoryRowUiState(
         recordId = recordId,
+        categoryLabel = "Saved match",
         primaryText = hero ?: "Hero not entered",
         resultText = formatResult(result),
         recencyText = formatSavedAt(savedAt),

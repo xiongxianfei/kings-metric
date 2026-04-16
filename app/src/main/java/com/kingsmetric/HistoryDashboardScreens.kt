@@ -6,14 +6,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -76,6 +73,10 @@ import com.kingsmetric.importflow.DraftRecord
 import com.kingsmetric.importflow.FieldKey
 import com.kingsmetric.importflow.ImportResult
 import com.kingsmetric.importflow.MatchImportWorkflow
+import com.kingsmetric.ui.components.ShellPrimaryActionButton
+import com.kingsmetric.ui.components.ShellStateBlock
+import com.kingsmetric.ui.components.ShellSurfaceCard
+import com.kingsmetric.ui.theme.AppShellVisualFoundation
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -96,6 +97,7 @@ fun HistoryDashboardRoot(
     testImportedDraft: DraftRecord? = null,
     onReviewSaveSucceeded: (() -> Unit)? = null
 ) {
+    val foundation = AppShellVisualFoundation.shared
     val historyBinder = remember(repository) { HistoryScreenBinder(repository) }
     val dashboardBinder = remember(repository) { DashboardScreenBinder(repository) }
     val importAdapter = remember(uriStorage) {
@@ -172,7 +174,8 @@ fun HistoryDashboardRoot(
                 title = {
                     Text(
                         text = shellChrome.title,
-                        modifier = Modifier.testTag("shell-title")
+                        modifier = Modifier.testTag("shell-title"),
+                        style = MaterialTheme.typography.titleLarge
                     )
                 },
                 navigationIcon = {
@@ -224,11 +227,14 @@ fun HistoryDashboardRoot(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(
+                    horizontal = foundation.screenHorizontalPaddingDp.dp,
+                    vertical = foundation.screenVerticalPaddingDp.dp
+                ),
+            verticalArrangement = Arrangement.spacedBy(foundation.sectionSpacingDp.dp)
         ) {
             rootMessage?.let { message ->
-                Text(message)
+                ShellStateBlock(message = message)
             }
 
             NavHost(
@@ -393,31 +399,42 @@ fun ImportScreen(
         }
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(model.title)
-        Text(model.supportedScreenshotHint)
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        ShellSurfaceCard(testTag = "import-supported-card") {
+            Text("Supported screenshot", style = MaterialTheme.typography.titleMedium)
+            Text(
+                model.supportedScreenshotHint,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        ShellStateBlock(
+            title = model.title,
+            message = model.guidance,
+            testTag = "import-status-block"
+        ) {
+            Text(
+                model.nextStepText,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
 
         testImportedDraft?.let { draft ->
-            Button(
-                onClick = {
-                    onReviewDraftReady(draft)
-                }
-            ) {
+            TextButton(onClick = { onReviewDraftReady(draft) }) {
                 Text("Use Test Draft")
             }
         }
-        Button(
-            onClick = {
-                launcher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                )
-            },
-            modifier = Modifier.testTag("import-primary-action")
-        ) {
-            Text(model.primaryActionLabel)
+        if (model.showImportAction) {
+            ShellPrimaryActionButton(
+                label = model.primaryActionLabel,
+                onClick = {
+                    launcher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+                buttonTag = "import-primary-action"
+            )
         }
-
-        Text(model.guidance)
 
         when (val current = status) {
             ImportRuntimeStatus.Idle,
@@ -427,17 +444,22 @@ fun ImportScreen(
             is ImportRuntimeStatus.StorageFailed,
             is ImportRuntimeStatus.Failed -> Unit
             is ImportRuntimeStatus.ReviewReady -> {
-                Text(current.draft.screenshotPath.orEmpty())
+                ShellSurfaceCard {
+                    Text("Screenshot ready", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        current.draft.screenshotPath.orEmpty(),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
 
         val reviewDraft = model.reviewDraft
         if (model.showContinueReview && reviewDraft != null) {
-            Button(
+            ShellPrimaryActionButton(
+                label = model.continueReviewLabel,
                 onClick = { onReviewDraftReady(reviewDraft) }
-            ) {
-                Text(model.continueReviewLabel)
-            }
+            )
         }
     }
 }
@@ -447,34 +469,51 @@ fun HistoryScreen(
     state: HistoryScreenUiState,
     onRecordSelected: (String) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         when (val content = state.content) {
-            HistoryContentState.Empty -> Text(SharedUxCopy.message(SharedMessageKey.HISTORY_EMPTY).text)
-            is HistoryContentState.Error -> Text(content.message)
+            HistoryContentState.Empty -> ShellStateBlock(
+                message = SharedUxCopy.message(SharedMessageKey.HISTORY_EMPTY).text
+            )
+            is HistoryContentState.Error -> ShellStateBlock(message = content.message)
             is HistoryContentState.Loaded -> {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(state.rows, key = { it.recordId }) { row ->
-                        Card(
+                        ShellSurfaceCard(
                             modifier = Modifier
                                 .testTag("history-record-${row.recordId}")
                                 .fillMaxWidth()
                                 .clickable(enabled = row.selectable) { onRecordSelected(row.recordId) }
                         ) {
                             Column(
-                                modifier = Modifier.padding(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                Text(
+                                    row.categoryLabel,
+                                    style = MaterialTheme.typography.labelMedium
+                                )
                                 Text(
                                     row.primaryText,
                                     style = MaterialTheme.typography.titleMedium
                                 )
-                                Text(
-                                    row.resultText,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(row.recencyText, style = MaterialTheme.typography.bodySmall)
+                                Column(
+                                    modifier = Modifier.testTag("history-row-meta-${row.recordId}"),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Text(
+                                        row.resultText,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        row.recencyText,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
                                 row.previewText?.let { previewText ->
-                                    Text(previewText, style = MaterialTheme.typography.bodySmall)
+                                    Text(
+                                        previewText,
+                                        modifier = Modifier.testTag("history-row-secondary-${row.recordId}"),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
                                 }
                             }
                         }
@@ -484,7 +523,7 @@ fun HistoryScreen(
         }
 
         state.userMessage?.let { message ->
-            Text(message, style = MaterialTheme.typography.bodyMedium)
+            ShellStateBlock(message = message)
         }
     }
 }
@@ -492,21 +531,57 @@ fun HistoryScreen(
 @Composable
 fun DashboardScreen(state: DashboardScreenUiState) {
     when (val content = state.content) {
-        DashboardContentState.Empty -> Text(SharedUxCopy.message(SharedMessageKey.DASHBOARD_EMPTY).text)
-        is DashboardContentState.Error -> Text(content.message)
+        DashboardContentState.Empty -> ShellStateBlock(
+            message = SharedUxCopy.message(SharedMessageKey.DASHBOARD_EMPTY).text,
+            testTag = "dashboard-empty-state"
+        )
+        is DashboardContentState.Error -> ShellStateBlock(
+            message = content.message,
+            testTag = "dashboard-error-state"
+        )
         is DashboardContentState.Loaded -> {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                state.contextText?.let { Text(it) }
-                state.primaryCards.forEach { card ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(card.label, style = MaterialTheme.typography.labelMedium)
-                            Text(card.valueText, style = MaterialTheme.typography.titleLarge)
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                state.contextText?.let {
+                    ShellStateBlock(
+                        title = "Sample",
+                        message = it,
+                        testTag = "dashboard-context-card"
+                    )
+                }
+                ShellSurfaceCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    testTag = "dashboard-primary-section"
+                ) {
+                    Text("Current metrics", style = MaterialTheme.typography.titleMedium)
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        state.primaryCards.forEach { card ->
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(card.label, style = MaterialTheme.typography.labelMedium)
+                                Text(card.valueText, style = MaterialTheme.typography.titleLarge)
+                            }
                         }
                     }
                 }
-                state.sparseDataText?.let { Text(it) }
-                state.secondaryNotes.forEach { note -> Text(note) }
+                state.sparseDataText?.let {
+                    ShellStateBlock(
+                        title = "Limited data",
+                        message = it,
+                        testTag = "dashboard-sparse-card"
+                    )
+                }
+                if (state.secondaryNotes.isNotEmpty()) {
+                    ShellSurfaceCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        testTag = "dashboard-secondary-section"
+                    ) {
+                        Text("More context", style = MaterialTheme.typography.titleMedium)
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            state.secondaryNotes.forEach { note ->
+                                Text(note, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -514,20 +589,28 @@ fun DashboardScreen(state: DashboardScreenUiState) {
 
 @Composable
 fun RecordDetailScreen(state: DetailScreenUiState) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(state.summaryTitle, style = MaterialTheme.typography.headlineSmall)
-        Text(state.summaryResult, style = MaterialTheme.typography.titleMedium)
-        Text(
-            if (state.previewAvailability == PreviewAvailability.Available) {
-                state.screenshotPath ?: state.previewStatusText
-            } else {
-                SharedUxCopy.message(SharedMessageKey.MISSING_SCREENSHOT_PREVIEW).text
-            }
-        )
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        ShellSurfaceCard(testTag = "detail-summary-card") {
+            Text(state.summaryTitle, style = MaterialTheme.typography.headlineSmall)
+            Text(state.summaryResult, style = MaterialTheme.typography.titleMedium)
+            Text(
+                state.summaryMetaText,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+        ShellSurfaceCard(
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "detail-preview-card"
+        ) {
+            Text(state.previewStatusLabel, style = MaterialTheme.typography.titleMedium)
+            Text(
+                state.previewStatusText,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
         state.sections.forEach { section ->
-            Card(modifier = Modifier.fillMaxWidth()) {
+            ShellSurfaceCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
-                    modifier = Modifier.padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(section.title, style = MaterialTheme.typography.titleMedium)

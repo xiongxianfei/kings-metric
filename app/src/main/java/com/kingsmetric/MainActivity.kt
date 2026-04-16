@@ -3,11 +3,7 @@ package com.kingsmetric
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.kingsmetric.app.AndroidRuntimeAppVersionProvider
 import com.kingsmetric.app.AppVersionProvider
 import com.kingsmetric.app.MlKitRecognitionAdapter
@@ -15,6 +11,7 @@ import com.kingsmetric.app.UriScreenshotStorage
 import com.kingsmetric.data.local.RoomObservedMatchRepository
 import com.kingsmetric.diagnostics.DiagnosticsRecorder
 import com.kingsmetric.importflow.MatchImportWorkflow
+import com.kingsmetric.ui.theme.KingsMetricTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -50,8 +47,7 @@ private fun KingsMetricApp(
     diagnosticsRecorder: DiagnosticsRecorder,
     appVersionProvider: AppVersionProvider
 ) {
-    MaterialTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
+    KingsMetricTheme {
             HistoryDashboardRoot(
                 repository = repository,
                 uriStorage = uriStorage,
@@ -60,6 +56,5 @@ private fun KingsMetricApp(
                 diagnosticsRecorder = diagnosticsRecorder,
                 appVersionProvider = appVersionProvider
             )
-        }
     }
 }

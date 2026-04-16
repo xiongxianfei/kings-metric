@@ -31,6 +31,7 @@ class HistoryDetailDashboardUxTest {
         ).toHistoryScreenUiState()
 
         val row = state.rows.single()
+        assertEquals("Saved match", row.categoryLabel)
         assertEquals("Sun Shangxiang", row.primaryText)
         assertEquals("Victory", row.resultText)
         assertTrue(row.recencyText.startsWith("Saved "))
@@ -53,6 +54,7 @@ class HistoryDetailDashboardUxTest {
         ).toHistoryScreenUiState()
 
         val row = state.rows.single()
+        assertEquals("Saved match", row.categoryLabel)
         assertEquals("Hero not entered", row.primaryText)
         assertEquals("Defeat", row.resultText)
         assertEquals("Preview unavailable", row.previewText)
@@ -70,7 +72,9 @@ class HistoryDetailDashboardUxTest {
 
         assertEquals("Sun Shangxiang", state.summaryTitle)
         assertEquals("Victory", state.summaryResult)
-        assertEquals("Preview unavailable", state.previewStatusText)
+        assertTrue(state.summaryMetaText.startsWith("Saved "))
+        assertEquals("Screenshot", state.previewStatusLabel)
+        assertEquals("Screenshot preview unavailable", state.previewStatusText)
         assertTrue(state.sections.any { it.title == "Match Summary" })
         assertTrue(
             state.sections.flatMap { it.fields }.any { field ->
@@ -87,6 +91,7 @@ class HistoryDetailDashboardUxTest {
         ).toDetailScreenUiState()
 
         assertEquals("History", state.backLabel)
+        assertEquals("Screenshot available", state.previewStatusText)
     }
 
     @Test

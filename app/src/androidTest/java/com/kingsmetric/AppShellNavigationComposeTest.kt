@@ -1,7 +1,6 @@
 package com.kingsmetric
 
 import android.content.Context
-import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -9,7 +8,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -43,7 +42,7 @@ import org.junit.runner.RunWith
 class AppShellNavigationComposeTest {
 
     @get:Rule
-    val composeRule = createAndroidComposeRule<ComponentActivity>()
+    val composeRule = createComposeRule()
 
     @Test
     fun reviewRoute_withoutDraft_returnsToImportWithMessage() {
@@ -158,6 +157,7 @@ class AppShellNavigationComposeTest {
             )
         }
 
+        waitForPrimaryNavigation()
         composeRule.onAllNodesWithTag("nav-history", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onAllNodesWithTag("nav-dashboard", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onAllNodesWithTag("nav-diagnostics", useUnmergedTree = true).assertCountEquals(1)
@@ -165,6 +165,23 @@ class AppShellNavigationComposeTest {
         composeRule.onNodeWithTag("nav-dashboard", useUnmergedTree = true).assertIsNotSelected()
         composeRule.onNodeWithTag("nav-diagnostics", useUnmergedTree = true).assertIsNotSelected()
         composeRule.onNodeWithTag("shell-title").assertTextEquals("Import Match")
+    }
+
+    @Test
+    fun importRoute_uses_the_shared_primary_action_treatment() {
+        composeRule.setContent {
+            HistoryDashboardRoot(
+                repository = testRepository(),
+                uriStorage = FakeUriScreenshotStorage(),
+                recognizeStoredScreenshot = { com.kingsmetric.importflow.ImportResult.Cancelled },
+                reviewWorkflow = AppShellTestFixtures.workflow()
+            )
+        }
+
+        waitForPrimaryNavigation()
+        composeRule.onAllNodesWithTag("shell-primary-action").assertCountEquals(1)
+        composeRule.onNodeWithTag("import-primary-action").assertIsDisplayed()
+        composeRule.onNodeWithTag("import-primary-action").assertIsEnabled()
     }
 
     @Test
@@ -178,19 +195,23 @@ class AppShellNavigationComposeTest {
             )
         }
 
+        waitForPrimaryNavigation()
         composeRule.onNodeWithTag("nav-history", useUnmergedTree = true).performClick()
         composeRule.onNodeWithTag("nav-history", useUnmergedTree = true).assertIsSelected()
         composeRule.onNodeWithTag("shell-title").assertTextEquals("Match History")
+        composeRule.onAllNodesWithTag("shell-state-block").assertCountEquals(1)
         composeRule.onNodeWithText("No saved matches yet. Save a reviewed match to see it here.").assertIsDisplayed()
 
         composeRule.onNodeWithTag("nav-dashboard", useUnmergedTree = true).performClick()
         composeRule.onNodeWithTag("nav-dashboard", useUnmergedTree = true).assertIsSelected()
         composeRule.onNodeWithTag("shell-title").assertTextEquals("Dashboard")
+        composeRule.onNodeWithTag("dashboard-empty-state").assertIsDisplayed()
         composeRule.onNodeWithText("No saved metrics yet. Save a reviewed match to see them here.").assertIsDisplayed()
 
         composeRule.onNodeWithTag("nav-diagnostics", useUnmergedTree = true).performClick()
         composeRule.onNodeWithTag("nav-diagnostics", useUnmergedTree = true).assertIsSelected()
         composeRule.onNodeWithTag("shell-title").assertTextEquals("Diagnostics")
+        composeRule.onNodeWithTag("diagnostics-empty-state").assertIsDisplayed()
         composeRule.onNodeWithText("No diagnostics captured yet.").assertIsDisplayed()
 
         composeRule.onNodeWithTag("nav-import", useUnmergedTree = true).performClick()
@@ -216,6 +237,7 @@ class AppShellNavigationComposeTest {
         composeRule.onNodeWithText("Use Test Draft").performClick()
         composeRule.onNodeWithTag("shell-title").assertTextEquals("Review Match")
         composeRule.onNodeWithTag("shell-secondary-action").assertIsDisplayed()
+        composeRule.onAllNodesWithTag("shell-primary-action").assertCountEquals(1)
         composeRule.onNodeWithText("Close").assertIsDisplayed()
         composeRule.onAllNodesWithTag("nav-import", useUnmergedTree = true).assertCountEquals(0)
         composeRule.onAllNodesWithTag("nav-history", useUnmergedTree = true).assertCountEquals(0)
@@ -280,6 +302,13 @@ class AppShellNavigationComposeTest {
         composeRule.onAllNodesWithTag("nav-history", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onAllNodesWithTag("nav-dashboard", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onAllNodesWithTag("nav-diagnostics", useUnmergedTree = true).assertCountEquals(1)
+    }
+
+    private fun waitForPrimaryNavigation() {
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodesWithTag("nav-history", useUnmergedTree = true)
+                .fetchSemanticsNodes().size == 1
+        }
     }
 }
 
