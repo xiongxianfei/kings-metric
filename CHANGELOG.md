@@ -2,6 +2,46 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.14] - 2026-04-16
+
+Alpha prerelease replacement for early testers.
+
+### Bug Fixes
+
+- **Dashboard hero UI now fails closed on unreadable placeholder values** - the
+  dashboard no longer renders numeric-only placeholder heroes such as `1` or
+  `2` as if they were real hero labels in `Most Played Hero` or `Hero Usage`.
+- **New imports can no longer save numeric-only hero placeholders** - the
+  import, review, and save flow now treats numeric-only `hero` values as
+  unresolved required input, so new saved matches cannot persist those
+  placeholders as final hero names.
+
+### Internal
+
+- added dashboard regressions for unreadable placeholder hero values in hero
+  metrics and graph shaping
+- added import/review/save regressions for numeric-only required `hero`
+  placeholders
+- aligned the release metadata, artifact contract, changelog, and release
+  notes to the `v0.1.0-alpha.14` cut
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.13`
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.13] - 2026-04-16
 
 Alpha prerelease replacement for early testers.
