@@ -63,6 +63,9 @@ import com.kingsmetric.app.HistoryQuickSummaryKind
 import com.kingsmetric.app.HistoryScreenUiState
 import com.kingsmetric.app.ImportScreenUiStateMapper
 import com.kingsmetric.app.ImportRuntimeStatus
+import com.kingsmetric.app.MarksmanInsightMetricGroupUiState
+import com.kingsmetric.app.MarksmanInsightsUiState
+import com.kingsmetric.app.MarksmanSuggestionsUiState
 import com.kingsmetric.app.PreviewAvailability
 import com.kingsmetric.app.ReviewScreenRoute
 import com.kingsmetric.app.ReviewScreenViewModel
@@ -83,6 +86,7 @@ import com.kingsmetric.ui.components.ShellStateBlock
 import com.kingsmetric.ui.components.ShellSurfaceCard
 import com.kingsmetric.ui.theme.AppShellVisualFoundation
 import java.io.File
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -643,8 +647,82 @@ fun RecordDetailScreen(state: DetailScreenUiState) {
                 style = MaterialTheme.typography.bodyMedium
             )
         }
+        state.marksmanInsights?.let { insights ->
+            when (insights) {
+                is MarksmanInsightsUiState.Eligible -> {
+                    ShellSurfaceCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        testTag = "detail-marksman-section"
+                    ) {
+                        Text("Marksman Lane Insights", style = MaterialTheme.typography.titleMedium)
+                    }
+                    insights.metricGroups.forEach { group ->
+                        MarksmanInsightGroupCard(group)
+                    }
+                    ShellSurfaceCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        testTag = "detail-marksman-suggestions"
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Suggestions", style = MaterialTheme.typography.titleMedium)
+                            when (val suggestionState = insights.suggestions) {
+                                is MarksmanSuggestionsUiState.Suggestions -> {
+                                    suggestionState.items.forEachIndexed { index, item ->
+                                        Column(
+                                            modifier = Modifier.testTag("detail-marksman-suggestion-$index"),
+                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            Text(
+                                                "Rule Category: ${item.categoryLabel}",
+                                                style = MaterialTheme.typography.labelMedium
+                                            )
+                                            Text(item.title, style = MaterialTheme.typography.titleSmall)
+                                            Text(item.rationale, style = MaterialTheme.typography.bodyMedium)
+                                            Text(item.evidenceText, style = MaterialTheme.typography.bodySmall)
+                                        }
+                                        if (index != suggestionState.items.lastIndex) {
+                                            HorizontalDivider()
+                                        }
+                                    }
+                                }
+                                is MarksmanSuggestionsUiState.Neutral -> {
+                                    Text(
+                                        suggestionState.message,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                is MarksmanInsightsUiState.Error -> {
+                    ShellStateBlock(
+                        title = "Marksman Lane Insights",
+                        message = insights.message,
+                        testTag = "detail-marksman-state"
+                    )
+                }
+                is MarksmanInsightsUiState.Insufficient -> {
+                    ShellStateBlock(
+                        title = "Marksman Lane Insights",
+                        message = insights.message,
+                        testTag = "detail-marksman-state"
+                    )
+                }
+                is MarksmanInsightsUiState.Unavailable -> {
+                    ShellStateBlock(
+                        title = "Marksman Lane Insights",
+                        message = insights.message,
+                        testTag = "detail-marksman-state"
+                    )
+                }
+            }
+        }
         state.sections.forEach { section ->
-            ShellSurfaceCard(modifier = Modifier.fillMaxWidth()) {
+            ShellSurfaceCard(
+                modifier = Modifier.fillMaxWidth(),
+                testTag = "detail-section-${section.title.toTagValue()}"
+            ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -663,6 +741,38 @@ fun RecordDetailScreen(state: DetailScreenUiState) {
         }
     }
 }
+
+@Composable
+private fun MarksmanInsightGroupCard(group: MarksmanInsightMetricGroupUiState) {
+    ShellSurfaceCard(
+        modifier = Modifier.fillMaxWidth(),
+        testTag = "detail-marksman-group-${group.title.toTagValue()}"
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(group.title, style = MaterialTheme.typography.titleMedium)
+            group.statusText?.let { statusText ->
+                Text(statusText, style = MaterialTheme.typography.bodySmall)
+            }
+            group.metrics.forEachIndexed { index, metric ->
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(metric.label, style = MaterialTheme.typography.labelMedium)
+                    Text(metric.valueText, style = MaterialTheme.typography.bodyLarge)
+                }
+                if (index != group.metrics.lastIndex) {
+                    HorizontalDivider()
+                }
+            }
+        }
+    }
+}
+
+private fun String.toTagValue(): String {
+    return lowercase(Locale.US)
+        .replace(" / ", "-")
+        .replace(" ", "-")
+    }
 
 private fun navigatePrimary(
     navController: androidx.navigation.NavHostController,
