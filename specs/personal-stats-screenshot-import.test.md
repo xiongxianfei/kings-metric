@@ -77,6 +77,10 @@ This test spec covers the first-release flow for importing one supported post-ma
   Input: `fixture_supported_required_missing`
   Assert: required field is flagged unresolved.
 
+- `T12a` Mark numeric-only required `hero` placeholder invalid.
+  Input: supported screenshot/OCR output where `hero = 1`
+  Assert: `hero` remains unresolved and is flagged invalid.
+
 - `T13` Do not derive values not explicitly visible on the screenshot.
   Input: screenshot/OCR output lacking one field not shown in the image
   Assert: parser leaves the field empty instead of generating a derived value.
@@ -115,6 +119,11 @@ This test spec covers the first-release flow for importing one supported post-ma
 
 - `T21` Reject final save when any required field remains missing or invalid.
   Input: unresolved reviewed draft from `fixture_supported_required_missing`
+  Assert: save validation fails with a required-field reason.
+
+- `T21a` Reject final save when required `hero` contains a numeric-only
+  placeholder.
+  Input: reviewed draft where `hero = 2`
   Assert: save validation fails with a required-field reason.
 
 ### Record Linkage and Reprocessing Metadata
@@ -217,6 +226,9 @@ This test spec covers the first-release flow for importing one supported post-ma
 - `E5` User changes extracted values during review before saving.
   Covered by: `IT4`
 
+- `E6` Required `hero` field contains a numeric-only placeholder.
+  Covered by: `T12a`, `T21a`
+
 ## What Not To Test
 
 - Recognition accuracy for unsupported screenshot templates.
@@ -278,10 +290,14 @@ This test spec covers the first-release flow for importing one supported post-ma
   Covered by: `T10`
 
 - System MUST mark missing or ambiguous fields.
-  Covered by: `T11`, `T12`, `T17`, `T18`, `IT2`, `IT5`
+  Covered by: `T11`, `T12`, `T12a`, `T17`, `T18`, `IT2`, `IT5`
 
 - System MUST NOT invent or derive non-visible values except normalization.
   Covered by: `T13`
+
+- System MUST treat unreadable placeholder values for required fields as
+  unresolved rather than saveable values.
+  Covered by: `T12a`, `T21a`
 
 - System MUST show original screenshot during review.
   Covered by: `IT1`, `IT9`
@@ -306,7 +322,7 @@ This test spec covers the first-release flow for importing one supported post-ma
   Covered by: `T20`, `IT6`
 
 - System MUST NOT save final record when required fields remain unresolved.
-  Covered by: `T21`, `IT5`
+  Covered by: `T21`, `T21a`, `IT5`
 
 - System SHOULD retain enough linkage for future re-checking.
   Covered by: `T22`

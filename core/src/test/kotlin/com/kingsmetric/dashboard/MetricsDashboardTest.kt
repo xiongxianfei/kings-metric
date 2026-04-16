@@ -170,6 +170,28 @@ class MetricsDashboardTest {
     }
 
     @Test
+    fun `T9 hero usage ignores numeric-only placeholder hero labels`() {
+        val calculator = DashboardMetricsCalculator()
+
+        val metrics = calculator.calculate(
+            listOf(
+                DashboardFixtures.record(recordId = "record-1", hero = "1"),
+                DashboardFixtures.record(recordId = "record-2", hero = "2"),
+                DashboardFixtures.record(recordId = "record-3", hero = "Sun Shangxiang")
+            )
+        )
+
+        assertEquals(
+            listOf(HeroUsageMetric(hero = "Sun Shangxiang", matches = 1)),
+            metrics.heroUsage
+        )
+        assertEquals(
+            listOf(HeroUsageMetric(hero = "Sun Shangxiang", matches = 1)),
+            metrics.graphs.heroUsage
+        )
+    }
+
+    @Test
     fun `IT1 dashboard shows aggregate metrics when saved records exist`() {
         val controller = dashboardController(
             repository = FakeDashboardRepository(

@@ -30,6 +30,9 @@ or arbitrary filtering.
   rather than fabricated into wins or losses.
 - `T6` Missing `hero` values are omitted from hero-usage graph inputs rather
   than fabricated into named heroes.
+- `T6a` Unreadable placeholder `hero` values such as numeric-only tokens are
+  omitted from hero-usage graph inputs rather than rendered as user-facing hero
+  labels.
 - `T7` Graph availability degrades independently when one graph has enough data
   and the other does not.
 - `T8` Dashboard graph state preserves the existing primary summary-card state
@@ -113,6 +116,7 @@ or arbitrary filtering.
 - all recent matches are defeats -> `CT2`
 - multiple heroes tied for the same usage count -> `T4`
 - some records missing `hero` -> `T6`, `IT5`, `CT5`
+- some records contain unreadable placeholder `hero` values -> `T6a`, `CT5`
 - some records missing `result` -> `T5`, `IT6`, `CT5`
 - all records missing `hero` -> `T7`, `IT5`, `CT5`
 - all records missing `result` -> `T7`, `IT6`, `CT5`
@@ -135,6 +139,7 @@ or arbitrary filtering.
 - `R13` -> `T10`, `IT3`, `CT7`
 - `R14` -> `T7`, `IT5`, `IT6`, `CT5`
 - `R15` -> `T5`, `T6`
+- `R15a` -> `T6a`, `CT5`
 - `R16` -> `T14`, `IT4`
 
 ## What Not To Test

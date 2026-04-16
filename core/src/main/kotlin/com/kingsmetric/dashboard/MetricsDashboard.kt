@@ -110,6 +110,7 @@ class DashboardMetricsCalculator {
                 record.fields[FieldKey.HERO]
                     ?.trim()
                     ?.takeIf(String::isNotEmpty)
+                    ?.takeIf(::isUsableHeroLabel)
             }
             .groupingBy { it }
             .eachCount()
@@ -186,6 +187,10 @@ class DashboardMetricsCalculator {
             "defeat" -> DashboardMatchResult.Defeat
             else -> null
         }
+    }
+
+    private fun isUsableHeroLabel(value: String): Boolean {
+        return value.any(Char::isLetter)
     }
 
     private fun roundToTwoDecimals(value: Double): Double {
