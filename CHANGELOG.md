@@ -2,6 +2,42 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.12] - 2026-04-16
+
+Alpha prerelease replacement for early testers.
+
+### Bug Fixes
+
+- **Record detail sections remain reachable on phone-sized screens** - the
+  saved-match detail screen now scrolls vertically, so lower grouped sections
+  such as `Damage Output` no longer clip below the fold on smaller viewports.
+
+### Internal
+
+- added a phone-sized Compose regression that pins access to lower detail
+  fields instead of assuming all grouped sections fit in the initial viewport
+- tightened the record-detail usability contract and test contract to require
+  lower-section reachability
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.11`
+- aligned the release metadata, artifact contract, and release notes to the
+  `v0.1.0-alpha.12` cut
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.11] - 2026-04-16
 
 Alpha prerelease replacement for early testers.
