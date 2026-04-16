@@ -6,6 +6,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -55,6 +57,7 @@ import com.kingsmetric.app.DetailScreenUiState
 import com.kingsmetric.app.DiagnosticsScreenRoute
 import com.kingsmetric.app.DiagnosticsScreenViewModel
 import com.kingsmetric.app.HistoryScreenBinder
+import com.kingsmetric.app.HistoryQuickSummaryKind
 import com.kingsmetric.app.HistoryScreenUiState
 import com.kingsmetric.app.ImportScreenUiStateMapper
 import com.kingsmetric.app.ImportRuntimeStatus
@@ -495,25 +498,22 @@ fun HistoryScreen(
                                     row.primaryText,
                                     style = MaterialTheme.typography.titleMedium
                                 )
+                                HistoryRowQuickSummary(row)
                                 Column(
                                     modifier = Modifier.testTag("history-row-meta-${row.recordId}"),
                                     verticalArrangement = Arrangement.spacedBy(2.dp)
                                 ) {
                                     Text(
-                                        row.resultText,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    Text(
                                         row.recencyText,
                                         style = MaterialTheme.typography.bodySmall
                                     )
-                                }
-                                row.previewText?.let { previewText ->
-                                    Text(
-                                        previewText,
-                                        modifier = Modifier.testTag("history-row-secondary-${row.recordId}"),
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
+                                    row.previewText?.let { previewText ->
+                                        Text(
+                                            previewText,
+                                            modifier = Modifier.testTag("history-row-secondary-${row.recordId}"),
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -526,6 +526,33 @@ fun HistoryScreen(
             ShellStateBlock(message = message)
         }
     }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HistoryRowQuickSummary(row: com.kingsmetric.app.HistoryRowUiState) {
+    Column(
+        modifier = Modifier.testTag("history-row-summary-${row.recordId}")
+    ) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            row.quickSummaryItems.forEach { item ->
+                Text(
+                    text = item.text,
+                    modifier = Modifier.testTag(
+                        "history-row-summary-${row.recordId}-${item.kind.tagValue()}"
+                    ),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+    }
+}
+
+private fun HistoryQuickSummaryKind.tagValue(): String {
+    return name.lowercase()
 }
 
 @Composable

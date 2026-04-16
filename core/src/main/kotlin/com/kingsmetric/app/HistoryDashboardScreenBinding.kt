@@ -33,9 +33,22 @@ data class HistoryRowUiState(
     val categoryLabel: String,
     val primaryText: String,
     val resultText: String,
+    val quickSummaryItems: List<HistoryQuickSummaryItemUiState> = emptyList(),
     val recencyText: String,
     val previewText: String?,
     val selectable: Boolean
+)
+
+enum class HistoryQuickSummaryKind {
+    RESULT,
+    LANE,
+    KDA,
+    SCORE
+}
+
+data class HistoryQuickSummaryItemUiState(
+    val kind: HistoryQuickSummaryKind,
+    val text: String
 )
 
 data class DetailFieldDisplayUiState(
@@ -142,11 +155,45 @@ fun MatchDetailState.toDetailScreenUiState(): DetailScreenUiState {
 }
 
 private fun MatchHistoryListItem.toHistoryRowUiState(): HistoryRowUiState {
+    val summaryItems = buildList {
+        add(
+            HistoryQuickSummaryItemUiState(
+                kind = HistoryQuickSummaryKind.RESULT,
+                text = formatResult(result)
+            )
+        )
+        lane?.trim()?.takeIf(String::isNotEmpty)?.let { laneValue ->
+            add(
+                HistoryQuickSummaryItemUiState(
+                    kind = HistoryQuickSummaryKind.LANE,
+                    text = laneValue
+                )
+            )
+        }
+        kda?.trim()?.takeIf(String::isNotEmpty)?.let { kdaValue ->
+            add(
+                HistoryQuickSummaryItemUiState(
+                    kind = HistoryQuickSummaryKind.KDA,
+                    text = kdaValue
+                )
+            )
+        }
+        score?.trim()?.takeIf(String::isNotEmpty)?.let { scoreValue ->
+            add(
+                HistoryQuickSummaryItemUiState(
+                    kind = HistoryQuickSummaryKind.SCORE,
+                    text = scoreValue
+                )
+            )
+        }
+    }
+
     return HistoryRowUiState(
         recordId = recordId,
         categoryLabel = "Saved match",
         primaryText = hero ?: "Hero not entered",
         resultText = formatResult(result),
+        quickSummaryItems = summaryItems,
         recencyText = formatSavedAt(savedAt),
         previewText = if (screenshotAvailable) null else "Preview unavailable",
         selectable = true

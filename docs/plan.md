@@ -4,7 +4,7 @@ This file is an index of active and closed execution plans. Do not put the full 
 
 ## Active plans
 
-- None.
+- [ ] [2026-04-16-history-page-detail-expansion](./plans/2026-04-16-history-page-detail-expansion.md)
 
 ## Blocked plans
 

@@ -3,8 +3,8 @@ package com.kingsmetric.app
 import com.kingsmetric.dashboard.DashboardContentState
 import com.kingsmetric.dashboard.DashboardMetricsCalculator
 import com.kingsmetric.history.HistoryContentState
-import com.kingsmetric.history.MatchDetailState
 import com.kingsmetric.history.MatchHistoryListItem
+import com.kingsmetric.history.MatchDetailState
 import com.kingsmetric.history.SavedMatchHistoryRecord
 import com.kingsmetric.history.ScreenshotPreviewState
 import com.kingsmetric.importflow.FieldKey
@@ -17,7 +17,7 @@ import org.junit.Test
 class HistoryDetailDashboardUxTest {
 
     @Test
-    fun historyRowMapper_promotesPrimaryScanFieldsAndRecency() {
+    fun historyRowMapper_promotesPrimaryScanFieldsAndRecencyInBoundedOrder() {
         val state = HistoryContentState.Loaded(
             records = listOf(
                 MatchHistoryListItem(
@@ -25,6 +25,9 @@ class HistoryDetailDashboardUxTest {
                     savedAt = 1_710_000_000_000L,
                     hero = "Sun Shangxiang",
                     result = "victory",
+                    lane = "Farm Lane",
+                    score = "20-10",
+                    kda = "11/1/5",
                     screenshotAvailable = true
                 )
             )
@@ -35,19 +38,31 @@ class HistoryDetailDashboardUxTest {
         assertEquals("Sun Shangxiang", row.primaryText)
         assertEquals("Victory", row.resultText)
         assertTrue(row.recencyText.startsWith("Saved "))
+        assertEquals(
+            listOf(
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.RESULT, "Victory"),
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.LANE, "Farm Lane"),
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.KDA, "11/1/5"),
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.SCORE, "20-10")
+            ),
+            row.quickSummaryItems
+        )
         assertNull(row.previewText)
         assertTrue(row.selectable)
     }
 
     @Test
-    fun historyRowMapper_degradesGracefullyWhenHeroOrPreviewIsMissing() {
+    fun historyRowMapper_omitsMissingOptionalQuickSummaryFieldsInRelativeOrder() {
         val state = HistoryContentState.Loaded(
             records = listOf(
                 MatchHistoryListItem(
                     recordId = "record-2",
                     savedAt = 1_710_000_000_000L,
-                    hero = null,
+                    hero = "Sun Shangxiang",
                     result = "defeat",
+                    lane = null,
+                    score = null,
+                    kda = "5/3/7",
                     screenshotAvailable = false
                 )
             )
@@ -55,10 +70,46 @@ class HistoryDetailDashboardUxTest {
 
         val row = state.rows.single()
         assertEquals("Saved match", row.categoryLabel)
-        assertEquals("Hero not entered", row.primaryText)
+        assertEquals("Sun Shangxiang", row.primaryText)
         assertEquals("Defeat", row.resultText)
+        assertEquals(
+            listOf(
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.RESULT, "Defeat"),
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.KDA, "5/3/7")
+            ),
+            row.quickSummaryItems
+        )
         assertEquals("Preview unavailable", row.previewText)
         assertTrue(row.selectable)
+    }
+
+    @Test
+    fun historyRowMapper_usesReadableFallbacksForHeroAndResultAndKeepsReducedSummaryClean() {
+        val state = HistoryContentState.Loaded(
+            records = listOf(
+                MatchHistoryListItem(
+                    recordId = "record-3",
+                    savedAt = 1_710_000_000_000L,
+                    hero = null,
+                    result = null,
+                    lane = null,
+                    score = null,
+                    kda = null,
+                    screenshotAvailable = true
+                )
+            )
+        ).toHistoryScreenUiState()
+
+        val row = state.rows.single()
+        assertEquals("Hero not entered", row.primaryText)
+        assertEquals("Result not entered", row.resultText)
+        assertEquals(
+            listOf(
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.RESULT, "Result not entered")
+            ),
+            row.quickSummaryItems
+        )
+        assertNull(row.previewText)
     }
 
     @Test

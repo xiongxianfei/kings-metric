@@ -15,6 +15,9 @@ data class MatchHistoryListItem(
     val savedAt: Long,
     val hero: String?,
     val result: String?,
+    val lane: String? = null,
+    val score: String? = null,
+    val kda: String? = null,
     val screenshotAvailable: Boolean = true
 )
 
@@ -78,7 +81,10 @@ class MatchHistoryController(
                             recordId = record.recordId,
                             savedAt = record.savedAt,
                             hero = record.fields[FieldKey.HERO],
-                            result = record.fields[FieldKey.RESULT]
+                            result = record.fields[FieldKey.RESULT],
+                            lane = record.fields[FieldKey.LANE],
+                            score = record.fields[FieldKey.SCORE],
+                            kda = record.fields[FieldKey.KDA]
                         )
                     }
             )
