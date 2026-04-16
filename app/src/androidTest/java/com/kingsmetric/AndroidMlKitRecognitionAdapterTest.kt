@@ -49,6 +49,7 @@ class AndroidMlKitRecognitionAdapterTest {
         assertTrue(result.toString(), result is ImportResult.DraftReady)
         result as ImportResult.DraftReady
         assertEquals("victory", result.draft.require(FieldKey.RESULT).value)
+        assertEquals("发育路", result.draft.require(FieldKey.LANE).value)
         assertEquals("11/1/5", result.draft.require(FieldKey.KDA).value)
         assertEquals("35.3%", result.draft.require(FieldKey.DAMAGE_SHARE).value)
         assertEquals("80.0%", result.draft.require(FieldKey.PARTICIPATION_RATE).value)
@@ -100,6 +101,7 @@ class AndroidMlKitRecognitionAdapterTest {
         }
         result as ImportResult.DraftReady
         assertEquals("victory", result.draft.require(FieldKey.RESULT).value)
+        assertEquals("发育路", result.draft.require(FieldKey.LANE).value)
         assertEquals("20 vs 10", result.draft.require(FieldKey.SCORE).value)
         assertEquals("11/1/5", result.draft.require(FieldKey.KDA).value)
         assertEquals("35.3%", result.draft.require(FieldKey.DAMAGE_SHARE).value)
@@ -168,6 +170,7 @@ class AndroidMlKitRecognitionAdapterTest {
         assertTrue(result.toString(), result is ImportResult.DraftReady)
         result as ImportResult.DraftReady
         assertEquals("victory", result.draft.require(FieldKey.RESULT).value)
+        assertEquals("发育路", result.draft.require(FieldKey.LANE).value)
         assertEquals("11/1/5", result.draft.require(FieldKey.KDA).value)
         assertEquals("35.3%", result.draft.require(FieldKey.DAMAGE_SHARE).value)
         assertEquals("24%", result.draft.require(FieldKey.GOLD_SHARE).value)

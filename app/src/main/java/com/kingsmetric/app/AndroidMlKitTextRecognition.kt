@@ -69,6 +69,14 @@ internal object SupportedTemplateTextMapper {
     private val resultLabels = listOf("胜利", "失败")
     private val resultPattern = Regex(resultLabels.joinToString("|") { Regex.escape(it) })
     private val laneNames = listOf("发育路", "对抗路", "中路", "打野", "游走")
+    private val laneAliases = listOf(
+        "发育路" to listOf("发育路", "发有路"),
+        "对抗路" to listOf("对抗路"),
+        "中路" to listOf("中路"),
+        "打野" to listOf("打野"),
+        "游走" to listOf("游走")
+    )
+    private val allLaneLabels = laneAliases.flatMap { it.second }.distinct()
     private val dataTabLabels = listOf("数据")
     private val damageDealtLabels = listOf("对英雄输出", "对英雄輸出", "对英雄出", "输出伤害", "輸出伤害", "输出")
     private val damageShareLabels = listOf("输出占比", "輸出占比")
@@ -120,7 +128,7 @@ internal object SupportedTemplateTextMapper {
         }
         safeExtract { extractKda(lines) }?.let { rawValues[FieldKey.KDA] = it }
 
-        laneNames.firstOrNull(normalizedText::contains)?.let { rawValues[FieldKey.LANE] = it }
+        safeExtract { extractLane(lines, playerSummaryLine) }?.let { rawValues[FieldKey.LANE] = it }
         safeExtract { extractPlayerName(playerSummaryLine) }?.let { rawValues[FieldKey.PLAYER_NAME] = it }
         safeExtract { extractTotalGold(playerSummaryLine, lines) }?.let { rawValues[FieldKey.TOTAL_GOLD] = it }
 
@@ -230,7 +238,7 @@ internal object SupportedTemplateTextMapper {
         val prefix = ratingPattern.find(line)?.let { rating ->
             line.substring(0, rating.range.first)
         } ?: line.substringBeforeLast('/')
-        val cleaned = laneNames.fold(prefix) { current, lane -> current.replace(lane, " ") }
+        val cleaned = allLaneLabels.fold(prefix) { current, lane -> current.replace(lane, " ") }
 
         return cleaned
             .replace(Regex("""[^\p{IsHan}A-Za-z0-9、]"""), " ")
@@ -262,6 +270,29 @@ internal object SupportedTemplateTextMapper {
             return null
         }
         return "${parts[0].takeLast(2)}/${parts[1]}/${parts[2]}"
+    }
+
+    private fun extractLane(lines: List<String>, playerSummaryLine: String?): String? {
+        canonicalLaneFor(playerSummaryLine)?.let { return it }
+        lines.forEach { line ->
+            canonicalLaneFor(line)?.let { return it }
+        }
+        return null
+    }
+
+    private fun canonicalLaneFor(text: String?): String? {
+        if (text.isNullOrBlank()) {
+            return null
+        }
+        return laneAliases.firstNotNullOfOrNull { (canonicalLane, aliases) ->
+            if (!aliases.any(text::contains)) {
+                return@firstNotNullOfOrNull null
+            }
+            if (canonicalLane == "打野" && farmingGoldLabels.any(text::contains)) {
+                return@firstNotNullOfOrNull null
+            }
+            canonicalLane
+        }
     }
 
     private fun extractFirstLabeledValue(

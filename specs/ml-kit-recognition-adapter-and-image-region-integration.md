@@ -110,3 +110,9 @@ Expected behavior:
   the screenshot is on the supported path, degrade to a reviewable partial
   draft with unresolved fields instead of collapsing into a generic
   recognition failure.
+- 2026-04-16: Do not infer the player lane from any whole-text substring hit.
+  Real OCR dumps can contain metric labels such as `鎵撻噹缁忔祹`, which would
+  falsely classify the match as jungle if the lane detector scans the whole OCR
+  text. Lane extraction must prefer summary or badge-local context and treat
+  degraded badge variants such as `鍙戞湁璺?as the canonical marksman lane
+  instead of letting nearby metric labels win.
