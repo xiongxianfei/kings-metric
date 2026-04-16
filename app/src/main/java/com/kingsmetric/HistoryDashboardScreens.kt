@@ -574,7 +574,13 @@ fun DashboardScreen(state: DashboardScreenUiState) {
             testTag = "dashboard-error-state"
         )
         is DashboardContentState.Loaded -> {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .testTag("dashboard-scroll"),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 state.contextText?.let {
                     ShellStateBlock(
                         title = "Sample",

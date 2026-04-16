@@ -523,6 +523,76 @@ class HistoryDetailDashboardUxComposeTest {
     }
 
     @Test
+    fun dashboardScreen_phoneSizedViewport_canReachFullHeroUsagePanel() {
+        composeRule.setContent {
+            Box(modifier = androidx.compose.ui.Modifier.height(340.dp)) {
+                DashboardScreen(
+                    state = DashboardScreenUiState(
+                        content = DashboardContentState.Loaded(
+                            metrics = com.kingsmetric.dashboard.DashboardMetricsCalculator().calculate(emptyList())
+                        ),
+                        primaryCards = listOf(
+                            DashboardCardUiState("Win Rate", "66.7%"),
+                            DashboardCardUiState("Average KDA", "13.0"),
+                            DashboardCardUiState("Most Played Hero", "Sun Shangxiang")
+                        ),
+                        graphSection = DashboardGraphSectionUiState(
+                            panels = listOf(
+                                DashboardGraphPanelUiState.RecentResults(
+                                    title = "Recent Results",
+                                    points = listOf(
+                                        DashboardRecentResultPointUiState(
+                                            recordId = "record-1",
+                                            isVictory = true,
+                                            resultLabel = "Victory"
+                                        ),
+                                        DashboardRecentResultPointUiState(
+                                            recordId = "record-2",
+                                            isVictory = false,
+                                            resultLabel = "Defeat"
+                                        )
+                                    )
+                                ),
+                                DashboardGraphPanelUiState.HeroUsage(
+                                    title = "Hero Usage",
+                                    bars = listOf(
+                                        DashboardHeroUsageBarUiState(
+                                            hero = "Sun Shangxiang",
+                                            matches = 3,
+                                            countLabel = "3 matches"
+                                        ),
+                                        DashboardHeroUsageBarUiState(
+                                            hero = "Consort Yu",
+                                            matches = 2,
+                                            countLabel = "2 matches"
+                                        ),
+                                        DashboardHeroUsageBarUiState(
+                                            hero = "Arli",
+                                            matches = 1,
+                                            countLabel = "1 match"
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        contextText = "Based on 3 saved matches",
+                        sparseDataText = "Based on limited match history.",
+                        secondaryNotes = listOf("Some metrics need more saved data.")
+                    )
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("dashboard-scroll")
+            .performScrollToNode(hasTestTag("dashboard-graph-hero-usage"))
+
+        composeRule.onNodeWithTag("dashboard-graph-hero-usage").assertIsDisplayed()
+        composeRule.onNodeWithText("Hero Usage").assertIsDisplayed()
+        composeRule.onNodeWithText("Consort Yu").assertIsDisplayed()
+        composeRule.onNodeWithText("1 match").assertIsDisplayed()
+    }
+
+    @Test
     fun dashboardScreen_emptyState_staysClear() {
         composeRule.setContent {
             DashboardScreen(
