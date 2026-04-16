@@ -121,7 +121,11 @@ The dashboard may render:
 - `R9` The graph section MUST remain non-interactive in this first release.
   Users must not need drag, tap, zoom, or tooltip gestures to read the chart.
 - `R10` The graph section MUST remain readable on a phone-sized portrait screen
-  without horizontal scrolling or off-screen graph content.
+  without horizontal scrolling or off-screen graph content that becomes
+  unreachable in the normal vertical dashboard flow.
+- `R10a` If the loaded dashboard becomes taller than one phone-sized portrait
+  viewport, the user MUST still be able to reach the full graph section and
+  its labels through normal vertical scrolling.
 - `R11` The dashboard MUST preserve explicit sparse-data messaging when the
   current saved-record sample is too small to imply a strong trend.
 - `R12` If no saved records exist, the dashboard MUST continue to show the
@@ -200,6 +204,7 @@ The dashboard may render:
 - some records missing `result`
 - all records missing `hero`
 - all records missing `result`
+- dashboard content taller than one phone-sized portrait viewport
 - saved records update while the dashboard is visible
 
 ## Non-Goals
@@ -229,3 +234,8 @@ The dashboard may render:
 - 2026-04-16: The current dashboard specs still treat advanced charts as a
   non-goal, so graph work must stay explicitly bounded. This first release is a
   small additive graph section, not a generic analytics expansion.
+- 2026-04-16: Graph readability is not only about bar width or label density.
+  Once the loaded dashboard becomes taller than one phone-sized viewport, the
+  graph section also needs a normal vertical scroll path. A plain non-
+  scrollable `Column` can make the lower `Hero Usage` panel clip even when the
+  graph itself is otherwise correctly bounded.

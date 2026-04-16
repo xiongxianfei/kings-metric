@@ -144,6 +144,10 @@ If a required spec does not exist and the work changes externally observable beh
 - If a route-scoped `ViewModel` edits a draft or form state that the shell also needs to recover after activity recreation, push those edits back into the shell-owned saveable state as they happen.
 - If an Android flow depends on framework UI that is not deterministic in tests, add the narrowest possible test seam at the app-shell boundary. Do not bypass the business flow itself just to make instrumentation easier.
 - For Android screenshot flows, do not fully decode the original screenshot bitmap just to validate file readability or render a small preview. Use bounds-only decode for validation and downsampled decode for previews.
+- If a loaded Android screen can grow taller than one phone-sized portrait
+  viewport, do not render it in a plain `Column` with no vertical scroll path.
+  Use `verticalScroll` or a lazy container and keep one focused constrained-
+  height Compose regression that proves lower sections remain reachable.
 
 ## CI conventions
 

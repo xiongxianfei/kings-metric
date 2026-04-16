@@ -83,6 +83,8 @@ or arbitrary filtering.
   content.
 - `CT8` Graph panels remain bounded within the normal portrait dashboard flow
   and do not require horizontal scrolling.
+- `CT8a` On a constrained phone-height viewport, the full `Hero Usage` panel
+  remains reachable through normal vertical dashboard scrolling.
 - `CT9` Graph labels and graph-state text remain user-facing and visible
   without relying on color alone.
 
@@ -91,6 +93,9 @@ or arbitrary filtering.
 - `M1` On a narrow phone-sized portrait device, primary summary cards are still
   easy to find before or alongside the graph section.
 - `M2` No graph requires horizontal scrolling or off-screen reading.
+- `M2a` If the dashboard is taller than one phone-sized viewport, the user can
+  still reach the full `Hero Usage` panel and its labels with normal vertical
+  scrolling.
 - `M3` With one or two saved matches, the dashboard still reads as sparse data,
   not as a misleading full analytics surface.
 - `M4` Recent-results and hero-usage graphs remain understandable at a glance
@@ -120,6 +125,8 @@ or arbitrary filtering.
 - some records missing `result` -> `T5`, `IT6`, `CT5`
 - all records missing `hero` -> `T7`, `IT5`, `CT5`
 - all records missing `result` -> `T7`, `IT6`, `CT5`
+- dashboard content taller than one phone-sized portrait viewport -> `CT8a`,
+  `M2a`
 - saved records update while the dashboard is visible -> `IT4`
 
 ## Requirement Coverage Map
@@ -134,6 +141,7 @@ or arbitrary filtering.
 - `R8` -> `T12`, `CT2`, `CT3`, `CT9`, `M4`
 - `R9` -> `CT9`, `M4`
 - `R10` -> `CT8`, `M2`
+- `R10a` -> `CT8a`, `M2a`
 - `R11` -> `T11`, `CT4`, `M3`
 - `R12` -> `T9`, `IT2`, `CT6`
 - `R13` -> `T10`, `IT3`, `CT7`
