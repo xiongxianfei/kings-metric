@@ -25,6 +25,26 @@ class MatchHistoryUiTest {
         assertTrue(state.history is HistoryContentState.Loaded)
         state.history as HistoryContentState.Loaded
         assertEquals(listOf("record-3", "record-2", "record-1"), state.history.records.map { it.recordId })
+        assertEquals("Farm Lane", state.history.records.first().lane)
+        assertEquals("11/1/5", state.history.records.first().kda)
+        assertEquals("20-10", state.history.records.first().score)
+    }
+
+    @Test
+    fun `T5 history state exposes approved richer quick summary fields from saved records`() {
+        val controller = historyController(
+            repository = FakeMatchHistoryRepository(records = listOf(HistoryFixtures.record()))
+        )
+
+        val state = controller.loadHistory()
+
+        assertTrue(state.history is HistoryContentState.Loaded)
+        state.history as HistoryContentState.Loaded
+        val row = state.history.records.single()
+        assertEquals("victory", row.result)
+        assertEquals("Farm Lane", row.lane)
+        assertEquals("11/1/5", row.kda)
+        assertEquals("20-10", row.score)
     }
 
     @Test
@@ -180,6 +200,8 @@ private object HistoryFixtures {
                 FieldKey.RESULT to "victory",
                 FieldKey.HERO to "Sun Shangxiang",
                 FieldKey.PLAYER_NAME to "King",
+                FieldKey.LANE to "Farm Lane",
+                FieldKey.SCORE to "20-10",
                 FieldKey.KDA to "11/1/5"
             )
         )

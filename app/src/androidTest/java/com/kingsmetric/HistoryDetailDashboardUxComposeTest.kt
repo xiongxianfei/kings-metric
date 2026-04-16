@@ -10,6 +10,8 @@ import com.kingsmetric.app.DashboardScreenUiState
 import com.kingsmetric.app.DetailFieldDisplayUiState
 import com.kingsmetric.app.DetailScreenUiState
 import com.kingsmetric.app.DetailSectionUiState
+import com.kingsmetric.app.HistoryQuickSummaryItemUiState
+import com.kingsmetric.app.HistoryQuickSummaryKind
 import com.kingsmetric.app.HistoryRowUiState
 import com.kingsmetric.app.HistoryScreenUiState
 import com.kingsmetric.app.PreviewAvailability
@@ -37,6 +39,12 @@ class HistoryDetailDashboardUxComposeTest {
                             categoryLabel = "Saved match",
                             primaryText = "Sun Shangxiang",
                             resultText = "Victory",
+                            quickSummaryItems = listOf(
+                                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.RESULT, "Victory"),
+                                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.LANE, "Farm Lane"),
+                                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.KDA, "11/1/5"),
+                                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.SCORE, "20-10")
+                            ),
                             recencyText = "Saved Apr 15, 2026",
                             previewText = null,
                             selectable = true
@@ -49,13 +57,21 @@ class HistoryDetailDashboardUxComposeTest {
 
         composeRule.onNodeWithText("Saved match").assertIsDisplayed()
         composeRule.onNodeWithText("Sun Shangxiang").assertIsDisplayed()
+        composeRule.onNodeWithTag("history-row-summary-record-1", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("history-row-summary-record-1-result", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("history-row-summary-record-1-lane", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("history-row-summary-record-1-kda", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("history-row-summary-record-1-score", useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithText("Victory").assertIsDisplayed()
+        composeRule.onNodeWithText("Farm Lane").assertIsDisplayed()
+        composeRule.onNodeWithText("11/1/5").assertIsDisplayed()
+        composeRule.onNodeWithText("20-10").assertIsDisplayed()
         composeRule.onNodeWithText("Saved Apr 15, 2026").assertIsDisplayed()
         composeRule.onNodeWithTag("history-record-record-1").assertIsDisplayed()
     }
 
     @Test
-    fun historyScreen_missingHeroAndPreviewRemainReadable() {
+    fun historyScreen_missingOptionalSummaryItemsRemainReadableAndOrdered() {
         composeRule.setContent {
             HistoryScreen(
                 state = HistoryScreenUiState(
@@ -64,8 +80,12 @@ class HistoryDetailDashboardUxComposeTest {
                         HistoryRowUiState(
                             recordId = "record-2",
                             categoryLabel = "Saved match",
-                            primaryText = "Hero not entered",
+                            primaryText = "Sun Shangxiang",
                             resultText = "Defeat",
+                            quickSummaryItems = listOf(
+                                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.RESULT, "Defeat"),
+                                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.KDA, "5/3/7")
+                            ),
                             recencyText = "Saved Apr 14, 2026",
                             previewText = "Preview unavailable",
                             selectable = true
@@ -76,9 +96,46 @@ class HistoryDetailDashboardUxComposeTest {
             )
         }
 
-        composeRule.onNodeWithText("Hero not entered").assertIsDisplayed()
+        composeRule.onNodeWithText("Sun Shangxiang").assertIsDisplayed()
+        composeRule.onNodeWithTag("history-row-summary-record-2", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("history-row-summary-record-2-result", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("history-row-summary-record-2-kda", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Defeat").assertIsDisplayed()
+        composeRule.onNodeWithText("5/3/7").assertIsDisplayed()
         composeRule.onNodeWithText("Preview unavailable").assertIsDisplayed()
         composeRule.onNodeWithTag("history-record-record-2").assertIsDisplayed()
+    }
+
+    @Test
+    fun historyScreen_fullyReducedRowKeepsFallbacksAndRecencyOnly() {
+        composeRule.setContent {
+            HistoryScreen(
+                state = HistoryScreenUiState(
+                    content = HistoryContentState.Loaded(emptyList()),
+                    rows = listOf(
+                        HistoryRowUiState(
+                            recordId = "record-3",
+                            categoryLabel = "Saved match",
+                            primaryText = "Hero not entered",
+                            resultText = "Result not entered",
+                            quickSummaryItems = listOf(
+                                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.RESULT, "Result not entered")
+                            ),
+                            recencyText = "Saved Apr 13, 2026",
+                            previewText = null,
+                            selectable = true
+                        )
+                    )
+                ),
+                onRecordSelected = {}
+            )
+        }
+
+        composeRule.onNodeWithText("Hero not entered").assertIsDisplayed()
+        composeRule.onNodeWithTag("history-row-summary-record-3", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("history-row-summary-record-3-result", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Result not entered").assertIsDisplayed()
+        composeRule.onNodeWithText("Saved Apr 13, 2026").assertIsDisplayed()
     }
 
     @Test

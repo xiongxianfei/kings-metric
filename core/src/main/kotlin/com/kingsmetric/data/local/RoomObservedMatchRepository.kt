@@ -125,6 +125,9 @@ class RoomObservedMatchRepository(
                                 savedAt = entity.savedAt,
                                 hero = entity.hero,
                                 result = entity.result,
+                                lane = entity.lane,
+                                score = entity.score,
+                                kda = entity.kda,
                                 screenshotAvailable = screenshotFiles.exists(entity.screenshotPath)
                             )
                         }

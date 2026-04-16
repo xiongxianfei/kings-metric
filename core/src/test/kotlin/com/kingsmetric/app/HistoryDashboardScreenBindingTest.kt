@@ -37,7 +37,10 @@ class HistoryDashboardScreenStateMapperTest {
                     recordId = "record-1",
                     savedAt = 200L,
                     hero = "Sun Shangxiang",
-                    result = "victory"
+                    result = "victory",
+                    lane = "Farm Lane",
+                    score = "20-10",
+                    kda = "11/1/5"
                 )
             )
         ).toHistoryScreenUiState()
@@ -50,6 +53,15 @@ class HistoryDashboardScreenStateMapperTest {
         assertTrue(historyState.content is HistoryContentState.Loaded)
         historyState.content as HistoryContentState.Loaded
         assertEquals("record-1", historyState.content.records.single().recordId)
+        assertEquals(
+            listOf(
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.RESULT, "Victory"),
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.LANE, "Farm Lane"),
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.KDA, "11/1/5"),
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.SCORE, "20-10")
+            ),
+            historyState.rows.single().quickSummaryItems
+        )
 
         assertTrue(dashboardState.content is DashboardContentState.Loaded)
         dashboardState.content as DashboardContentState.Loaded
@@ -82,6 +94,15 @@ class HistoryDashboardScreenBindingIntegrationTest {
         assertTrue(state.content is HistoryContentState.Loaded)
         state.content as HistoryContentState.Loaded
         assertEquals("Sun Shangxiang", state.content.records.single().hero)
+        assertEquals(
+            listOf(
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.RESULT, "Victory"),
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.LANE, "Farm Lane"),
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.KDA, "11/1/5"),
+                HistoryQuickSummaryItemUiState(HistoryQuickSummaryKind.SCORE, "20-10")
+            ),
+            state.rows.single().quickSummaryItems
+        )
         job.cancel()
     }
 

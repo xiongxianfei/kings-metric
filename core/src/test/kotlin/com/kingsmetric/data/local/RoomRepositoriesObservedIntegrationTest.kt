@@ -39,8 +39,12 @@ class RoomRepositoryMappingTest {
         val history = repository.observeHistory().take(1).toList().single()
         assertTrue(history is HistoryContentState.Loaded)
         history as HistoryContentState.Loaded
-        assertEquals("record-1", history.records.single().recordId)
-        assertEquals("Sun Shangxiang", history.records.single().hero)
+        val historyRow = history.records.single()
+        assertEquals("record-1", historyRow.recordId)
+        assertEquals("Sun Shangxiang", historyRow.hero)
+        assertEquals("Farm Lane", historyRow.lane)
+        assertEquals("11/1/5", historyRow.kda)
+        assertEquals("20-10", historyRow.score)
 
         val detail = repository.getDetail("record-1")
         assertTrue(detail is RecordLookupResult.Found)
@@ -150,6 +154,56 @@ class RoomRepositoryObservedIntegrationTest {
         val result = repository.getDetail("record-404")
 
         assertEquals(RecordLookupResult.NotFound, result)
+    }
+
+    @Test
+    fun `IT6 repository and controller stay aligned on richer history-row inputs`() = runBlocking {
+        val entity = savedMatchEntity(
+            recordId = "record-1",
+            savedAt = 200L,
+            hero = "Sun Shangxiang",
+            result = "victory",
+            kda = "11/1/5"
+        )
+        val repository = roomRepository(
+            dao = FakeSavedMatchDao(initialEntities = listOf(entity))
+        )
+        val controller = com.kingsmetric.history.MatchHistoryController(
+            repository = com.kingsmetric.history.FakeMatchHistoryRepository(
+                records = listOf(
+                    com.kingsmetric.history.SavedMatchHistoryRecord(
+                        recordId = "record-1",
+                        savedAt = 200L,
+                        screenshotId = "shot-1",
+                        screenshotPath = "stored/shot-1.png",
+                        fields = mapOf(
+                            FieldKey.RESULT to "victory",
+                            FieldKey.HERO to "Sun Shangxiang",
+                            FieldKey.LANE to "Farm Lane",
+                            FieldKey.SCORE to "20-10",
+                            FieldKey.KDA to "11/1/5"
+                        )
+                    )
+                )
+            ),
+            screenshotFiles = com.kingsmetric.history.FakeScreenshotFileChecker(
+                existingPaths = setOf("stored/shot-1.png")
+            )
+        )
+
+        val repositoryHistory = repository.observeHistory().take(1).toList().single()
+        assertTrue(repositoryHistory is HistoryContentState.Loaded)
+        repositoryHistory as HistoryContentState.Loaded
+        val controllerHistory = controller.loadHistory()
+        assertTrue(controllerHistory.history is HistoryContentState.Loaded)
+        controllerHistory.history as HistoryContentState.Loaded
+
+        val repositoryRow = repositoryHistory.records.single()
+        val controllerRow = controllerHistory.history.records.single()
+        assertEquals(controllerRow.result, repositoryRow.result)
+        assertEquals(controllerRow.lane, repositoryRow.lane)
+        assertEquals(controllerRow.kda, repositoryRow.kda)
+        assertEquals(controllerRow.score, repositoryRow.score)
     }
 }
 
