@@ -27,6 +27,8 @@ and safe missing-record fallback.
   does not look corrupted.
 - `IT4` Missing-record fallback remains safe and visible.
 - `IT5` User can return from detail to history predictably.
+- `IT6` Phone-sized detail viewport can still reach lower grouped sections
+  without clipping them permanently below the fold.
 
 ## What Not To Test
 
@@ -40,6 +42,7 @@ and safe missing-record fallback.
 - Preview availability handling covered by `T2`, `IT2`
 - Optional-field readability covered by `T3`, `IT3`
 - Navigation and safe fallback covered by `T4`, `IT4`, `IT5`
+- Lower-section reachability covered by `IT6`
 
 ## Not Directly Testable
 

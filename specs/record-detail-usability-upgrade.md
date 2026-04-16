@@ -44,6 +44,8 @@ Expected behavior:
 - The detail screen MUST make screenshot preview availability clear.
 - The detail screen MUST keep field data readable even when the screenshot is
   unavailable.
+- The detail screen MUST allow lower grouped sections to remain reachable on a
+  phone-sized screen instead of clipping them below the fold.
 - The detail screen MUST preserve stable navigation back to history.
 - The detail screen SHOULD emphasize the most useful summary information first.
 
@@ -58,11 +60,14 @@ Expected behavior:
 
 - Missing record fallback MUST remain safe and visible.
 - Missing screenshot preview MUST not hide or remove the saved field data.
+- Long detail content MUST remain vertically reachable without requiring
+  horizontal scrolling.
 
 ## Edge Cases
 
 - Screenshot preview unavailable.
 - Optional fields empty.
+- Lower grouped sections below the initial viewport.
 - User arrives from history and wants to return quickly.
 
 ## Non-Goals
@@ -75,6 +80,7 @@ Expected behavior:
 
 - Detail is as readable and navigable as the other primary screens.
 - Missing preview handling is explicit and non-destructive.
+- Lower grouped sections remain reachable on a phone-sized detail screen.
 - Existing detail-route safety behavior remains intact.
 
 ## Gotchas

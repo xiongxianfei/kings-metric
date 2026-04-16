@@ -3,6 +3,8 @@ package com.kingsmetric
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -616,7 +618,13 @@ fun DashboardScreen(state: DashboardScreenUiState) {
 
 @Composable
 fun RecordDetailScreen(state: DetailScreenUiState) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .testTag("detail-scroll"),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         ShellSurfaceCard(testTag = "detail-summary-card") {
             Text(state.summaryTitle, style = MaterialTheme.typography.headlineSmall)
             Text(state.summaryResult, style = MaterialTheme.typography.titleMedium)
