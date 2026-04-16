@@ -10,6 +10,14 @@ import com.kingsmetric.history.MatchDetailState
 import com.kingsmetric.history.SavedMatchHistoryRecord
 import com.kingsmetric.history.ScreenshotPreviewState
 import com.kingsmetric.importflow.FieldKey
+import com.kingsmetric.marksman.MarksmanLaneAnalysisInputFactory
+import com.kingsmetric.marksman.MarksmanLaneAnalysisState
+import com.kingsmetric.marksman.MarksmanLaneDetailedMetricGroupResult
+import com.kingsmetric.marksman.MarksmanLaneDetailedMetricsCalculator
+import com.kingsmetric.marksman.MarksmanLaneMetricGroup
+import com.kingsmetric.marksman.MarksmanLaneSuggestionCategory
+import com.kingsmetric.marksman.MarksmanLaneSuggestionEngine
+import com.kingsmetric.marksman.MarksmanLaneSuggestionState
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -61,6 +69,40 @@ data class DetailSectionUiState(
     val fields: List<DetailFieldDisplayUiState>
 )
 
+data class MarksmanInsightMetricGroupUiState(
+    val title: String,
+    val statusText: String?,
+    val metrics: List<DetailFieldDisplayUiState>
+)
+
+data class MarksmanInsightSuggestionItemUiState(
+    val categoryLabel: String,
+    val title: String,
+    val rationale: String,
+    val evidenceText: String
+)
+
+sealed interface MarksmanSuggestionsUiState {
+    data class Suggestions(
+        val items: List<MarksmanInsightSuggestionItemUiState>
+    ) : MarksmanSuggestionsUiState
+
+    data class Neutral(val message: String) : MarksmanSuggestionsUiState
+}
+
+sealed interface MarksmanInsightsUiState {
+    data class Eligible(
+        val metricGroups: List<MarksmanInsightMetricGroupUiState>,
+        val suggestions: MarksmanSuggestionsUiState
+    ) : MarksmanInsightsUiState
+
+    data class Unavailable(val message: String) : MarksmanInsightsUiState
+
+    data class Insufficient(val message: String) : MarksmanInsightsUiState
+
+    data class Error(val message: String) : MarksmanInsightsUiState
+}
+
 data class DetailScreenUiState(
     val recordId: String,
     val screenshotPath: String?,
@@ -72,6 +114,7 @@ data class DetailScreenUiState(
     val backLabel: String = "History",
     val previewStatusLabel: String = "Screenshot",
     val previewStatusText: String = "",
+    val marksmanInsights: MarksmanInsightsUiState? = null,
     val sections: List<DetailSectionUiState> = emptyList()
 )
 
@@ -125,7 +168,9 @@ fun DashboardContentState.toDashboardScreenUiState(): DashboardScreenUiState {
     }
 }
 
-fun MatchDetailState.toDetailScreenUiState(): DetailScreenUiState {
+fun MatchDetailState.toDetailScreenUiState(
+    marksmanInsightsMapper: (SavedMatchHistoryRecord) -> MarksmanInsightsUiState = DefaultMarksmanInsightsUiStateMapper()::map
+): DetailScreenUiState {
     val previewAvailability = when (screenshotPreview) {
         is ScreenshotPreviewState.Available -> PreviewAvailability.Available
         ScreenshotPreviewState.Unavailable -> PreviewAvailability.Unavailable
@@ -149,6 +194,13 @@ fun MatchDetailState.toDetailScreenUiState(): DetailScreenUiState {
             "Screenshot available"
         } else {
             "Screenshot preview unavailable"
+        },
+        marksmanInsights = runCatching {
+            marksmanInsightsMapper(record)
+        }.getOrElse {
+            MarksmanInsightsUiState.Error(
+                message = "Marksman lane insights are unavailable for this match."
+            )
         },
         sections = detailSectionsFor(record)
     )
@@ -238,6 +290,83 @@ private fun detailSectionsFor(record: SavedMatchHistoryRecord): List<DetailSecti
                 )
             }
         )
+    }
+}
+
+class DefaultMarksmanInsightsUiStateMapper(
+    private val analysisInputFactory: MarksmanLaneAnalysisInputFactory = MarksmanLaneAnalysisInputFactory(),
+    private val detailedMetricsCalculator: MarksmanLaneDetailedMetricsCalculator = MarksmanLaneDetailedMetricsCalculator(),
+    private val suggestionEngine: MarksmanLaneSuggestionEngine = MarksmanLaneSuggestionEngine()
+) {
+
+    fun map(record: SavedMatchHistoryRecord): MarksmanInsightsUiState {
+        return when (val analysis = analysisInputFactory.from(record)) {
+            is MarksmanLaneAnalysisState.Eligible -> {
+                val metrics = detailedMetricsCalculator.calculate(analysis)
+                MarksmanInsightsUiState.Eligible(
+                    metricGroups = metrics.groups.map(::toMarksmanMetricGroupUiState),
+                    suggestions = when (val suggestionState = suggestionEngine.suggestionsFor(analysis, metrics)) {
+                        is MarksmanLaneSuggestionState.Suggestions -> MarksmanSuggestionsUiState.Suggestions(
+                            items = suggestionState.items.map { suggestion ->
+                                MarksmanInsightSuggestionItemUiState(
+                                    categoryLabel = suggestion.category.toUiLabel(),
+                                    title = suggestion.title,
+                                    rationale = suggestion.rationale,
+                                    evidenceText = suggestion.evidenceLine
+                                )
+                            }
+                        )
+                        MarksmanLaneSuggestionState.NoHighPrioritySuggestions -> MarksmanSuggestionsUiState.Neutral(
+                            message = "No high-priority marksman suggestions for this match."
+                        )
+                    }
+                )
+            }
+            is MarksmanLaneAnalysisState.UnavailableForThisLane -> MarksmanInsightsUiState.Unavailable(
+                message = "Marksman lane insights are unavailable for this lane."
+            )
+            is MarksmanLaneAnalysisState.InsufficientSavedData -> MarksmanInsightsUiState.Insufficient(
+                message = "Not enough saved data to determine marksman lane insights."
+            )
+        }
+    }
+}
+
+private fun toMarksmanMetricGroupUiState(
+    group: MarksmanLaneDetailedMetricGroupResult
+): MarksmanInsightMetricGroupUiState {
+    return MarksmanInsightMetricGroupUiState(
+        title = group.group.toUiTitle(),
+        statusText = if (group.isComplete) {
+            null
+        } else {
+            "Some saved metrics are unavailable for this group."
+        },
+        metrics = group.metrics.map { metric ->
+            DetailFieldDisplayUiState(
+                label = SharedUxCopy.field(metric.field).label,
+                valueText = metric.value ?: "Not enough saved data"
+            )
+        }
+    )
+}
+
+private fun MarksmanLaneMetricGroup.toUiTitle(): String {
+    return when (this) {
+        MarksmanLaneMetricGroup.MatchContext -> "Match Context"
+        MarksmanLaneMetricGroup.EconomyAndFarming -> "Economy And Farming"
+        MarksmanLaneMetricGroup.OutputAndPressure -> "Output And Pressure"
+        MarksmanLaneMetricGroup.SurvivalAndRisk -> "Survival And Risk"
+        MarksmanLaneMetricGroup.TeamfightPresence -> "Teamfight Presence"
+    }
+}
+
+private fun MarksmanLaneSuggestionCategory.toUiLabel(): String {
+    return when (this) {
+        MarksmanLaneSuggestionCategory.EconomyRhythm -> "Economy Rhythm"
+        MarksmanLaneSuggestionCategory.RiskDisciplineAndSurvival -> "Risk Discipline And Survival"
+        MarksmanLaneSuggestionCategory.FollowTeamIsolation -> "Follow-Team / Isolation"
+        MarksmanLaneSuggestionCategory.OutputContribution -> "Output Contribution"
     }
 }
 

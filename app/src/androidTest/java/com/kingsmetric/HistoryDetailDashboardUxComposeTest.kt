@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -19,6 +20,10 @@ import com.kingsmetric.app.HistoryQuickSummaryItemUiState
 import com.kingsmetric.app.HistoryQuickSummaryKind
 import com.kingsmetric.app.HistoryRowUiState
 import com.kingsmetric.app.HistoryScreenUiState
+import com.kingsmetric.app.MarksmanInsightMetricGroupUiState
+import com.kingsmetric.app.MarksmanInsightSuggestionItemUiState
+import com.kingsmetric.app.MarksmanInsightsUiState
+import com.kingsmetric.app.MarksmanSuggestionsUiState
 import com.kingsmetric.app.PreviewAvailability
 import com.kingsmetric.dashboard.DashboardContentState
 import com.kingsmetric.history.HistoryContentState
@@ -157,6 +162,28 @@ class HistoryDetailDashboardUxComposeTest {
                     backLabel = "History",
                     previewStatusLabel = "Screenshot",
                     previewStatusText = "Screenshot available",
+                    marksmanInsights = MarksmanInsightsUiState.Eligible(
+                        metricGroups = listOf(
+                            MarksmanInsightMetricGroupUiState(
+                                title = "Economy And Farming",
+                                statusText = null,
+                                metrics = listOf(
+                                    DetailFieldDisplayUiState("Gold Share", "21%"),
+                                    DetailFieldDisplayUiState("Last Hits", "48")
+                                )
+                            )
+                        ),
+                        suggestions = MarksmanSuggestionsUiState.Suggestions(
+                            items = listOf(
+                                MarksmanInsightSuggestionItemUiState(
+                                    categoryLabel = "Economy Rhythm",
+                                    title = "Economy Rhythm",
+                                    rationale = "Your farming pace lagged behind a stable marksman lane curve in this match.",
+                                    evidenceText = "Gold share 21%, farming gold 2200, last hits 48."
+                                )
+                            )
+                        )
+                    ),
                     sections = listOf(
                         DetailSectionUiState(
                             title = "Match Summary",
@@ -175,6 +202,12 @@ class HistoryDetailDashboardUxComposeTest {
         composeRule.onNodeWithText("Saved Apr 15, 2026").assertIsDisplayed()
         composeRule.onNodeWithTag("detail-summary-card").assertIsDisplayed()
         composeRule.onNodeWithTag("detail-preview-card").assertIsDisplayed()
+        composeRule.onNodeWithTag("detail-marksman-section").assertIsDisplayed()
+        composeRule.onNodeWithTag("detail-marksman-group-economy-and-farming").assertIsDisplayed()
+        composeRule.onNodeWithTag("detail-marksman-suggestions").assertIsDisplayed()
+        composeRule.onNodeWithText("Marksman Lane Insights").assertIsDisplayed()
+        composeRule.onNodeWithText("Economy Rhythm").assertIsDisplayed()
+        composeRule.onNodeWithText("Gold share 21%, farming gold 2200, last hits 48.").assertIsDisplayed()
         composeRule.onNodeWithText("Screenshot available").assertIsDisplayed()
         composeRule.onNodeWithText("Match Summary").assertIsDisplayed()
         composeRule.onNodeWithText("Player").assertIsDisplayed()
@@ -196,6 +229,9 @@ class HistoryDetailDashboardUxComposeTest {
                     backLabel = "History",
                     previewStatusLabel = "Screenshot",
                     previewStatusText = "Screenshot preview unavailable",
+                    marksmanInsights = MarksmanInsightsUiState.Unavailable(
+                        message = "Marksman lane insights are unavailable for this lane."
+                    ),
                     sections = listOf(
                         DetailSectionUiState(
                             title = "Economy",
@@ -209,9 +245,139 @@ class HistoryDetailDashboardUxComposeTest {
         }
 
         composeRule.onNodeWithTag("detail-preview-card").assertIsDisplayed()
+        composeRule.onNodeWithTag("detail-marksman-state").assertIsDisplayed()
+        composeRule.onNodeWithText("Marksman lane insights are unavailable for this lane.").assertIsDisplayed()
         composeRule.onNodeWithText("Screenshot preview unavailable").assertIsDisplayed()
         composeRule.onNodeWithText("Last Hits").assertIsDisplayed()
         composeRule.onNodeWithText("Not entered").assertIsDisplayed()
+    }
+
+    @Test
+    fun detailScreen_missingLaneShowsMarksmanInsufficientStateAndKeepsRawDetailVisible() {
+        composeRule.setContent {
+            RecordDetailScreen(
+                state = DetailScreenUiState(
+                    recordId = "record-1",
+                    screenshotPath = "stored/shot-1.png",
+                    previewAvailability = PreviewAvailability.Available,
+                    summaryTitle = "Sun Shangxiang",
+                    summaryResult = "Victory",
+                    summaryMetaText = "Saved Apr 15, 2026",
+                    backLabel = "History",
+                    previewStatusLabel = "Screenshot",
+                    previewStatusText = "Screenshot available",
+                    marksmanInsights = MarksmanInsightsUiState.Insufficient(
+                        message = "Not enough saved data to determine marksman lane insights."
+                    ),
+                    sections = listOf(
+                        DetailSectionUiState(
+                            title = "Team Play",
+                            fields = listOf(
+                                DetailFieldDisplayUiState("Participation Rate", "Not entered")
+                            )
+                        )
+                    )
+                )
+            )
+        }
+
+        composeRule.onNodeWithTag("detail-marksman-state").assertIsDisplayed()
+        composeRule.onNodeWithText("Not enough saved data to determine marksman lane insights.").assertIsDisplayed()
+        composeRule.onNodeWithText("Team Play").assertIsDisplayed()
+        composeRule.onNodeWithText("Participation Rate").assertIsDisplayed()
+    }
+
+    @Test
+    fun detailScreen_marksmanNeutralStateRendersWithoutLeavingAnEmptyGap() {
+        composeRule.setContent {
+            RecordDetailScreen(
+                state = DetailScreenUiState(
+                    recordId = "record-1",
+                    screenshotPath = "stored/shot-1.png",
+                    previewAvailability = PreviewAvailability.Available,
+                    summaryTitle = "Sun Shangxiang",
+                    summaryResult = "Victory",
+                    summaryMetaText = "Saved Apr 15, 2026",
+                    backLabel = "History",
+                    previewStatusLabel = "Screenshot",
+                    previewStatusText = "Screenshot available",
+                    marksmanInsights = MarksmanInsightsUiState.Eligible(
+                        metricGroups = listOf(
+                            MarksmanInsightMetricGroupUiState(
+                                title = "Match Context",
+                                statusText = null,
+                                metrics = listOf(
+                                    DetailFieldDisplayUiState("Lane", "发育路"),
+                                    DetailFieldDisplayUiState("Score", "20-10")
+                                )
+                            )
+                        ),
+                        suggestions = MarksmanSuggestionsUiState.Neutral(
+                            message = "No high-priority marksman suggestions for this match."
+                        )
+                    ),
+                    sections = listOf(
+                        DetailSectionUiState(
+                            title = "Match Summary",
+                            fields = listOf(
+                                DetailFieldDisplayUiState("Player", "Summoner One")
+                            )
+                        )
+                    )
+                )
+            )
+        }
+
+        composeRule.onNodeWithTag("detail-marksman-suggestions").assertIsDisplayed()
+        composeRule.onNodeWithText("No high-priority marksman suggestions for this match.").assertIsDisplayed()
+        composeRule.onNodeWithText("Match Summary").assertIsDisplayed()
+    }
+
+    @Test
+    fun detailScreen_marksmanPartialDataShowsReadableUnavailability() {
+        composeRule.setContent {
+            RecordDetailScreen(
+                state = DetailScreenUiState(
+                    recordId = "record-1",
+                    screenshotPath = "stored/shot-1.png",
+                    previewAvailability = PreviewAvailability.Available,
+                    summaryTitle = "Sun Shangxiang",
+                    summaryResult = "Victory",
+                    summaryMetaText = "Saved Apr 15, 2026",
+                    backLabel = "History",
+                    previewStatusLabel = "Screenshot",
+                    previewStatusText = "Screenshot available",
+                    marksmanInsights = MarksmanInsightsUiState.Eligible(
+                        metricGroups = listOf(
+                            MarksmanInsightMetricGroupUiState(
+                                title = "Economy And Farming",
+                                statusText = "Some saved metrics are unavailable for this group.",
+                                metrics = listOf(
+                                    DetailFieldDisplayUiState("Gold Share", "21%"),
+                                    DetailFieldDisplayUiState("Gold from Farming", "Not enough saved data")
+                                )
+                            )
+                        ),
+                        suggestions = MarksmanSuggestionsUiState.Neutral(
+                            message = "No high-priority marksman suggestions for this match."
+                        )
+                    ),
+                    sections = listOf(
+                        DetailSectionUiState(
+                            title = "Economy",
+                            fields = listOf(
+                                DetailFieldDisplayUiState("Gold Share", "21%")
+                            )
+                        )
+                    )
+                )
+            )
+        }
+
+        composeRule.onNodeWithText("Some saved metrics are unavailable for this group.").assertIsDisplayed()
+        composeRule.onNodeWithText("Gold from Farming").assertIsDisplayed()
+        composeRule.onNodeWithText("Not enough saved data").assertIsDisplayed()
+        composeRule.onNodeWithText("Economy").assertIsDisplayed()
     }
 
     @Test
@@ -225,11 +391,14 @@ class HistoryDetailDashboardUxComposeTest {
         }
 
         composeRule.onNodeWithTag("detail-scroll")
-            .performScrollToNode(hasText("10101"))
+            .performScrollToNode(hasText("Damage Output"))
 
         composeRule.onNodeWithText("Damage Output").assertIsDisplayed()
-        composeRule.onNodeWithText("Damage to Opponents").assertIsDisplayed()
-        composeRule.onNodeWithText("10101").assertIsDisplayed()
+
+        composeRule.onNodeWithTag("detail-scroll")
+            .performScrollToNode(hasTestTag("detail-section-damage-output"))
+
+        composeRule.onNodeWithTag("detail-section-damage-output").assertIsDisplayed()
     }
 
     @Test
@@ -303,6 +472,28 @@ private fun fullDetailScreenState(): DetailScreenUiState {
         backLabel = "History",
         previewStatusLabel = "Screenshot",
         previewStatusText = "Screenshot available",
+        marksmanInsights = MarksmanInsightsUiState.Eligible(
+            metricGroups = listOf(
+                MarksmanInsightMetricGroupUiState(
+                    title = "Output And Pressure",
+                    statusText = null,
+                    metrics = listOf(
+                        DetailFieldDisplayUiState("Damage Share", "34%"),
+                        DetailFieldDisplayUiState("Damage to Opponents", "10101")
+                    )
+                )
+            ),
+            suggestions = MarksmanSuggestionsUiState.Suggestions(
+                items = listOf(
+                    MarksmanInsightSuggestionItemUiState(
+                        categoryLabel = "Output Contribution",
+                        title = "Output Contribution",
+                        rationale = "Your damage contribution stayed low for a marksman lane slot in this match.",
+                        evidenceText = "Damage share 22%, damage to opponents 10101."
+                    )
+                )
+            )
+        ),
         sections = listOf(
             DetailSectionUiState(
                 title = "Match Summary",

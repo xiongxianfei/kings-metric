@@ -132,6 +132,7 @@ class HistoryDetailDashboardUxTest {
                 field.label == "Last Hits" && field.valueText == "Not entered"
             }
         )
+        assertTrue(state.marksmanInsights is MarksmanInsightsUiState.Unavailable)
     }
 
     @Test
@@ -143,6 +144,87 @@ class HistoryDetailDashboardUxTest {
 
         assertEquals("History", state.backLabel)
         assertEquals("Screenshot available", state.previewStatusText)
+    }
+
+    @Test
+    fun detailMapper_marksmanEligibleRecordAddsBoundedInsightsAndSuggestions() {
+        val state = MatchDetailState(
+            record = detailRecord(
+                fields = detailFields() + mapOf(
+                    FieldKey.LANE to MARKSMAN_LANE,
+                    FieldKey.GOLD_SHARE to "21%",
+                    FieldKey.GOLD_FROM_FARMING to "2200",
+                    FieldKey.LAST_HITS to "48",
+                    FieldKey.KDA to "3/5/4",
+                    FieldKey.DAMAGE_TAKEN_SHARE to "34%",
+                    FieldKey.PARTICIPATION_RATE to "58%",
+                    FieldKey.DAMAGE_SHARE to "22%"
+                )
+            ),
+            screenshotPreview = ScreenshotPreviewState.Available("stored/shot-1.png")
+        ).toDetailScreenUiState()
+
+        assertTrue(state.marksmanInsights is MarksmanInsightsUiState.Eligible)
+        state.marksmanInsights as MarksmanInsightsUiState.Eligible
+        assertEquals(
+            listOf(
+                "Match Context",
+                "Economy And Farming",
+                "Output And Pressure",
+                "Survival And Risk",
+                "Teamfight Presence"
+            ),
+            state.marksmanInsights.metricGroups.map { it.title }
+        )
+        assertTrue(state.marksmanInsights.suggestions is MarksmanSuggestionsUiState.Suggestions)
+        state.marksmanInsights.suggestions as MarksmanSuggestionsUiState.Suggestions
+        assertEquals(3, state.marksmanInsights.suggestions.items.size)
+        assertEquals(
+            listOf(
+                "Economy Rhythm",
+                "Risk Discipline And Survival",
+                "Follow-Team / Isolation"
+            ),
+            state.marksmanInsights.suggestions.items.map { it.categoryLabel }
+        )
+        assertTrue(state.marksmanInsights.suggestions.items.all { it.evidenceText.isNotBlank() })
+    }
+
+    @Test
+    fun detailMapper_missingLaneShowsMarksmanInsufficientState() {
+        val state = MatchDetailState(
+            record = detailRecord(
+                fields = detailFields() + (FieldKey.LANE to null)
+            ),
+            screenshotPreview = ScreenshotPreviewState.Available("stored/shot-1.png")
+        ).toDetailScreenUiState()
+
+        assertEquals(
+            MarksmanInsightsUiState.Insufficient(
+                message = "Not enough saved data to determine marksman lane insights."
+            ),
+            state.marksmanInsights
+        )
+    }
+
+    @Test
+    fun detailMapper_marksmanAnalysisFailureDegradesOnlyInsightsLayer() {
+        val state = MatchDetailState(
+            record = detailRecord(
+                fields = detailFields() + (FieldKey.LANE to MARKSMAN_LANE)
+            ),
+            screenshotPreview = ScreenshotPreviewState.Available("stored/shot-1.png")
+        ).toDetailScreenUiState(
+            marksmanInsightsMapper = { throw IllegalStateException("boom") }
+        )
+
+        assertEquals(
+            MarksmanInsightsUiState.Error(
+                message = "Marksman lane insights are unavailable for this match."
+            ),
+            state.marksmanInsights
+        )
+        assertTrue(state.sections.any { it.title == "Damage Output" })
     }
 
     @Test
@@ -245,3 +327,5 @@ private fun detailFields(): Map<FieldKey, String?> {
         FieldKey.DAMAGE_DEALT_TO_OPPONENTS to "10101"
     )
 }
+
+private const val MARKSMAN_LANE = "\u53d1\u80b2\u8def"
