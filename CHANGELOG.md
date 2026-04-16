@@ -2,6 +2,45 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.10] - 2026-04-16
+
+Alpha prerelease replacement for early testers.
+
+### Features
+
+- **Shared visual polish across the core app flow** - the app now uses one
+  consistent shell-level design language across Import, Review, History,
+  Detail, Dashboard, and Diagnostics, with stronger title hierarchy, spacing,
+  surfaces, and primary-action treatment.
+- **Diagnostics now read like a support surface instead of raw exported text**
+  - `Current Version`, export guidance, failure `Reason`, `Surface`, and OCR
+  text are now presented in dedicated readable sections.
+
+### Internal
+
+- closed the `2026-04-15-ui-ux-polish` plan after milestone-by-milestone
+  verification across import, review, history/detail, dashboard, diagnostics,
+  and residual cross-screen UX coverage
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.9`
+- aligned the release metadata, artifact contract, and release notes to the
+  `v0.1.0-alpha.10` cut
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.9] - 2026-04-15
 
 Alpha prerelease replacement for early testers.
