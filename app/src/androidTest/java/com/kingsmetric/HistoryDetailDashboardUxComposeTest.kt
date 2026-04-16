@@ -12,6 +12,11 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kingsmetric.app.DashboardCardUiState
+import com.kingsmetric.app.DashboardGraphKind
+import com.kingsmetric.app.DashboardGraphPanelUiState
+import com.kingsmetric.app.DashboardGraphSectionUiState
+import com.kingsmetric.app.DashboardHeroUsageBarUiState
+import com.kingsmetric.app.DashboardRecentResultPointUiState
 import com.kingsmetric.app.DashboardScreenUiState
 import com.kingsmetric.app.DetailFieldDisplayUiState
 import com.kingsmetric.app.DetailScreenUiState
@@ -414,6 +419,40 @@ class HistoryDetailDashboardUxComposeTest {
                         DashboardCardUiState("Average KDA", "13.0"),
                         DashboardCardUiState("Most Played Hero", "Sun Shangxiang")
                     ),
+                    graphSection = DashboardGraphSectionUiState(
+                        panels = listOf(
+                            DashboardGraphPanelUiState.RecentResults(
+                                title = "Recent Results",
+                                points = listOf(
+                                    DashboardRecentResultPointUiState(
+                                        recordId = "record-1",
+                                        isVictory = true,
+                                        resultLabel = "Victory"
+                                    ),
+                                    DashboardRecentResultPointUiState(
+                                        recordId = "record-2",
+                                        isVictory = false,
+                                        resultLabel = "Defeat"
+                                    )
+                                )
+                            ),
+                            DashboardGraphPanelUiState.HeroUsage(
+                                title = "Hero Usage",
+                                bars = listOf(
+                                    DashboardHeroUsageBarUiState(
+                                        hero = "Sun Shangxiang",
+                                        matches = 2,
+                                        countLabel = "2 matches"
+                                    ),
+                                    DashboardHeroUsageBarUiState(
+                                        hero = "Arli",
+                                        matches = 1,
+                                        countLabel = "1 match"
+                                    )
+                                )
+                            )
+                        )
+                    ),
                     contextText = "Based on 2 saved matches",
                     sparseDataText = "Based on limited match history.",
                     secondaryNotes = listOf("Some metrics need more saved data.")
@@ -430,6 +469,57 @@ class HistoryDetailDashboardUxComposeTest {
         composeRule.onNodeWithText("Based on 2 saved matches").assertIsDisplayed()
         composeRule.onNodeWithText("Based on limited match history.").assertIsDisplayed()
         composeRule.onNodeWithText("Some metrics need more saved data.").assertIsDisplayed()
+        composeRule.onNodeWithTag("dashboard-graphs-section").assertIsDisplayed()
+        composeRule.onNodeWithTag("dashboard-graph-recent-results").assertIsDisplayed()
+        composeRule.onNodeWithTag("dashboard-graph-hero-usage").assertIsDisplayed()
+        composeRule.onNodeWithText("Defeat").assertIsDisplayed()
+        composeRule.onNodeWithText("2 matches").assertIsDisplayed()
+    }
+
+    @Test
+    fun dashboardScreen_partialGraphAvailability_keepsAvailableGraphAndReadableUnavailableMessage() {
+        composeRule.setContent {
+            DashboardScreen(
+                state = DashboardScreenUiState(
+                    content = DashboardContentState.Loaded(
+                        metrics = com.kingsmetric.dashboard.DashboardMetricsCalculator().calculate(emptyList())
+                    ),
+                    primaryCards = listOf(
+                        DashboardCardUiState("Win Rate", "100.0%"),
+                        DashboardCardUiState("Average KDA", "13.0"),
+                        DashboardCardUiState("Most Played Hero", "Not enough data")
+                    ),
+                    graphSection = DashboardGraphSectionUiState(
+                        panels = listOf(
+                            DashboardGraphPanelUiState.RecentResults(
+                                title = "Recent Results",
+                                points = listOf(
+                                    DashboardRecentResultPointUiState(
+                                        recordId = "record-1",
+                                        isVictory = true,
+                                        resultLabel = "Victory"
+                                    )
+                                )
+                            ),
+                            DashboardGraphPanelUiState.Unavailable(
+                                kind = DashboardGraphKind.HeroUsage,
+                                title = "Hero Usage",
+                                message = "Hero usage graph is unavailable for the current saved matches."
+                            )
+                        )
+                    ),
+                    contextText = "Based on 1 saved match",
+                    sparseDataText = "Based on limited match history."
+                )
+            )
+        }
+
+        composeRule.onNodeWithTag("dashboard-graph-recent-results").assertIsDisplayed()
+        composeRule.onNodeWithTag("dashboard-graph-hero-usage-unavailable").assertIsDisplayed()
+        composeRule.onNodeWithText("Victory").assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "Hero usage graph is unavailable for the current saved matches."
+        ).assertIsDisplayed()
     }
 
     @Test

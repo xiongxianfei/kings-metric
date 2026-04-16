@@ -1,6 +1,8 @@
 package com.kingsmetric.app
 
 import com.kingsmetric.dashboard.DashboardContentState
+import com.kingsmetric.dashboard.DashboardMatchResult
+import com.kingsmetric.dashboard.DashboardGraphs
 import com.kingsmetric.dashboard.DashboardMetrics
 import com.kingsmetric.data.local.RecordLookupResult
 import com.kingsmetric.data.local.RoomObservedMatchRepository
@@ -130,9 +132,56 @@ data class DashboardCardUiState(
     val valueText: String
 )
 
+enum class DashboardGraphKind {
+    RecentResults,
+    HeroUsage
+}
+
+data class DashboardRecentResultPointUiState(
+    val recordId: String,
+    val isVictory: Boolean,
+    val resultLabel: String
+)
+
+data class DashboardHeroUsageBarUiState(
+    val hero: String,
+    val matches: Int,
+    val countLabel: String
+)
+
+sealed interface DashboardGraphPanelUiState {
+    val kind: DashboardGraphKind
+    val title: String
+
+    data class RecentResults(
+        override val title: String,
+        val points: List<DashboardRecentResultPointUiState>
+    ) : DashboardGraphPanelUiState {
+        override val kind: DashboardGraphKind = DashboardGraphKind.RecentResults
+    }
+
+    data class HeroUsage(
+        override val title: String,
+        val bars: List<DashboardHeroUsageBarUiState>
+    ) : DashboardGraphPanelUiState {
+        override val kind: DashboardGraphKind = DashboardGraphKind.HeroUsage
+    }
+
+    data class Unavailable(
+        override val kind: DashboardGraphKind,
+        override val title: String,
+        val message: String
+    ) : DashboardGraphPanelUiState
+}
+
+data class DashboardGraphSectionUiState(
+    val panels: List<DashboardGraphPanelUiState>
+)
+
 data class DashboardScreenUiState(
     val content: DashboardContentState,
     val primaryCards: List<DashboardCardUiState> = emptyList(),
+    val graphSection: DashboardGraphSectionUiState? = null,
     val contextText: String? = null,
     val sparseDataText: String? = null,
     val secondaryNotes: List<String> = emptyList()
@@ -161,6 +210,7 @@ fun DashboardContentState.toDashboardScreenUiState(): DashboardScreenUiState {
         is DashboardContentState.Loaded -> DashboardScreenUiState(
             content = this,
             primaryCards = metrics.toPrimaryCards(),
+            graphSection = metrics.toGraphSection(),
             contextText = metrics.sampleContextText(),
             sparseDataText = metrics.sparseDataText(),
             secondaryNotes = metrics.secondaryNotes()
@@ -385,6 +435,64 @@ private fun DashboardMetrics.toPrimaryCards(): List<DashboardCardUiState> {
             valueText = heroUsage.firstOrNull()?.hero ?: "Not enough data"
         )
     )
+}
+
+private fun DashboardMetrics.toGraphSection(): DashboardGraphSectionUiState {
+    return DashboardGraphSectionUiState(
+        panels = listOf(
+            graphs.toRecentResultsPanel(),
+            graphs.toHeroUsagePanel()
+        )
+    )
+}
+
+private fun DashboardGraphs.toRecentResultsPanel(): DashboardGraphPanelUiState {
+    return if (recentResults.isEmpty()) {
+        DashboardGraphPanelUiState.Unavailable(
+            kind = DashboardGraphKind.RecentResults,
+            title = "Recent Results",
+            message = "Recent results graph is unavailable for the current saved matches."
+        )
+    } else {
+        DashboardGraphPanelUiState.RecentResults(
+            title = "Recent Results",
+            points = recentResults.map { point ->
+                DashboardRecentResultPointUiState(
+                    recordId = point.recordId,
+                    isVictory = point.result == DashboardMatchResult.Victory,
+                    resultLabel = when (point.result) {
+                        DashboardMatchResult.Victory -> "Victory"
+                        DashboardMatchResult.Defeat -> "Defeat"
+                    }
+                )
+            }
+        )
+    }
+}
+
+private fun DashboardGraphs.toHeroUsagePanel(): DashboardGraphPanelUiState {
+    return if (heroUsage.isEmpty()) {
+        DashboardGraphPanelUiState.Unavailable(
+            kind = DashboardGraphKind.HeroUsage,
+            title = "Hero Usage",
+            message = "Hero usage graph is unavailable for the current saved matches."
+        )
+    } else {
+        DashboardGraphPanelUiState.HeroUsage(
+            title = "Hero Usage",
+            bars = heroUsage.map { heroMetric ->
+                DashboardHeroUsageBarUiState(
+                    hero = heroMetric.hero,
+                    matches = heroMetric.matches,
+                    countLabel = if (heroMetric.matches == 1) {
+                        "1 match"
+                    } else {
+                        "${heroMetric.matches} matches"
+                    }
+                )
+            }
+        )
+    }
 }
 
 private fun DashboardMetrics.sampleContextText(): String? {

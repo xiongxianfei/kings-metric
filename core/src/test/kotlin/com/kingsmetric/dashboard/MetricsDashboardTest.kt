@@ -90,6 +90,86 @@ class MetricsDashboardTest {
     }
 
     @Test
+    fun `T6 recent-results graph keeps at most five usable matches in oldest-to-newest order`() {
+        val calculator = DashboardMetricsCalculator()
+
+        val metrics = calculator.calculate(
+            listOf(
+                DashboardFixtures.record(recordId = "record-1", savedAt = 100L, result = "victory"),
+                DashboardFixtures.record(recordId = "record-2", savedAt = 200L, result = "defeat"),
+                DashboardFixtures.record(recordId = "record-3", savedAt = 300L, result = "victory"),
+                DashboardFixtures.record(recordId = "record-4", savedAt = 400L, result = "abandoned"),
+                DashboardFixtures.record(recordId = "record-5", savedAt = 500L, result = "defeat"),
+                DashboardFixtures.record(recordId = "record-6", savedAt = 600L, result = "victory"),
+                DashboardFixtures.record(recordId = "record-7", savedAt = 700L, result = "defeat")
+            )
+        )
+
+        assertEquals(
+            listOf("record-2", "record-3", "record-5", "record-6", "record-7"),
+            metrics.graphs.recentResults.map { it.recordId }
+        )
+        assertEquals(
+            listOf(
+                DashboardMatchResult.Defeat,
+                DashboardMatchResult.Victory,
+                DashboardMatchResult.Defeat,
+                DashboardMatchResult.Victory,
+                DashboardMatchResult.Defeat
+            ),
+            metrics.graphs.recentResults.map { it.result }
+        )
+    }
+
+    @Test
+    fun `T7 hero-usage graph keeps top three heroes in stable order`() {
+        val calculator = DashboardMetricsCalculator()
+
+        val metrics = calculator.calculate(
+            listOf(
+                DashboardFixtures.record(recordId = "record-1", hero = "Sun Shangxiang"),
+                DashboardFixtures.record(recordId = "record-2", hero = "Sun Shangxiang"),
+                DashboardFixtures.record(recordId = "record-3", hero = "Consort Yu"),
+                DashboardFixtures.record(recordId = "record-4", hero = "Lady Sun"),
+                DashboardFixtures.record(recordId = "record-5", hero = "Consort Yu"),
+                DashboardFixtures.record(recordId = "record-6", hero = "Arli"),
+                DashboardFixtures.record(recordId = "record-7", hero = "Arli")
+            )
+        )
+
+        assertEquals(
+            listOf(
+                HeroUsageMetric(hero = "Arli", matches = 2),
+                HeroUsageMetric(hero = "Consort Yu", matches = 2),
+                HeroUsageMetric(hero = "Sun Shangxiang", matches = 2)
+            ),
+            metrics.graphs.heroUsage
+        )
+    }
+
+    @Test
+    fun `T8 graph inputs omit missing hero and result values instead of inventing them`() {
+        val calculator = DashboardMetricsCalculator()
+
+        val metrics = calculator.calculate(
+            listOf(
+                DashboardFixtures.record(recordId = "record-1", savedAt = 100L, result = "victory", hero = "Sun Shangxiang"),
+                DashboardFixtures.record(recordId = "record-2", savedAt = 200L, result = null, hero = "Sun Shangxiang"),
+                DashboardFixtures.record(recordId = "record-3", savedAt = 300L, result = "defeat", hero = null)
+            )
+        )
+
+        assertEquals(
+            listOf("record-1", "record-3"),
+            metrics.graphs.recentResults.map { it.recordId }
+        )
+        assertEquals(
+            listOf(HeroUsageMetric(hero = "Sun Shangxiang", matches = 2)),
+            metrics.graphs.heroUsage
+        )
+    }
+
+    @Test
     fun `IT1 dashboard shows aggregate metrics when saved records exist`() {
         val controller = dashboardController(
             repository = FakeDashboardRepository(
@@ -103,6 +183,8 @@ class MetricsDashboardTest {
         state.content as DashboardContentState.Loaded
         assertEquals(100.0, state.content.metrics.winRate?.percentage ?: 0.0, 0.01)
         assertTrue(state.content.metrics.heroUsage.isNotEmpty())
+        assertTrue(state.content.metrics.graphs.recentResults.isNotEmpty())
+        assertTrue(state.content.metrics.graphs.heroUsage.isNotEmpty())
     }
 
     @Test
@@ -188,14 +270,15 @@ private fun dashboardController(
 private object DashboardFixtures {
     fun record(
         recordId: String = "record-1",
-        result: String = "victory",
-        hero: String = "Sun Shangxiang",
+        savedAt: Long = 100L,
+        result: String? = "victory",
+        hero: String? = "Sun Shangxiang",
         kda: String = "11/1/5",
         fields: Map<FieldKey, String?> = baseFields()
     ): SavedMatchHistoryRecord {
         return SavedMatchHistoryRecord(
             recordId = recordId,
-            savedAt = 100L,
+            savedAt = savedAt,
             screenshotId = "shot-$recordId",
             screenshotPath = "stored/$recordId.png",
             fields = fields +

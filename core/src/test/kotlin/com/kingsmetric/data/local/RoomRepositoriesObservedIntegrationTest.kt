@@ -57,6 +57,8 @@ class RoomRepositoryMappingTest {
         dashboard as DashboardContentState.Loaded
         assertEquals(100.0, dashboard.metrics.winRate!!.percentage, 0.0)
         assertEquals("Sun Shangxiang", dashboard.metrics.heroUsage.single().hero)
+        assertEquals(listOf("record-1"), dashboard.metrics.graphs.recentResults.map { it.recordId })
+        assertEquals(listOf("Sun Shangxiang"), dashboard.metrics.graphs.heroUsage.map { it.hero })
     }
 
     @Test
@@ -134,6 +136,8 @@ class RoomRepositoryObservedIntegrationTest {
         assertTrue(updated is DashboardContentState.Loaded)
         updated as DashboardContentState.Loaded
         assertEquals(1, updated.metrics.winRate?.totalMatches)
+        assertEquals(1, updated.metrics.graphs.recentResults.size)
+        assertEquals(1, updated.metrics.graphs.heroUsage.size)
     }
 
     @Test

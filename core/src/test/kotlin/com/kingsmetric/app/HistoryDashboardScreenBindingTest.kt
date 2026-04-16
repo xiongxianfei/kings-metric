@@ -66,6 +66,10 @@ class HistoryDashboardScreenStateMapperTest {
         assertTrue(dashboardState.content is DashboardContentState.Loaded)
         dashboardState.content as DashboardContentState.Loaded
         assertEquals("Sun Shangxiang", dashboardState.content.metrics.heroUsage.single().hero)
+        assertEquals(
+            listOf(DashboardGraphKind.RecentResults, DashboardGraphKind.HeroUsage),
+            dashboardState.graphSection!!.panels.map { it.kind }
+        )
     }
 
     @Test
@@ -117,6 +121,11 @@ class HistoryDashboardScreenBindingIntegrationTest {
         assertTrue(state.content is DashboardContentState.Loaded)
         state.content as DashboardContentState.Loaded
         assertEquals(1, state.content.metrics.winRate?.totalMatches)
+        assertTrue(state.graphSection != null)
+        val recentResults = state.graphSection!!.panels[0] as DashboardGraphPanelUiState.RecentResults
+        val heroUsage = state.graphSection!!.panels[1] as DashboardGraphPanelUiState.HeroUsage
+        assertEquals(listOf("Victory"), recentResults.points.map { it.resultLabel })
+        assertEquals(listOf("Sun Shangxiang"), heroUsage.bars.map { it.hero })
         job.cancel()
     }
 
@@ -138,6 +147,7 @@ class HistoryDashboardScreenBindingIntegrationTest {
 
         assertEquals(HistoryContentState.Empty, historyBinder.state.value.content)
         assertEquals(DashboardContentState.Empty, dashboardBinder.state.value.content)
+        assertEquals(null, dashboardBinder.state.value.graphSection)
         historyJob.cancel()
         dashboardJob.cancel()
     }
