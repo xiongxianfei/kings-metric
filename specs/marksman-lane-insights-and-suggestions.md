@@ -34,6 +34,45 @@ Expected behavior:
 - the screen shows a bounded suggestion set derived from the saved match
 - the existing raw grouped detail remains visible
 
+One valid insights snapshot may look like:
+
+```text
+Marksman Lane Insights
+
+Match Context
+- Result: Victory
+- Lane: 发育路
+- Score: 20 vs 10
+- KDA Ratio: 11/1/5
+
+Economy And Farming
+- Total Gold: 13.1k
+- Gold Share: 24%
+- Gold from Farming: 1.4k
+- Last Hits: 50
+
+Output And Pressure
+- Damage Dealt: 611.1k
+- Damage Share: 35.3%
+- Damage to Opponents: 171.2k
+
+Suggestions
+- Rule Category: Economy Rhythm
+  Title: Economy Rhythm
+  Rationale: Your farming pace lagged behind a stable marksman lane curve in this match.
+  Evidence: Gold share 21%, farming gold 2200, last hits 48.
+
+- Rule Category: Follow-Team / Isolation
+  Title: Follow Team
+  Rationale: Your teamfight presence was low for a marksman lane role, so later fights likely missed your damage window.
+  Evidence: Participation rate 58%.
+```
+
+This example is illustrative, not exhaustive. It shows the intended shape:
+- grouped field-backed metrics first
+- bounded suggestions second
+- visible evidence for every suggestion
+
 ### Example 2: Eligible Match With Partial Optional Inputs
 
 Input:
@@ -105,9 +144,11 @@ Outputs:
   the saved-record detail flow for one saved match at a time.
 
 - `R2` A match MUST be treated as marksman-lane eligible only when the saved
-  local record explicitly identifies the lane as `发育路`.
+  local record explicitly identifies the lane as the canonical marksman lane
+  `发育路` or the legacy saved alias `Farm Lane`.
 
-- `R3` If the saved lane is present and is not `发育路`, the system MUST show an
+- `R3` If the saved lane is present and is not the canonical marksman lane
+  `发育路` or the legacy saved alias `Farm Lane`, the system MUST show an
   explicit marksman-analysis unavailable state for that match instead of
   silently hiding the feature or attempting role analysis anyway.
 
@@ -278,6 +319,9 @@ current saved screenshot model does not retain enough evidence:
 
 - The first release SHOULD work against already saved local matches with no
   schema migration when the approved fields are present.
+- Older saved matches that already use the legacy lane alias `Farm Lane`
+  SHOULD remain marksman-lane eligible and normalize to the canonical
+  marksman-lane contract.
 - Older saved matches with partial optional fields MAY produce partial analysis.
 - This feature MUST NOT require a new OCR template before the first release of
   marksman-lane insights ships.
@@ -294,6 +338,7 @@ current saved screenshot model does not retain enough evidence:
 - eligible match where more than 3 suggestion triggers fire
 - lane present but not `发育路`
 - lane missing or unresolved
+- older saved record with the legacy lane alias `Farm Lane`
 - internal analysis failure while saved raw detail is still readable
 - older saved records created before this feature existed
 

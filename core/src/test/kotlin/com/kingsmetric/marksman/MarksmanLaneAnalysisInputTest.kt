@@ -57,6 +57,27 @@ class MarksmanLaneAnalysisInputTest {
     }
 
     @Test
+    fun `T4 legacy farm lane alias stays eligible for marksman analysis`() {
+        val factory = MarksmanLaneAnalysisInputFactory()
+
+        val fromRecord = factory.from(
+            historyRecord(
+                fields = historyRecord().fields + (FieldKey.LANE to FARM_LANE_ALIAS)
+            )
+        )
+        val fromEntity = factory.from(
+            savedMatchEntity(lane = FARM_LANE_ALIAS)
+        )
+
+        assertTrue(fromRecord is MarksmanLaneAnalysisState.Eligible)
+        assertTrue(fromEntity is MarksmanLaneAnalysisState.Eligible)
+        fromRecord as MarksmanLaneAnalysisState.Eligible
+        fromEntity as MarksmanLaneAnalysisState.Eligible
+        assertEquals(MARKSMAN_LANE, fromRecord.input.lane)
+        assertEquals(MARKSMAN_LANE, fromEntity.input.lane)
+    }
+
+    @Test
     fun `T4 missing lane becomes insufficient saved data`() {
         val state = MarksmanLaneAnalysisInputFactory().from(
             historyRecord(
@@ -189,4 +210,5 @@ private val defaultFields = mapOf(
 )
 
 private const val MARKSMAN_LANE = "\u53d1\u80b2\u8def"
+private const val FARM_LANE_ALIAS = "Farm Lane"
 private const val MID_LANE = "\u4e2d\u8def"
