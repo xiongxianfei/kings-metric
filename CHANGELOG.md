@@ -2,6 +2,41 @@
 
 All notable changes to this project should be tracked here.
 
+## [v0.1.0-alpha.11] - 2026-04-16
+
+Alpha prerelease replacement for early testers.
+
+### Features
+
+- **History rows now show more useful match context at a glance** - the History
+  page now shows a bounded quick summary of `Result`, `Lane`, `KDA`, and
+  `Score` when those values are available from the saved record, so users can
+  distinguish adjacent matches without opening Detail first.
+
+### Internal
+
+- aligned the Room observation path, controller path, and history-screen
+  binding to the same richer history-row contract
+- bumped Android release versioning so the replacement APK can be installed
+  over `v0.1.0-alpha.10`
+- aligned the release metadata, artifact contract, and release notes to the
+  `v0.1.0-alpha.11` cut
+
+### Supported Scope
+
+- one supported Simplified Chinese post-match detailed-data screenshot
+- local screenshot import
+- on-device processing
+- required review before final save
+
+Unsupported screenshots are rejected.
+
+### Known Limitations
+
+- Hero may still require manual entry during review.
+- The app does not support additional templates or non-Chinese screenshots in
+  this release.
+
 ## [v0.1.0-alpha.10] - 2026-04-16
 
 Alpha prerelease replacement for early testers.
